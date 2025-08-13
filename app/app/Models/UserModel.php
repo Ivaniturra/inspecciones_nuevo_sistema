@@ -5,8 +5,8 @@ namespace App\Models;
 use CodeIgniter\Model;
 
 /**
- * Ubicaci?n: app/Models/UserModel.php
- * Reemplaza tu UserModel actual con este c?digo
+ * Ubicación: app/Models/UserModel.php
+ * Reemplaza tu UserModel actual con este código
  */
 class UserModel extends Model
 {
@@ -43,7 +43,7 @@ class UserModel extends Model
     protected $beforeUpdate = ['normalizeInput', 'hashPasswordIfProvided', 'updateMetadata'];
     protected $afterFind    = ['parseJsonFields'];
 
-    // Validaci?n
+    // Validación
     protected $validationRules = [
         'user_nombre' => 'required|min_length[3]|max_length[100]',
         'user_email'  => 'required|valid_email|max_length[255]|is_unique[users.user_email,user_id,{user_id}]',
@@ -60,20 +60,20 @@ class UserModel extends Model
         ],
         'user_email' => [
             'required'    => 'El email es obligatorio',
-            'valid_email' => 'Debe ser un email v?lido',
-            'is_unique'   => 'Este email ya est? registrado',
+            'valid_email' => 'Debe ser un email válido',
+            'is_unique'   => 'Este email ya está registrado',
         ],
         'user_perfil' => [
             'required'      => 'El perfil es obligatorio',
             'is_not_unique' => 'El perfil seleccionado no existe',
         ],
         'user_clave' => [
-            'min_length' => 'La contrase?a debe tener al menos 6 caracteres',
+            'min_length' => 'La contraseña debe tener al menos 6 caracteres',
         ],
     ];
 
     // =====================================================
-    // M?TODOS EXISTENTES (los que ya ten?as)
+    // MÉTODOS EXISTENTES (los que ya tenías)
     // =====================================================
     
     public function getUsersWithDetails(): array
@@ -181,7 +181,7 @@ class UserModel extends Model
         if ($user) {
             $intentos = (int) ($user['user_intentos_login'] ?? 0);
 
-            // Bloquear despu?s de 5 intentos
+            // Bloquear después de 5 intentos
             if ($intentos >= 5) {
                 $this->update($userId, ['user_habil' => 0]);
             }
@@ -218,7 +218,7 @@ class UserModel extends Model
 
     public function canDelete(int $id): bool
     {
-        // Aqu? puedes agregar validaciones adicionales
+        // Aquí puedes agregar validaciones adicionales
         return true;
     }
 
@@ -245,18 +245,18 @@ class UserModel extends Model
         $errors = [];
 
         if (($perfil['perfil_tipo'] ?? null) === 'compania' && empty($data['cia_id'])) {
-            $errors['cia_id'] = 'Los usuarios con perfil de compa??a deben tener una compa??a asignada';
+            $errors['cia_id'] = 'Los usuarios con perfil de compañía deben tener una compañía asignada';
         }
 
         if (($perfil['perfil_tipo'] ?? null) === 'interno' && !empty($data['cia_id'])) {
-            $errors['cia_id'] = 'Los usuarios con perfil interno no pueden tener compa??a asignada';
+            $errors['cia_id'] = 'Los usuarios con perfil interno no pueden tener compañía asignada';
         }
 
         return $errors;
     }
 
     // =====================================================
-    // M?TODOS NUEVOS PARA SEGURIDAD Y JSON
+    // MÉTODOS NUEVOS PARA SEGURIDAD Y JSON
     // =====================================================
 
     /**
@@ -300,7 +300,7 @@ class UserModel extends Model
             'security_questions' => []
         ]);
 
-        // Historial de login vac?o
+        // Historial de login vacío
         $data['data']['user_login_history'] = json_encode([]);
 
         return $data;
@@ -313,19 +313,19 @@ class UserModel extends Model
     {
         if (!isset($data['data']) || !isset($data['id'])) return $data;
 
-        // Si se est? cambiando la contrase?a
+        // Si se está cambiando la contraseña
         if (isset($data['data']['user_clave']) && !empty($data['data']['user_clave'])) {
             $user = $this->find($data['id'][0] ?? $data['id']);
             if ($user && isset($user['user_metadata'])) {
                 $metadata = json_decode($user['user_metadata'] ?? '{}', true);
                 
-                // Actualizar historial de cambios de contrase?a
+                // Actualizar historial de cambios de contraseña
                 $metadata['password_history'][] = [
                     'changed_at' => date('Y-m-d H:i:s'),
                     'changed_by_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
                 ];
                 
-                // Mantener solo los ?ltimos 5 cambios
+                // Mantener solo los últimos 5 cambios
                 $metadata['password_history'] = array_slice($metadata['password_history'], -5);
                 $metadata['last_password_change'] = date('Y-m-d H:i:s');
                 
@@ -338,7 +338,7 @@ class UserModel extends Model
     }
 
     /**
-     * Parsear campos JSON despu?s de obtener datos
+     * Parsear campos JSON después de obtener datos
      */
     protected function parseJsonFields(array $data): array
     {
@@ -346,7 +346,7 @@ class UserModel extends Model
 
         $jsonFields = ['user_metadata', 'user_preferences', 'user_security_settings', 'user_login_history'];
 
-        // Para m?ltiples registros
+        // Para múltiples registros
         if (isset($data['data'][0]) && is_array($data['data'][0])) {
             foreach ($data['data'] as &$row) {
                 foreach ($jsonFields as $field) {
@@ -389,7 +389,7 @@ class UserModel extends Model
     }
 
     /**
-     * Hashear contrase?a en INSERT
+     * Hashear contraseña en INSERT
      */
     protected function hashPassword(array $data): array
     {
@@ -400,18 +400,18 @@ class UserModel extends Model
     }
 
     /**
-     * Hashear contrase?a en UPDATE solo si se proporciona
+     * Hashear contraseña en UPDATE solo si se proporciona
      */
     protected function hashPasswordIfProvided(array $data): array
     {
         if (isset($data['data']['user_clave']) && !empty($data['data']['user_clave'])) {
-            // Verificar que no est? ya hasheada
+            // Verificar que no esté ya hasheada
             $info = password_get_info($data['data']['user_clave']);
             if ($info['algo'] === null) {
                 $data['data']['user_clave'] = password_hash($data['data']['user_clave'], PASSWORD_DEFAULT);
             }
         } else {
-            // Si no se proporciona contrase?a, quitarla del update
+            // Si no se proporciona contraseña, quitarla del update
             unset($data['data']['user_clave']);
         }
         return $data;
@@ -437,10 +437,10 @@ class UserModel extends Model
         
         array_unshift($history, $attempt);
         
-        // Mantener solo los ?ltimos 50 intentos
+        // Mantener solo los últimos 50 intentos
         $history = array_slice($history, 0, 50);
         
-        // Si es un intento fallido, actualizar metadata tambi?n
+        // Si es un intento fallido, actualizar metadata también
         if (!$success) {
             $metadata = json_decode($user['user_metadata'] ?? '{}', true);
             $metadata['failed_login_attempts'][] = $attempt;
@@ -492,7 +492,7 @@ class UserModel extends Model
     }
 
     /**
-     * Verificar si el usuario necesita cambiar contrase?a
+     * Verificar si el usuario necesita cambiar contraseña
      */
     public function needsPasswordChange(int $userId): bool
     {
@@ -504,7 +504,7 @@ class UserModel extends Model
             return true;
         }
         
-        // Verificar por antig?edad (90 d?as)
+        // Verificar por antigüedad (90 días)
         if (isset($user['user_metadata'])) {
             $metadata = is_string($user['user_metadata']) 
                 ? json_decode($user['user_metadata'], true) 
@@ -554,13 +554,13 @@ class UserModel extends Model
     }
 
     /**
-     * Obtener estad?sticas mejoradas
+     * Obtener estadísticas mejoradas
      */
     public function getEnhancedStats(): array
     {
         $stats = $this->getStats();
         
-        // Agregar estad?sticas adicionales
+        // Agregar estadísticas adicionales
         $allUsers = $this->findAll();
         
         $stats['need_password_change'] = 0;
@@ -568,12 +568,12 @@ class UserModel extends Model
         $stats['locked_accounts'] = 0;
         
         foreach ($allUsers as $user) {
-            // Usuarios que necesitan cambiar contrase?a
+            // Usuarios que necesitan cambiar contraseña
             if ($this->needsPasswordChange($user['user_id'])) {
                 $stats['need_password_change']++;
             }
             
-            // Logins en las ?ltimas 24 horas
+            // Logins en las últimas 24 horas
             if ($user['user_ultimo_acceso'] ?? false) {
                 $hoursSinceLogin = (time() - strtotime($user['user_ultimo_acceso'])) / 3600;
                 if ($hoursSinceLogin <= 24) {

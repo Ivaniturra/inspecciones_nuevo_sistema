@@ -1,0 +1,54 @@
+# CodeIgniter 4 .gitignore
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE Files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Composer
+vendor/
+composer.lock
+
+# CodeIgniter 4
+writable/cache/*
+!writable/cache/index.html
+
+writable/logs/*
+!writable/logs/index.html
+
+writable/session/*
+!writable/session/index.html
+
+writable/uploads/*
+!writable/uploads/index.html
+!writable/uploads/avatars/index.html
+
+writable/debugbar/*
+
+# Environment
+.env
+env
+
+# Testing
+phpunit*.xml
+*.cache
+build/
+
+# Database
+*.db
+*.sql
+*.sqlite
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Temporary files
+*.tmp
+*.temp

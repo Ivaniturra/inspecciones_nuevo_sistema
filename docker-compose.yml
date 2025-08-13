@@ -1,0 +1,41 @@
+services:
+  app:
+    build: .
+    container_name: inspectzu_app
+    ports:
+      - "8000:80"
+    volumes:
+      - ./app:/var/www/html
+    depends_on:
+      - db
+    command: bash -lc "chown -R www-data:www-data /var/www/html/writable || true && apache2-foreground"
+
+  db:
+    image: mysql:8.0
+    container_name: ci4_db
+    restart: always
+    
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: insp_tzu
+      MYSQL_USER: ciuser
+      MYSQL_PASSWORD: cipass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: ci4_phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_USER: ciuser
+      PMA_PASSWORD: cipass
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+volumes:
+  db_data:

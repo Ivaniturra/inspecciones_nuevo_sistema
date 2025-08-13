@@ -1,15 +1,12 @@
 <?php
-declare(strict_types=1);
 
 namespace App\Models;
 
 use CodeIgniter\Model;
-use Throwable;
 
 /**
- * UserModel (hardened)
- * - Mantiene la misma interfaz p?blica del modelo original (m?todos y nombres).
- * - Endurece validaciones, callbacks y operaciones sensibles sin cambiar la l?gica funcional.
+ * Ubicaci?n: app/Models/UserModel.php
+ * Reemplaza tu UserModel actual con este c?digo
  */
 class UserModel extends Model
 {
@@ -18,11 +15,11 @@ class UserModel extends Model
 
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
-    protected $useSoftDeletes   = false; // mantener comportamiento original
+    protected $useSoftDeletes   = false;
     protected $protectFields    = true;
 
-    /** S?lo campos permitidos (del archivo original) */
-    protected $allowedFields    = [
+    // Campos permitidos - AGREGADOS los nuevos campos JSON
+    protected $allowedFields = [
         'user_nombre',
         'user_email',
         'user_telefono',
@@ -34,20 +31,24 @@ class UserModel extends Model
         'user_intentos_login',
         'user_token_reset',
         'user_habil',
+        'user_debe_cambiar_clave',      // NUEVO
+        'user_metadata',                 // NUEVO - JSON
+        'user_preferences',              // NUEVO - JSON
+        'user_security_settings',        // NUEVO - JSON
+        'user_login_history'            // NUEVO - JSON
     ];
 
-    /** Callbacks para normalizar e hashear */
-    protected $beforeInsert = ['normalizeInput', 'hashPassword'];
-    protected $beforeUpdate = ['normalizeInput', 'hashPassword'];
-    protected $afterFind    = ['hidePassword'];
+    // Callbacks
+    protected $beforeInsert = ['normalizeInput', 'hashPassword', 'setDefaultJsonFields'];
+    protected $beforeUpdate = ['normalizeInput', 'hashPasswordIfProvided', 'updateMetadata'];
+    protected $afterFind    = ['parseJsonFields'];
 
-    // Reglas m?s seguras: user_clave no es obligatoria en UPDATE (if_exist)
-    // y el email se valida como ?nico exceptuando el propio registro.
+    // Validaci?n
     protected $validationRules = [
         'user_nombre' => 'required|min_length[3]|max_length[100]',
         'user_email'  => 'required|valid_email|max_length[255]|is_unique[users.user_email,user_id,{user_id}]',
         'user_perfil' => 'required|integer|is_not_unique[perfiles.perfil_id]',
-        'user_clave'  => 'if_exist|min_length[6]',
+        'user_clave'  => 'permit_empty|min_length[6]',
         'user_habil'  => 'required|in_list[0,1]',
     ];
 
@@ -69,16 +70,12 @@ class UserModel extends Model
         'user_clave' => [
             'min_length' => 'La contrase?a debe tener al menos 6 caracteres',
         ],
-        'user_habil' => [
-            'required' => 'El estado es obligatorio',
-            'in_list'  => 'Estado inv?lido',
-        ],
     ];
 
-    /* =====================
-     * M?todos de consulta
-     * ===================== */
-
+    // =====================================================
+    // M?TODOS EXISTENTES (los que ya ten?as)
+    // =====================================================
+    
     public function getUsersWithDetails(): array
     {
         return $this->select(
@@ -142,8 +139,7 @@ class UserModel extends Model
 
     public function findByEmail(string $email): ?array
     {
-        // Normalizar email a min?sculas para evitar duplicados por casing
-        $email = mb_strtolower(trim($email));
+        $email = strtolower(trim($email));
 
         $row = $this->select(
                 'users.*, ' .
@@ -161,18 +157,9 @@ class UserModel extends Model
         return $row ?: null;
     }
 
-    /* =====================
-     * Autenticaci?n / Login
-     * ===================== */
-
     public function verifyPassword(string $password, string $hash): bool
     {
-        $ok = password_verify($password, $hash);
-        if ($ok && password_needs_rehash($hash, PASSWORD_DEFAULT)) {
-            // Si hay rehash, el controlador que conozca al usuario deber?a actualizarlo.
-            // Aqu? no sabemos el user_id, por eso s?lo devolvemos true.
-        }
-        return $ok;
+        return password_verify($password, $hash);
     }
 
     public function updateLastAccess(int $userId): bool
@@ -185,7 +172,6 @@ class UserModel extends Model
 
     public function incrementLoginAttempts(int $userId): int
     {
-        // Evitar condiciones de carrera usando una ?nica sentencia
         $this->builder()
             ->set('user_intentos_login', 'user_intentos_login + 1', false)
             ->where('user_id', $userId)
@@ -195,7 +181,7 @@ class UserModel extends Model
         if ($user) {
             $intentos = (int) ($user['user_intentos_login'] ?? 0);
 
-            // Bloquear usuario despu?s de 5 intentos (misma l?gica original)
+            // Bloquear despu?s de 5 intentos
             if ($intentos >= 5) {
                 $this->update($userId, ['user_habil' => 0]);
             }
@@ -213,48 +199,31 @@ class UserModel extends Model
         $newStatus = (int) ($user['user_habil'] == 1 ? 0 : 1);
         return (bool) $this->update($id, [
             'user_habil' => $newStatus,
-            'user_intentos_login' => 0, // misma l?gica
+            'user_intentos_login' => 0,
         ]);
     }
 
-    /**
-     * Genera un token para reset de contrase?a.
-     * Mantiene la l?gica original (guardar en user_token_reset),
-     * pero genera aleatoriedad criptogr?fica.
-     * Nota: Idealmente se deber?a guardar un hash del token y manejar expiraci?n.
-     */
     public function generateResetToken(string $email)
     {
-        $email = mb_strtolower(trim($email));
+        $email = strtolower(trim($email));
         $user = $this->where('user_email', $email)->first();
         if (!$user) {
             return false;
         }
 
-        try {
-            $token = bin2hex(random_bytes(32)); // 64 chars
-        } catch (Throwable $e) {
-            // Fallback m?nimo si random_bytes falla (muy improbable)
-            $token = bin2hex(openssl_random_pseudo_bytes(32));
-        }
-
+        $token = bin2hex(random_bytes(32));
         $this->update((int)$user['user_id'], ['user_token_reset' => $token]);
-        return $token; // Se retorna el token en claro para que el controlador lo env?e por email
+        return $token;
     }
-
-    /* =====================
-     * Integridad / Stats
-     * ===================== */
 
     public function canDelete(int $id): bool
     {
-        // Punto de extensi?n: validar FK antes de borrar (mantener true como en original)
+        // Aqu? puedes agregar validaciones adicionales
         return true;
     }
 
     public function getStats(): array
     {
-        // countAllResults(false) para reusar el builder y ahorrar queries
         return [
             'total'     => $this->countAll(),
             'activos'   => $this->where('user_habil', 1)->countAllResults(false),
@@ -263,10 +232,6 @@ class UserModel extends Model
             'externos'  => $this->where('cia_id IS NOT NULL')->countAllResults(false),
         ];
     }
-
-    /* =====================
-     * Validaci?n adicional
-     * ===================== */
 
     public function validateUserByProfileType(array $data): array
     {
@@ -279,12 +244,10 @@ class UserModel extends Model
 
         $errors = [];
 
-        // Si es perfil de compa??a, debe tener cia_id
         if (($perfil['perfil_tipo'] ?? null) === 'compania' && empty($data['cia_id'])) {
             $errors['cia_id'] = 'Los usuarios con perfil de compa??a deben tener una compa??a asignada';
         }
 
-        // Si es perfil interno, no debe tener cia_id
         if (($perfil['perfil_tipo'] ?? null) === 'interno' && !empty($data['cia_id'])) {
             $errors['cia_id'] = 'Los usuarios con perfil interno no pueden tener compa??a asignada';
         }
@@ -292,70 +255,338 @@ class UserModel extends Model
         return $errors;
     }
 
-    /* =====================
-     * Callbacks
-     * ===================== */
+    // =====================================================
+    // M?TODOS NUEVOS PARA SEGURIDAD Y JSON
+    // =====================================================
 
-    protected function normalizeInput(array $data): array
+    /**
+     * Configurar campos JSON por defecto al crear usuario
+     */
+    protected function setDefaultJsonFields(array $data): array
     {
-        if (!isset($data['data']) || !is_array($data['data'])) {
-            return $data;
-        }
+        if (!isset($data['data'])) return $data;
 
-        // Trim y normalizaci?n b?sica
-        if (isset($data['data']['user_nombre'])) {
-            $data['data']['user_nombre'] = trim((string) $data['data']['user_nombre']);
-        }
-        if (isset($data['data']['user_email'])) {
-            $data['data']['user_email'] = mb_strtolower(trim((string) $data['data']['user_email']));
-        }
-        if (isset($data['data']['user_telefono'])) {
-            $data['data']['user_telefono'] = trim((string) $data['data']['user_telefono']);
-        }
-        if (isset($data['data']['cia_id']) && $data['data']['cia_id'] !== null && $data['data']['cia_id'] !== '') {
-            $data['data']['cia_id'] = (int) $data['data']['cia_id'];
-        }
-        if (isset($data['data']['user_perfil'])) {
-            $data['data']['user_perfil'] = (int) $data['data']['user_perfil'];
-        }
-        if (isset($data['data']['user_habil'])) {
-            $data['data']['user_habil'] = (int) $data['data']['user_habil'];
-        }
+        // Metadata por defecto
+        $data['data']['user_metadata'] = json_encode([
+            'created_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'created_user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+            'created_at' => date('Y-m-d H:i:s'),
+            'last_password_change' => date('Y-m-d H:i:s'),
+            'password_history' => [],
+            'failed_login_attempts' => []
+        ]);
+
+        // Preferencias por defecto
+        $data['data']['user_preferences'] = json_encode([
+            'theme' => 'light',
+            'language' => 'es',
+            'notifications' => [
+                'email' => true,
+                'sms' => false,
+                'push' => true
+            ],
+            'timezone' => 'America/Santiago',
+            'date_format' => 'd/m/Y',
+            'items_per_page' => 25
+        ]);
+
+        // Configuraciones de seguridad
+        $data['data']['user_security_settings'] = json_encode([
+            'two_factor_enabled' => false,
+            'two_factor_method' => null,
+            'session_timeout' => 3600,
+            'ip_whitelist' => [],
+            'trusted_devices' => [],
+            'security_questions' => []
+        ]);
+
+        // Historial de login vac?o
+        $data['data']['user_login_history'] = json_encode([]);
 
         return $data;
     }
 
-    protected function hashPassword(array $data): array
+    /**
+     * Actualizar metadata cuando se modifica el usuario
+     */
+    protected function updateMetadata(array $data): array
     {
-        if (isset($data['data']['user_clave']) && $data['data']['user_clave'] !== '') {
-            $pwd = (string) $data['data']['user_clave'];
+        if (!isset($data['data']) || !isset($data['id'])) return $data;
 
-            // Evitar doble hash
-            $info = password_get_info($pwd);
-            if (empty($info['algo'])) {
-                $data['data']['user_clave'] = password_hash($pwd, PASSWORD_DEFAULT);
+        // Si se est? cambiando la contrase?a
+        if (isset($data['data']['user_clave']) && !empty($data['data']['user_clave'])) {
+            $user = $this->find($data['id'][0] ?? $data['id']);
+            if ($user && isset($user['user_metadata'])) {
+                $metadata = json_decode($user['user_metadata'] ?? '{}', true);
+                
+                // Actualizar historial de cambios de contrase?a
+                $metadata['password_history'][] = [
+                    'changed_at' => date('Y-m-d H:i:s'),
+                    'changed_by_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                ];
+                
+                // Mantener solo los ?ltimos 5 cambios
+                $metadata['password_history'] = array_slice($metadata['password_history'], -5);
+                $metadata['last_password_change'] = date('Y-m-d H:i:s');
+                
+                $data['data']['user_metadata'] = json_encode($metadata);
+                $data['data']['user_debe_cambiar_clave'] = 0;
             }
         }
+
         return $data;
     }
 
-    protected function hidePassword(array $data): array
+    /**
+     * Parsear campos JSON despu?s de obtener datos
+     */
+    protected function parseJsonFields(array $data): array
     {
-        // Ocultar el hash de salida (tanto en registros m?ltiples como ?nico)
-        if (!isset($data['data'])) {
-            return $data;
-        }
+        if (!isset($data['data'])) return $data;
 
+        $jsonFields = ['user_metadata', 'user_preferences', 'user_security_settings', 'user_login_history'];
+
+        // Para m?ltiples registros
         if (isset($data['data'][0]) && is_array($data['data'][0])) {
             foreach ($data['data'] as &$row) {
-                if (is_array($row)) {
-                    unset($row['user_clave']);
+                foreach ($jsonFields as $field) {
+                    if (isset($row[$field]) && is_string($row[$field])) {
+                        $row[$field] = json_decode($row[$field], true) ?? [];
+                    }
                 }
             }
-        } elseif (isset($data['data']['user_clave'])) {
-            unset($data['data']['user_clave']);
+        }
+        // Para un solo registro
+        else {
+            foreach ($jsonFields as $field) {
+                if (isset($data['data'][$field]) && is_string($data['data'][$field])) {
+                    $data['data'][$field] = json_decode($data['data'][$field], true) ?? [];
+                }
+            }
         }
 
         return $data;
+    }
+
+    /**
+     * Normalizar datos de entrada
+     */
+    protected function normalizeInput(array $data): array
+    {
+        if (!isset($data['data'])) return $data;
+
+        if (isset($data['data']['user_nombre'])) {
+            $data['data']['user_nombre'] = trim($data['data']['user_nombre']);
+        }
+        if (isset($data['data']['user_email'])) {
+            $data['data']['user_email'] = strtolower(trim($data['data']['user_email']));
+        }
+        if (isset($data['data']['user_telefono'])) {
+            $data['data']['user_telefono'] = trim($data['data']['user_telefono']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Hashear contrase?a en INSERT
+     */
+    protected function hashPassword(array $data): array
+    {
+        if (isset($data['data']['user_clave']) && !empty($data['data']['user_clave'])) {
+            $data['data']['user_clave'] = password_hash($data['data']['user_clave'], PASSWORD_DEFAULT);
+        }
+        return $data;
+    }
+
+    /**
+     * Hashear contrase?a en UPDATE solo si se proporciona
+     */
+    protected function hashPasswordIfProvided(array $data): array
+    {
+        if (isset($data['data']['user_clave']) && !empty($data['data']['user_clave'])) {
+            // Verificar que no est? ya hasheada
+            $info = password_get_info($data['data']['user_clave']);
+            if ($info['algo'] === null) {
+                $data['data']['user_clave'] = password_hash($data['data']['user_clave'], PASSWORD_DEFAULT);
+            }
+        } else {
+            // Si no se proporciona contrase?a, quitarla del update
+            unset($data['data']['user_clave']);
+        }
+        return $data;
+    }
+
+    /**
+     * Registrar intento de login (exitoso o fallido)
+     */
+    public function logLoginAttempt(int $userId, bool $success, string $ip = null): void
+    {
+        $user = $this->find($userId);
+        if (!$user) return;
+
+        $history = json_decode($user['user_login_history'] ?? '[]', true);
+        
+        // Agregar nuevo intento
+        $attempt = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'success' => $success,
+            'ip' => $ip ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+        ];
+        
+        array_unshift($history, $attempt);
+        
+        // Mantener solo los ?ltimos 50 intentos
+        $history = array_slice($history, 0, 50);
+        
+        // Si es un intento fallido, actualizar metadata tambi?n
+        if (!$success) {
+            $metadata = json_decode($user['user_metadata'] ?? '{}', true);
+            $metadata['failed_login_attempts'][] = $attempt;
+            $metadata['failed_login_attempts'] = array_slice($metadata['failed_login_attempts'], -10);
+            
+            $this->update($userId, [
+                'user_login_history' => json_encode($history),
+                'user_metadata' => json_encode($metadata),
+                'user_intentos_login' => ($user['user_intentos_login'] ?? 0) + 1
+            ]);
+        } else {
+            $this->update($userId, [
+                'user_login_history' => json_encode($history),
+                'user_ultimo_acceso' => date('Y-m-d H:i:s'),
+                'user_intentos_login' => 0
+            ]);
+        }
+    }
+
+    /**
+     * Obtener preferencias del usuario
+     */
+    public function getUserPreferences(int $userId): array
+    {
+        $user = $this->find($userId);
+        if (!$user || !isset($user['user_preferences'])) return [];
+        
+        if (is_string($user['user_preferences'])) {
+            return json_decode($user['user_preferences'], true) ?? [];
+        }
+        
+        return $user['user_preferences'] ?? [];
+    }
+
+    /**
+     * Actualizar preferencias del usuario
+     */
+    public function updateUserPreferences(int $userId, array $preferences): bool
+    {
+        $user = $this->find($userId);
+        if (!$user) return false;
+        
+        $currentPrefs = $this->getUserPreferences($userId);
+        $newPrefs = array_merge($currentPrefs, $preferences);
+        
+        return $this->update($userId, [
+            'user_preferences' => json_encode($newPrefs)
+        ]);
+    }
+
+    /**
+     * Verificar si el usuario necesita cambiar contrase?a
+     */
+    public function needsPasswordChange(int $userId): bool
+    {
+        $user = $this->find($userId);
+        if (!$user) return false;
+        
+        // Verificar flag directo
+        if ($user['user_debe_cambiar_clave'] ?? false) {
+            return true;
+        }
+        
+        // Verificar por antig?edad (90 d?as)
+        if (isset($user['user_metadata'])) {
+            $metadata = is_string($user['user_metadata']) 
+                ? json_decode($user['user_metadata'], true) 
+                : $user['user_metadata'];
+                
+            $lastChange = $metadata['last_password_change'] ?? $user['created_at'] ?? null;
+            
+            if ($lastChange) {
+                $daysSinceChange = (time() - strtotime($lastChange)) / (60 * 60 * 24);
+                if ($daysSinceChange > 90) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Obtener configuraciones de seguridad del usuario
+     */
+    public function getSecuritySettings(int $userId): array
+    {
+        $user = $this->find($userId);
+        if (!$user || !isset($user['user_security_settings'])) return [];
+        
+        if (is_string($user['user_security_settings'])) {
+            return json_decode($user['user_security_settings'], true) ?? [];
+        }
+        
+        return $user['user_security_settings'] ?? [];
+    }
+
+    /**
+     * Obtener historial de login
+     */
+    public function getLoginHistory(int $userId, int $limit = 10): array
+    {
+        $user = $this->find($userId);
+        if (!$user || !isset($user['user_login_history'])) return [];
+        
+        $history = is_string($user['user_login_history']) 
+            ? json_decode($user['user_login_history'], true) 
+            : $user['user_login_history'];
+            
+        return array_slice($history ?? [], 0, $limit);
+    }
+
+    /**
+     * Obtener estad?sticas mejoradas
+     */
+    public function getEnhancedStats(): array
+    {
+        $stats = $this->getStats();
+        
+        // Agregar estad?sticas adicionales
+        $allUsers = $this->findAll();
+        
+        $stats['need_password_change'] = 0;
+        $stats['recent_logins_24h'] = 0;
+        $stats['locked_accounts'] = 0;
+        
+        foreach ($allUsers as $user) {
+            // Usuarios que necesitan cambiar contrase?a
+            if ($this->needsPasswordChange($user['user_id'])) {
+                $stats['need_password_change']++;
+            }
+            
+            // Logins en las ?ltimas 24 horas
+            if ($user['user_ultimo_acceso'] ?? false) {
+                $hoursSinceLogin = (time() - strtotime($user['user_ultimo_acceso'])) / 3600;
+                if ($hoursSinceLogin <= 24) {
+                    $stats['recent_logins_24h']++;
+                }
+            }
+            
+            // Cuentas bloqueadas
+            if (($user['user_intentos_login'] ?? 0) >= 5) {
+                $stats['locked_accounts']++;
+            }
+        }
+        
+        return $stats;
     }
 }

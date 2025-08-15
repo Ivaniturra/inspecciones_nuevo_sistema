@@ -5,17 +5,21 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */ 
-// Rutas para Cias
+// Rutas para Cia
+ 
 $routes->group('cias', function($routes) {
     $routes->get('/', 'Cias::index');
     $routes->get('create', 'Cias::create');
     $routes->post('store', 'Cias::store');
     $routes->get('show/(:num)', 'Cias::show/$1');
     $routes->get('edit/(:num)', 'Cias::edit/$1');
-    $routes->post('update/(:num)', 'Cias::update/$1');
+
+    // Cualquiera de estas dos líneas funciona:
+    $routes->put('update/(:num)', 'Cias::update/$1'); 
+    // ó: $routes->match(['post','put'], 'update/(:num)', 'Cias::update/$1');
+
     $routes->delete('delete/(:num)', 'Cias::delete/$1');
     $routes->post('toggleStatus/(:num)', 'Cias::toggleStatus/$1');
-    $routes->get('getSelect', 'Cias::getSelect');
 });
 // Rutas para Perfiles
 $routes->group('perfiles', function($routes) {
@@ -23,15 +27,16 @@ $routes->group('perfiles', function($routes) {
     $routes->get('create', 'Perfiles::create');
     $routes->post('store', 'Perfiles::store');
     $routes->get('show/(:num)', 'Perfiles::show/$1');
-    $routes->get('edit/(:num)', 'Perfiles::edit/$1');
-    $routes->post('update/(:num)', 'Perfiles::update/$1');
+    $routes->get('edit/(:num)', 'Perfiles::edit/$1'); 
     $routes->delete('delete/(:num)', 'Perfiles::delete/$1');
     $routes->post('toggleStatus/(:num)', 'Perfiles::toggleStatus/$1');
     $routes->get('getByTipo/(:segment)', 'Perfiles::getByTipo/$1');
     $routes->get('getSelect', 'Perfiles::getSelect');
+    $routes->match(['post','put'], 'update/(:num)', 'Perfiles::update/$1');
+
 });
-// Rutas para Users
-$routes->group('users', function($routes) {
+
+$routes->group('users', static function($routes) {
     $routes->get('/', 'Users::index');
     $routes->get('create', 'Users::create');
     $routes->post('store', 'Users::store');
@@ -40,7 +45,7 @@ $routes->group('users', function($routes) {
     $routes->post('update/(:num)', 'Users::update/$1');
     $routes->delete('delete/(:num)', 'Users::delete/$1');
     $routes->post('toggleStatus/(:num)', 'Users::toggleStatus/$1');
-    $routes->post('resetPassword/(:num)', 'Users::resetPassword/$1');  // â† Esta lÃ­nea
+    $routes->post('resetPassword/(:num)', 'Users::resetPassword/$1');
     $routes->get('getByCompany/(:num)', 'Users::getByCompany/$1');
     $routes->get('getStats', 'Users::getStats');
 });

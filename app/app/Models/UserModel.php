@@ -1,102 +1,240 @@
 <?php
-
 namespace App\Models;
 
 use CodeIgniter\Model;
 
-/**
- * Ubicación: app/Models/UserModel.php
- * Reemplaza tu UserModel actual con este código
- */
 class UserModel extends Model
 {
-    protected $table      = 'users';
-    protected $primaryKey = 'user_id';
-
+    protected $table            = 'users';
+    protected $primaryKey       = 'user_id';
     protected $useAutoIncrement = true;
+
     protected $returnType       = 'array';
-    protected $useSoftDeletes   = false;
     protected $protectFields    = true;
 
-    // Campos permitidos - AGREGADOS los nuevos campos JSON
     protected $allowedFields = [
-        'user_nombre',
-        'user_email',
-        'user_telefono',
-        'user_perfil',
-        'cia_id',
-        'user_clave',
-        'user_avatar',
-        'user_ultimo_acceso',
-        'user_intentos_login',
-        'user_token_reset',
-        'user_habil',
-        'user_debe_cambiar_clave',      // NUEVO
-        'user_metadata',                 // NUEVO - JSON
-        'user_preferences',              // NUEVO - JSON
-        'user_security_settings',        // NUEVO - JSON
-        'user_login_history'            // NUEVO - JSON
+        'user_nombre','user_email','user_telefono','user_perfil','cia_id',
+        'user_clave','user_avatar','user_ultimo_acceso','user_intentos_login',
+        'user_token_reset','user_habil','user_debe_cambiar_clave',
+        'user_metadata','user_preferences','user_security_settings','user_login_history',
     ];
 
-    // Callbacks
-    protected $beforeInsert = ['normalizeInput', 'hashPassword', 'setDefaultJsonFields'];
-    protected $beforeUpdate = ['normalizeInput', 'hashPasswordIfProvided', 'updateMetadata'];
-    protected $afterFind    = ['parseJsonFields'];
+    protected $useTimestamps = true;
+    protected $dateFormat    = 'datetime';
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at'; 
 
-    // Validación
+    /** Validación mínima (el controlador aplica la validación fuerte) */
     protected $validationRules = [
         'user_nombre' => 'required|min_length[3]|max_length[100]',
         'user_email'  => 'required|valid_email|max_length[255]|is_unique[users.user_email,user_id,{user_id}]',
-        'user_perfil' => 'required|integer|is_not_unique[perfiles.perfil_id]',
-        'user_clave'  => 'permit_empty|min_length[6]',
+        'user_perfil' => 'required|integer',
+        'user_clave'  => 'permit_empty',     // el controlador exige regex fuerte donde corresponda
         'user_habil'  => 'required|in_list[0,1]',
     ];
 
     protected $validationMessages = [
-        'user_nombre' => [
-            'required'    => 'El nombre es obligatorio',
-            'min_length'  => 'El nombre debe tener al menos 3 caracteres',
-            'max_length'  => 'El nombre no puede exceder 100 caracteres',
-        ],
         'user_email' => [
-            'required'    => 'El email es obligatorio',
-            'valid_email' => 'Debe ser un email válido',
-            'is_unique'   => 'Este email ya está registrado',
-        ],
-        'user_perfil' => [
-            'required'      => 'El perfil es obligatorio',
-            'is_not_unique' => 'El perfil seleccionado no existe',
-        ],
-        'user_clave' => [
-            'min_length' => 'La contraseña debe tener al menos 6 caracteres',
+            'is_unique' => 'Este email ya está registrado.',
         ],
     ];
 
-    // =====================================================
-    // MÉTODOS EXISTENTES (los que ya tenías)
-    // =====================================================
-    
+    /** Callbacks */
+    protected $beforeInsert = ['normalizeInput', 'ensureDefaults', 'hashPassword', 'setDefaultJsonFields'];
+    protected $beforeUpdate = ['normalizeInput', 'ensureDefaults', 'hashPasswordIfProvided', 'updateMetadata'];
+    protected $afterFind    = ['parseJsonFields'];
+
+    /* --------------------- Helpers de normalización y defaults --------------------- */
+
+    /** Normaliza strings (espacios y casing del email) */
+    protected function normalizeInput(array $data): array
+    {
+        if (!isset($data['data'])) return $data;
+
+        if (array_key_exists('user_nombre', $data['data'])) {
+            $data['data']['user_nombre'] = trim((string) $data['data']['user_nombre']);
+        }
+        if (array_key_exists('user_email', $data['data'])) {
+            $data['data']['user_email'] = strtolower(trim((string) $data['data']['user_email']));
+        }
+        if (array_key_exists('user_telefono', $data['data'])) {
+            $data['data']['user_telefono'] = trim((string) $data['data']['user_telefono']);
+        }
+
+        // Normaliza CIA null si viene vacío
+        if (array_key_exists('cia_id', $data['data']) && $data['data']['cia_id'] === '') {
+            $data['data']['cia_id'] = null;
+        }
+
+        return $data;
+    }
+
+    /** Defaults seguros para campos NOT NULL (evita errores de BD si faltan) */
+    protected function ensureDefaults(array $data): array
+    {
+        if (!isset($data['data'])) return $data;
+
+        $d =& $data['data'];
+        if (!isset($d['user_habil']))              $d['user_habil'] = 1;
+        if (!isset($d['user_debe_cambiar_clave'])) $d['user_debe_cambiar_clave'] = 0;
+        if (!isset($d['user_intentos_login']))     $d['user_intentos_login'] = 0;
+
+        return $data;
+    }
+
+    /* --------------------- Password --------------------- */
+
+    protected function hashPassword(array $data): array
+    {
+        if (!isset($data['data'])) return $data;
+        if (!empty($data['data']['user_clave'])) {
+            $data['data']['user_clave'] = password_hash((string)$data['data']['user_clave'], PASSWORD_DEFAULT);
+        }
+        return $data;
+    }
+
+    protected function hashPasswordIfProvided(array $data): array
+    {
+        if (!isset($data['data'])) return $data;
+
+        if (isset($data['data']['user_clave']) && $data['data']['user_clave'] !== '' && $data['data']['user_clave'] !== null) {
+            $info = password_get_info((string)$data['data']['user_clave']);
+            if ($info['algo'] === null) {
+                $data['data']['user_clave'] = password_hash((string)$data['data']['user_clave'], PASSWORD_DEFAULT);
+            }
+        } else {
+            unset($data['data']['user_clave']);
+        }
+
+        return $data;
+    }
+
+    /* --------------------- JSON por defecto / parse / metadata --------------------- */
+
+    protected function setDefaultJsonFields(array $data): array
+    {
+        if (!isset($data['data'])) return $data;
+        $ip  = $_SERVER['REMOTE_ADDR']     ?? 'unknown';
+        $ua  = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+        $now = date('Y-m-d H:i:s');
+
+        // Solo setear si el campo no viene definido
+        $data['data']['user_metadata']          = $data['data']['user_metadata']          ?? json_encode([
+            'created_ip'            => $ip,
+            'created_user_agent'    => $ua,
+            'created_at'            => $now,
+            'last_password_change'  => $now,
+            'password_history'      => [],
+            'failed_login_attempts' => [],
+        ], JSON_UNESCAPED_UNICODE);
+
+        $data['data']['user_preferences']       = $data['data']['user_preferences']       ?? json_encode([
+            'theme'         => 'light',
+            'language'      => 'es',
+            'notifications' => ['email' => true, 'sms' => false, 'push' => true],
+            'timezone'      => 'America/Santiago',
+            'date_format'   => 'd/m/Y',
+            'items_per_page'=> 25,
+        ], JSON_UNESCAPED_UNICODE);
+
+        $data['data']['user_security_settings'] = $data['data']['user_security_settings'] ?? json_encode([
+            'two_factor_enabled' => false,
+            'two_factor_method'  => null,
+            'session_timeout'    => 3600,
+            'ip_whitelist'       => [],
+            'trusted_devices'    => [],
+            'security_questions' => [],
+        ], JSON_UNESCAPED_UNICODE);
+
+        $data['data']['user_login_history']     = $data['data']['user_login_history']     ?? json_encode([], JSON_UNESCAPED_UNICODE);
+
+        return $data;
+    }
+
+    protected function updateMetadata(array $data): array
+    {
+        if (!isset($data['data'])) return $data;
+
+        // Tomar id de update de forma robusta
+        $id = $data['id'] ?? null;
+        if (is_array($id)) $id = $id[0] ?? null;
+        if (!$id) return $data;
+
+        // Si cambia la contraseña, actualiza metadata
+        if (array_key_exists('user_clave', $data['data'])) {
+            $user = $this->find($id);
+            if ($user) {
+                $metadata = is_string($user['user_metadata'] ?? null)
+                    ? json_decode($user['user_metadata'], true)
+                    : ($user['user_metadata'] ?? []);
+
+                $metadata['password_history']   = $metadata['password_history'] ?? [];
+                $metadata['password_history'][] = [
+                    'changed_at'   => date('Y-m-d H:i:s'),
+                    'changed_by_ip'=> $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                ];
+                // Mantener últimos 5
+                $metadata['password_history']      = array_slice($metadata['password_history'], -5);
+                $metadata['last_password_change']  = date('Y-m-d H:i:s');
+
+                $data['data']['user_metadata'] = json_encode($metadata, JSON_UNESCAPED_UNICODE);
+                // Si se cambia la clave manualmente desde panel, ya no debe cambiarla al iniciar sesión
+                $data['data']['user_debe_cambiar_clave'] = 0;
+            }
+        }
+
+        return $data;
+    }
+
+    protected function parseJsonFields(array $data): array
+    {
+        if (!isset($data['data'])) return $data;
+
+        $jsonFields = ['user_metadata','user_preferences','user_security_settings','user_login_history'];
+
+        // múltiples
+        if (isset($data['data'][0]) && is_array($data['data'][0])) {
+            foreach ($data['data'] as &$row) {
+                foreach ($jsonFields as $f) {
+                    if (isset($row[$f]) && is_string($row[$f])) {
+                        $row[$f] = json_decode($row[$f], true) ?? [];
+                    }
+                }
+            }
+        } else { // uno
+            foreach ($jsonFields as $f) {
+                if (isset($data['data'][$f]) && is_string($data['data'][$f])) {
+                    $data['data'][$f] = json_decode($data['data'][$f], true) ?? [];
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /* --------------------- Consultas de negocio --------------------- */
+
     public function getUsersWithDetails(): array
     {
         return $this->select(
-                'users.*, ' .
-                'cias.cia_nombre, ' .
-                'perfiles.perfil_nombre, ' .
-                'perfiles.perfil_tipo, ' .
+                'users.*,' .
+                'cias.cia_nombre,' .
+                'perfiles.perfil_nombre,' .
+                'perfiles.perfil_tipo,' .
                 'perfiles.perfil_nivel'
             )
             ->join('cias', 'cias.cia_id = users.cia_id', 'left')
             ->join('perfiles', 'perfiles.perfil_id = users.user_perfil', 'left')
-            ->orderBy('users.user_nombre', 'ASC')
+            ->orderBy('users.user_id', 'DESC')      // ✅ más reciente arriba (robusto)
+            // ->orderBy('users.created_at', 'DESC') // ✅ usa este si tienes created_at
             ->findAll();
     }
-
     public function getUsersByCompany(int $ciaId): array
     {
         return $this->select(
-                'users.*, ' .
-                'cias.cia_nombre, ' .
-                'perfiles.perfil_nombre, ' .
+                'users.*,' .
+                'cias.cia_nombre,' .
+                'perfiles.perfil_nombre,' .
                 'perfiles.perfil_tipo'
             )
             ->join('cias', 'cias.cia_id = users.cia_id', 'left')
@@ -110,12 +248,12 @@ class UserModel extends Model
     public function getInternalUsers(): array
     {
         return $this->select(
-                'users.*, ' .
-                'perfiles.perfil_nombre, ' .
+                'users.*,' .
+                'perfiles.perfil_nombre,' .
                 'perfiles.perfil_tipo'
             )
             ->join('perfiles', 'perfiles.perfil_id = users.user_perfil', 'left')
-            ->where('users.cia_id IS NULL')
+            ->where('users.cia_id', null)  // IS NULL
             ->where('users.user_habil', 1)
             ->orderBy('users.user_nombre', 'ASC')
             ->findAll();
@@ -124,9 +262,9 @@ class UserModel extends Model
     public function getUsersByProfileType(string $tipo): array
     {
         return $this->select(
-                'users.*, ' .
-                'cias.cia_nombre, ' .
-                'perfiles.perfil_nombre, ' .
+                'users.*,' .
+                'cias.cia_nombre,' .
+                'perfiles.perfil_nombre,' .
                 'perfiles.perfil_tipo'
             )
             ->join('cias', 'cias.cia_id = users.cia_id', 'left')
@@ -140,12 +278,11 @@ class UserModel extends Model
     public function findByEmail(string $email): ?array
     {
         $email = strtolower(trim($email));
-
         $row = $this->select(
-                'users.*, ' .
-                'cias.cia_nombre, ' .
-                'perfiles.perfil_nombre, ' .
-                'perfiles.perfil_tipo, ' .
+                'users.*,' .
+                'cias.cia_nombre,' .
+                'perfiles.perfil_nombre,' .
+                'perfiles.perfil_tipo,' .
                 'perfiles.perfil_permisos'
             )
             ->join('cias', 'cias.cia_id = users.cia_id', 'left')
@@ -180,8 +317,6 @@ class UserModel extends Model
         $user = $this->find($userId);
         if ($user) {
             $intentos = (int) ($user['user_intentos_login'] ?? 0);
-
-            // Bloquear después de 5 intentos
             if ($intentos >= 5) {
                 $this->update($userId, ['user_habil' => 0]);
             }
@@ -193,12 +328,11 @@ class UserModel extends Model
     public function toggleStatus(int $id): bool
     {
         $user = $this->find($id);
-        if (!$user) {
-            return false;
-        }
-        $newStatus = (int) ($user['user_habil'] == 1 ? 0 : 1);
+        if (!$user) return false;
+
+        $new = (int) ($user['user_habil'] == 1 ? 0 : 1);
         return (bool) $this->update($id, [
-            'user_habil' => $newStatus,
+            'user_habil' => $new,
             'user_intentos_login' => 0,
         ]);
     }
@@ -206,10 +340,8 @@ class UserModel extends Model
     public function generateResetToken(string $email)
     {
         $email = strtolower(trim($email));
-        $user = $this->where('user_email', $email)->first();
-        if (!$user) {
-            return false;
-        }
+        $user  = $this->where('user_email', $email)->first();
+        if (!$user) return false;
 
         $token = bin2hex(random_bytes(32));
         $this->update((int)$user['user_id'], ['user_token_reset' => $token]);
@@ -218,375 +350,155 @@ class UserModel extends Model
 
     public function canDelete(int $id): bool
     {
-        // Aquí puedes agregar validaciones adicionales
         return true;
     }
 
+    /** Stats sin acumular condiciones */
     public function getStats(): array
     {
         return [
             'total'     => $this->countAll(),
-            'activos'   => $this->where('user_habil', 1)->countAllResults(false),
-            'inactivos' => $this->where('user_habil', 0)->countAllResults(false),
-            'internos'  => $this->where('cia_id IS NULL')->countAllResults(false),
-            'externos'  => $this->where('cia_id IS NOT NULL')->countAllResults(false),
+            'activos'   => $this->where('user_habil', 1)->countAllResults(true),
+            'inactivos' => $this->where('user_habil', 0)->countAllResults(true),
+            'internos'  => $this->where('cia_id', null)->countAllResults(true),                         // IS NULL
+            'externos'  => $this->where('cia_id IS NOT NULL', null, false)->countAllResults(true),      // IS NOT NULL
         ];
+    }
+
+    public function getEnhancedStats(): array
+    {
+        $stats    = $this->getStats();
+        $allUsers = $this->findAll();
+
+        $stats['need_password_change'] = 0;
+        $stats['recent_logins_24h']    = 0;
+        $stats['locked_accounts']      = 0;
+
+        foreach ($allUsers as $u) {
+            if ($this->needsPasswordChange($u['user_id'])) $stats['need_password_change']++;
+
+            if (!empty($u['user_ultimo_acceso'])) {
+                $hours = (time() - strtotime($u['user_ultimo_acceso'])) / 3600;
+                if ($hours <= 24) $stats['recent_logins_24h']++;
+            }
+
+            if ((int)($u['user_intentos_login'] ?? 0) >= 5) $stats['locked_accounts']++;
+        }
+        return $stats;
     }
 
     public function validateUserByProfileType(array $data): array
     {
         $perfilModel = new \App\Models\PerfilModel();
-        $perfil = $perfilModel->find((int) $data['user_perfil']);
+        $perfil = $perfilModel->find((int) ($data['user_perfil'] ?? 0));
 
         if (!$perfil) {
             return ['user_perfil' => 'El perfil seleccionado no existe'];
         }
 
         $errors = [];
+        $tipo = $perfil['perfil_tipo'] ?? null;
 
-        if (($perfil['perfil_tipo'] ?? null) === 'compania' && empty($data['cia_id'])) {
+        if ($tipo === 'compania' && empty($data['cia_id'])) {
             $errors['cia_id'] = 'Los usuarios con perfil de compañía deben tener una compañía asignada';
         }
-
-        if (($perfil['perfil_tipo'] ?? null) === 'interno' && !empty($data['cia_id'])) {
+        if ($tipo === 'interno' && !empty($data['cia_id'])) {
             $errors['cia_id'] = 'Los usuarios con perfil interno no pueden tener compañía asignada';
         }
 
         return $errors;
     }
 
-    // =====================================================
-    // MÉTODOS NUEVOS PARA SEGURIDAD Y JSON
-    // =====================================================
+    /* Preferencias / Seguridad / Historial */
 
-    /**
-     * Configurar campos JSON por defecto al crear usuario
-     */
-    protected function setDefaultJsonFields(array $data): array
+    public function getUserPreferences(int $userId): array
     {
-        if (!isset($data['data'])) return $data;
+        $user = $this->find($userId);
+        if (!$user) return [];
 
-        // Metadata por defecto
-        $data['data']['user_metadata'] = json_encode([
-            'created_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-            'created_user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
-            'created_at' => date('Y-m-d H:i:s'),
-            'last_password_change' => date('Y-m-d H:i:s'),
-            'password_history' => [],
-            'failed_login_attempts' => []
-        ]);
-
-        // Preferencias por defecto
-        $data['data']['user_preferences'] = json_encode([
-            'theme' => 'light',
-            'language' => 'es',
-            'notifications' => [
-                'email' => true,
-                'sms' => false,
-                'push' => true
-            ],
-            'timezone' => 'America/Santiago',
-            'date_format' => 'd/m/Y',
-            'items_per_page' => 25
-        ]);
-
-        // Configuraciones de seguridad
-        $data['data']['user_security_settings'] = json_encode([
-            'two_factor_enabled' => false,
-            'two_factor_method' => null,
-            'session_timeout' => 3600,
-            'ip_whitelist' => [],
-            'trusted_devices' => [],
-            'security_questions' => []
-        ]);
-
-        // Historial de login vacío
-        $data['data']['user_login_history'] = json_encode([]);
-
-        return $data;
+        $prefs = $user['user_preferences'] ?? [];
+        return is_string($prefs) ? (json_decode($prefs, true) ?? []) : $prefs;
     }
 
-    /**
-     * Actualizar metadata cuando se modifica el usuario
-     */
-    protected function updateMetadata(array $data): array
+    public function updateUserPreferences(int $userId, array $preferences): bool
     {
-        if (!isset($data['data']) || !isset($data['id'])) return $data;
-
-        // Si se está cambiando la contraseña
-        if (isset($data['data']['user_clave']) && !empty($data['data']['user_clave'])) {
-            $user = $this->find($data['id'][0] ?? $data['id']);
-            if ($user && isset($user['user_metadata'])) {
-                $metadata = json_decode($user['user_metadata'] ?? '{}', true);
-                
-                // Actualizar historial de cambios de contraseña
-                $metadata['password_history'][] = [
-                    'changed_at' => date('Y-m-d H:i:s'),
-                    'changed_by_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-                ];
-                
-                // Mantener solo los últimos 5 cambios
-                $metadata['password_history'] = array_slice($metadata['password_history'], -5);
-                $metadata['last_password_change'] = date('Y-m-d H:i:s');
-                
-                $data['data']['user_metadata'] = json_encode($metadata);
-                $data['data']['user_debe_cambiar_clave'] = 0;
-            }
-        }
-
-        return $data;
+        $current = $this->getUserPreferences($userId);
+        $merged  = array_merge($current, $preferences);
+        return $this->update($userId, ['user_preferences' => json_encode($merged, JSON_UNESCAPED_UNICODE)]);
     }
 
-    /**
-     * Parsear campos JSON después de obtener datos
-     */
-    protected function parseJsonFields(array $data): array
+    public function needsPasswordChange(int $userId): bool
     {
-        if (!isset($data['data'])) return $data;
+        $user = $this->find($userId);
+        if (!$user) return false;
 
-        $jsonFields = ['user_metadata', 'user_preferences', 'user_security_settings', 'user_login_history'];
+        if (!empty($user['user_debe_cambiar_clave'])) return true;
 
-        // Para múltiples registros
-        if (isset($data['data'][0]) && is_array($data['data'][0])) {
-            foreach ($data['data'] as &$row) {
-                foreach ($jsonFields as $field) {
-                    if (isset($row[$field]) && is_string($row[$field])) {
-                        $row[$field] = json_decode($row[$field], true) ?? [];
-                    }
-                }
-            }
+        $meta = $user['user_metadata'] ?? [];
+        $meta = is_string($meta) ? (json_decode($meta, true) ?? []) : $meta;
+
+        $last = $meta['last_password_change'] ?? $user['created_at'] ?? null;
+        if ($last) {
+            $days = (time() - strtotime($last)) / 86400;
+            return $days > 90;
         }
-        // Para un solo registro
-        else {
-            foreach ($jsonFields as $field) {
-                if (isset($data['data'][$field]) && is_string($data['data'][$field])) {
-                    $data['data'][$field] = json_decode($data['data'][$field], true) ?? [];
-                }
-            }
-        }
-
-        return $data;
+        return false;
     }
 
-    /**
-     * Normalizar datos de entrada
-     */
-    protected function normalizeInput(array $data): array
+    public function getSecuritySettings(int $userId): array
     {
-        if (!isset($data['data'])) return $data;
-
-        if (isset($data['data']['user_nombre'])) {
-            $data['data']['user_nombre'] = trim($data['data']['user_nombre']);
-        }
-        if (isset($data['data']['user_email'])) {
-            $data['data']['user_email'] = strtolower(trim($data['data']['user_email']));
-        }
-        if (isset($data['data']['user_telefono'])) {
-            $data['data']['user_telefono'] = trim($data['data']['user_telefono']);
-        }
-
-        return $data;
+        $user = $this->find($userId);
+        if (!$user) return [];
+        $sec = $user['user_security_settings'] ?? [];
+        return is_string($sec) ? (json_decode($sec, true) ?? []) : $sec;
     }
 
-    /**
-     * Hashear contraseña en INSERT
-     */
-    protected function hashPassword(array $data): array
+    public function getLoginHistory(int $userId, int $limit = 10): array
     {
-        if (isset($data['data']['user_clave']) && !empty($data['data']['user_clave'])) {
-            $data['data']['user_clave'] = password_hash($data['data']['user_clave'], PASSWORD_DEFAULT);
-        }
-        return $data;
+        $user = $this->find($userId);
+        if (!$user) return [];
+        $hist = $user['user_login_history'] ?? [];
+        $hist = is_string($hist) ? (json_decode($hist, true) ?? []) : $hist;
+        return array_slice($hist, 0, $limit);
     }
 
-    /**
-     * Hashear contraseña en UPDATE solo si se proporciona
-     */
-    protected function hashPasswordIfProvided(array $data): array
-    {
-        if (isset($data['data']['user_clave']) && !empty($data['data']['user_clave'])) {
-            // Verificar que no esté ya hasheada
-            $info = password_get_info($data['data']['user_clave']);
-            if ($info['algo'] === null) {
-                $data['data']['user_clave'] = password_hash($data['data']['user_clave'], PASSWORD_DEFAULT);
-            }
-        } else {
-            // Si no se proporciona contraseña, quitarla del update
-            unset($data['data']['user_clave']);
-        }
-        return $data;
-    }
-
-    /**
-     * Registrar intento de login (exitoso o fallido)
-     */
     public function logLoginAttempt(int $userId, bool $success, string $ip = null): void
     {
         $user = $this->find($userId);
         if (!$user) return;
 
-        $history = json_decode($user['user_login_history'] ?? '[]', true);
-        
-        // Agregar nuevo intento
+        $history = $user['user_login_history'] ?? [];
+        $history = is_string($history) ? (json_decode($history, true) ?? []) : $history;
+
         $attempt = [
-            'timestamp' => date('Y-m-d H:i:s'),
-            'success' => $success,
-            'ip' => $ip ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+            'timestamp'   => date('Y-m-d H:i:s'),
+            'success'     => $success,
+            'ip'          => $ip ?? ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+            'user_agent'  => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
         ];
-        
+
         array_unshift($history, $attempt);
-        
-        // Mantener solo los últimos 50 intentos
         $history = array_slice($history, 0, 50);
-        
-        // Si es un intento fallido, actualizar metadata también
+
         if (!$success) {
-            $metadata = json_decode($user['user_metadata'] ?? '{}', true);
+            $metadata = $user['user_metadata'] ?? [];
+            $metadata = is_string($metadata) ? (json_decode($metadata, true) ?? []) : $metadata;
+
+            $metadata['failed_login_attempts']   = $metadata['failed_login_attempts'] ?? [];
             $metadata['failed_login_attempts'][] = $attempt;
-            $metadata['failed_login_attempts'] = array_slice($metadata['failed_login_attempts'], -10);
-            
+            $metadata['failed_login_attempts']   = array_slice($metadata['failed_login_attempts'], -10);
+
             $this->update($userId, [
-                'user_login_history' => json_encode($history),
-                'user_metadata' => json_encode($metadata),
-                'user_intentos_login' => ($user['user_intentos_login'] ?? 0) + 1
+                'user_login_history' => json_encode($history, JSON_UNESCAPED_UNICODE),
+                'user_metadata'      => json_encode($metadata, JSON_UNESCAPED_UNICODE),
+                'user_intentos_login'=> (int)($user['user_intentos_login'] ?? 0) + 1,
             ]);
         } else {
             $this->update($userId, [
-                'user_login_history' => json_encode($history),
+                'user_login_history' => json_encode($history, JSON_UNESCAPED_UNICODE),
                 'user_ultimo_acceso' => date('Y-m-d H:i:s'),
-                'user_intentos_login' => 0
+                'user_intentos_login'=> 0,
             ]);
         }
-    }
-
-    /**
-     * Obtener preferencias del usuario
-     */
-    public function getUserPreferences(int $userId): array
-    {
-        $user = $this->find($userId);
-        if (!$user || !isset($user['user_preferences'])) return [];
-        
-        if (is_string($user['user_preferences'])) {
-            return json_decode($user['user_preferences'], true) ?? [];
-        }
-        
-        return $user['user_preferences'] ?? [];
-    }
-
-    /**
-     * Actualizar preferencias del usuario
-     */
-    public function updateUserPreferences(int $userId, array $preferences): bool
-    {
-        $user = $this->find($userId);
-        if (!$user) return false;
-        
-        $currentPrefs = $this->getUserPreferences($userId);
-        $newPrefs = array_merge($currentPrefs, $preferences);
-        
-        return $this->update($userId, [
-            'user_preferences' => json_encode($newPrefs)
-        ]);
-    }
-
-    /**
-     * Verificar si el usuario necesita cambiar contraseña
-     */
-    public function needsPasswordChange(int $userId): bool
-    {
-        $user = $this->find($userId);
-        if (!$user) return false;
-        
-        // Verificar flag directo
-        if ($user['user_debe_cambiar_clave'] ?? false) {
-            return true;
-        }
-        
-        // Verificar por antigüedad (90 días)
-        if (isset($user['user_metadata'])) {
-            $metadata = is_string($user['user_metadata']) 
-                ? json_decode($user['user_metadata'], true) 
-                : $user['user_metadata'];
-                
-            $lastChange = $metadata['last_password_change'] ?? $user['created_at'] ?? null;
-            
-            if ($lastChange) {
-                $daysSinceChange = (time() - strtotime($lastChange)) / (60 * 60 * 24);
-                if ($daysSinceChange > 90) {
-                    return true;
-                }
-            }
-        }
-        
-        return false;
-    }
-
-    /**
-     * Obtener configuraciones de seguridad del usuario
-     */
-    public function getSecuritySettings(int $userId): array
-    {
-        $user = $this->find($userId);
-        if (!$user || !isset($user['user_security_settings'])) return [];
-        
-        if (is_string($user['user_security_settings'])) {
-            return json_decode($user['user_security_settings'], true) ?? [];
-        }
-        
-        return $user['user_security_settings'] ?? [];
-    }
-
-    /**
-     * Obtener historial de login
-     */
-    public function getLoginHistory(int $userId, int $limit = 10): array
-    {
-        $user = $this->find($userId);
-        if (!$user || !isset($user['user_login_history'])) return [];
-        
-        $history = is_string($user['user_login_history']) 
-            ? json_decode($user['user_login_history'], true) 
-            : $user['user_login_history'];
-            
-        return array_slice($history ?? [], 0, $limit);
-    }
-
-    /**
-     * Obtener estadísticas mejoradas
-     */
-    public function getEnhancedStats(): array
-    {
-        $stats = $this->getStats();
-        
-        // Agregar estadísticas adicionales
-        $allUsers = $this->findAll();
-        
-        $stats['need_password_change'] = 0;
-        $stats['recent_logins_24h'] = 0;
-        $stats['locked_accounts'] = 0;
-        
-        foreach ($allUsers as $user) {
-            // Usuarios que necesitan cambiar contraseña
-            if ($this->needsPasswordChange($user['user_id'])) {
-                $stats['need_password_change']++;
-            }
-            
-            // Logins en las últimas 24 horas
-            if ($user['user_ultimo_acceso'] ?? false) {
-                $hoursSinceLogin = (time() - strtotime($user['user_ultimo_acceso'])) / 3600;
-                if ($hoursSinceLogin <= 24) {
-                    $stats['recent_logins_24h']++;
-                }
-            }
-            
-            // Cuentas bloqueadas
-            if (($user['user_intentos_login'] ?? 0) >= 5) {
-                $stats['locked_accounts']++;
-            }
-        }
-        
-        return $stats;
     }
 }

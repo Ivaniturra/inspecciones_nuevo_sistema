@@ -182,7 +182,8 @@ Gestión de Usuarios
                         </thead>
                         <tbody>
                             <?php foreach ($usuarios as $usuario): ?>
-                                <tr data-tipo="<?= $usuario['perfil_tipo'] ?>" 
+                                <tr data-id="<?= (int)$usuario['user_id'] ?>"
+                                    data-tipo="<?= $usuario['perfil_tipo'] ?>" 
                                     data-estado="<?= $usuario['user_habil'] ? 'activo' : 'inactivo' ?>"
                                     data-search="<?= strtolower($usuario['user_nombre'] . ' ' . $usuario['user_email'] . ' ' . ($usuario['cia_nombre'] ?? '')) ?>">
                                     <td>
@@ -264,13 +265,14 @@ Gestión de Usuarios
                                         <?php endif; ?>
                                     </td>
                                     <td>
+                                        <?php if (!empty($canToggle) && $canToggle): ?>
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input status-toggle" 
-                                                   type="checkbox" 
-                                                   <?= $usuario['user_habil'] ? 'checked' : '' ?>
-                                                   data-id="<?= $usuario['user_id'] ?>"
-                                                   title="Cambiar estado">
+                                            <input class="form-check-input status-toggle"
+                                                type="checkbox"
+                                                <?= $usuario['user_habil'] ? 'checked' : '' ?>
+                                                data-id="<?= $usuario['user_id'] ?>">
                                         </div>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
@@ -284,23 +286,26 @@ Gestión de Usuarios
                                                title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-outline-info reset-password-btn" 
+                                            <!-- Reset password -->
+                                            <?php if (!empty($canReset) && $canReset): ?>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-info reset-password-btn"
                                                     data-id="<?= $usuario['user_id'] ?>"
-                                                    data-name="<?= esc($usuario['user_nombre']) ?>"
-                                                    title="Resetear contraseña">
+                                                    data-name="<?= esc($usuario['user_nombre']) ?>">
                                                 <i class="fas fa-key"></i>
                                             </button>
-                                            <form method="post" action="<?= base_url('users/delete/' . $usuario['user_id']) ?>" style="display: inline;">
+                                            <?php endif; ?>
+                                            <!-- Eliminar -->
+                                            <?php if (!empty($canDelete) && $canDelete): ?>
+                                            <form method="post" action="<?= base_url('users/delete/' . $usuario['user_id']) ?>" style="display:inline;">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="_method" value="DELETE">
-                                                <button type="submit" 
-                                                        class="btn btn-sm btn-outline-danger" 
-                                                        title="Eliminar"
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
                                                         onclick="return confirm('¿Estás seguro de eliminar este usuario?')">
-                                                    <i class="fas fa-trash"></i>
+                                                <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
@@ -317,6 +322,26 @@ Gestión de Usuarios
 <?= $this->section('scripts') ?>
 <script>
 $(document).ready(function() {
+    const flashSuccess = `<?= addslashes(session()->getFlashdata('success') ?? '') ?>`;
+    if (flashSuccess) {
+    Swal.fire({
+        icon: 'success',
+        title: flashSuccess,
+        timer: 2500,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+    });
+    }
+    const newId = '<?= (int)(session()->getFlashdata('new_user_id') ?? 0) ?>';
+        if (Number(newId) > 0) {
+        const $row = $('tr[data-id="'+ newId +'"]');
+        if ($row.length) {
+            $row.addClass('table-success'); // highlight Bootstrap
+            $row[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => $row.removeClass('table-success'), 4000);
+        }
+    }
     console.log('=== Index Users: Document ready ===');
     
     // Debug: verificar si existen los botones

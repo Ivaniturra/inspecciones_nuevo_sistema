@@ -15,155 +15,161 @@ class Perfiles extends BaseController
     }
 
     /**
-     * Mostrar listado de perfiles
+     * Listado de perfiles
      */
     public function index()
     {
         $data = [
-            'title' => 'Gestión de Perfiles',
-            'perfiles' => $this->perfilModel->getPerfilesWithUserCount()
+            'title'    => 'Gestión de Perfiles',
+            'perfiles' => $this->perfilModel->getPerfilesWithUserCount(),
         ];
 
         return view('perfiles/index', $data);
     }
 
     /**
-     * Mostrar formulario de creación
+     * Formulario de creación
      */
     public function create()
     {
         $data = [
-            'title' => 'Nuevo Perfil',
+            'title'            => 'Nuevo Perfil',
             'permisosCompania' => $this->perfilModel->getPermisosDisponibles('compania'),
-            'permisosInternos' => $this->perfilModel->getPermisosDisponibles('interno')
+            'permisosInternos' => $this->perfilModel->getPermisosDisponibles('interno'),
         ];
 
         return view('perfiles/create', $data);
     }
 
     /**
-     * Procesar creación de perfil
+     * Guardar nuevo perfil
      */
     public function store()
     {
-        // Validación básica
-        if (!$this->validate([
+        // Validación
+        $rules = [
             'perfil_nombre' => 'required|min_length[3]|max_length[100]',
-            'perfil_tipo' => 'required|in_list[compania,interno]',
-            'perfil_nivel' => 'required|integer|greater_than[0]|less_than[5]'
-        ])) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
-
-        // Procesar permisos
-        $permisos = [];
-        $permisosPost = $this->request->getPost('permisos') ?? [];
-        
-        foreach ($permisosPost as $permiso) {
-            $permisos[$permiso] = true;
-        }
-
-        // Guardar datos
-        $data = [
-            'perfil_nombre' => $this->request->getPost('perfil_nombre'),
-            'perfil_tipo' => $this->request->getPost('perfil_tipo'),
-            'perfil_descripcion' => $this->request->getPost('perfil_descripcion'),
-            'perfil_permisos' => $permisos,
-            'perfil_nivel' => $this->request->getPost('perfil_nivel'),
-            'perfil_habil' => $this->request->getPost('perfil_habil') ?? 1
+            'perfil_tipo'   => 'required|in_list[compania,interno]',
+            'perfil_nivel'  => 'required|integer|greater_than[0]|less_than[5]',
         ];
+
+        if (! $this->validate($rules)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', $this->validator->getErrors());
+        }
+
+        // Normaliza y filtra permisos por tipo
+        $tipo              = $this->request->getPost('perfil_tipo');
+        $permisosMarcados  = (array) ($this->request->getPost('permisos') ?? []);
+        $permisosCompania  = $this->perfilModel->getPermisosDisponibles('compania');
+        $permisosInternos  = $this->perfilModel->getPermisosDisponibles('interno');
+        $permisosFiltrados = $this->filtrarPermisos($tipo, $permisosMarcados, $permisosCompania, $permisosInternos);
+
+        $data = [
+            'perfil_nombre'      => trim((string) $this->request->getPost('perfil_nombre')),
+            'perfil_tipo'        => $tipo,
+            'perfil_descripcion' => (string) $this->request->getPost('perfil_descripcion'),
+            'perfil_permisos'    => $permisosFiltrados, // PerfilModel puede guardar como json automáticamente, si no, json_encode aquí
+            'perfil_nivel'       => (int) $this->request->getPost('perfil_nivel'),
+            'perfil_habil'       => (int) ($this->request->getPost('perfil_habil') ?? 1),
+        ];
+
+        // Si tu PerfilModel NO json_encode automáticamente, usa:
+        // $data['perfil_permisos'] = json_encode($permisosFiltrados, JSON_UNESCAPED_UNICODE);
 
         if ($this->perfilModel->save($data)) {
             return redirect()->to('/perfiles')->with('success', 'Perfil creado exitosamente');
-        } else {
-            return redirect()->back()->withInput()->with('error', 'Error al crear el perfil');
         }
+
+        return redirect()->back()->withInput()->with('error', 'Error al crear el perfil');
     }
 
     /**
-     * Mostrar detalles de un perfil
+     * Detalle de un perfil
      */
     public function show($id)
     {
-        $perfil = $this->perfilModel->find($id);
-        
-        if (!$perfil) {
+        $perfil = $this->perfilModel->find((int) $id);
+        if (! $perfil) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Perfil no encontrado');
         }
 
         $data = [
-            'title' => 'Detalles del Perfil',
-            'perfil' => $perfil,
-            'permisosDisponibles' => $this->perfilModel->getPermisosDisponibles($perfil['perfil_tipo'])
+            'title'               => 'Detalles del Perfil',
+            'perfil'              => $perfil,
+            'permisosDisponibles' => $this->perfilModel->getPermisosDisponibles($perfil['perfil_tipo'] ?? 'interno'),
         ];
 
         return view('perfiles/show', $data);
     }
 
     /**
-     * Mostrar formulario de edición
+     * Formulario de edición
      */
     public function edit($id)
     {
-        $perfil = $this->perfilModel->find($id);
-        
-        if (!$perfil) {
+        $perfil = $this->perfilModel->find((int) $id);
+        if (! $perfil) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Perfil no encontrado');
         }
 
         $data = [
-            'title' => 'Editar Perfil',
-            'perfil' => $perfil,
+            'title'            => 'Editar Perfil',
+            'perfil'           => $perfil,
             'permisosCompania' => $this->perfilModel->getPermisosDisponibles('compania'),
-            'permisosInternos' => $this->perfilModel->getPermisosDisponibles('interno')
+            'permisosInternos' => $this->perfilModel->getPermisosDisponibles('interno'),
         ];
 
         return view('perfiles/edit', $data);
     }
 
     /**
-     * Procesar actualización de perfil
+     * Actualizar perfil
      */
     public function update($id)
     {
+        $id     = (int) $id;
         $perfil = $this->perfilModel->find($id);
-        
-        if (!$perfil) {
+        if (! $perfil) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Perfil no encontrado');
         }
 
-        // Validación
-        if (!$this->validate([
+        $rules = [
             'perfil_nombre' => 'required|min_length[3]|max_length[100]',
-            'perfil_tipo' => 'required|in_list[compania,interno]',
-            'perfil_nivel' => 'required|integer|greater_than[0]|less_than[5]'
-        ])) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
-
-        // Procesar permisos
-        $permisos = [];
-        $permisosPost = $this->request->getPost('permisos') ?? [];
-        
-        foreach ($permisosPost as $permiso) {
-            $permisos[$permiso] = true;
-        }
-
-        // Actualizar datos
-        $data = [
-            'perfil_nombre' => $this->request->getPost('perfil_nombre'),
-            'perfil_tipo' => $this->request->getPost('perfil_tipo'),
-            'perfil_descripcion' => $this->request->getPost('perfil_descripcion'),
-            'perfil_permisos' => $permisos,
-            'perfil_nivel' => $this->request->getPost('perfil_nivel'),
-            'perfil_habil' => $this->request->getPost('perfil_habil')
+            'perfil_tipo'   => 'required|in_list[compania,interno]',
+            'perfil_nivel'  => 'required|integer|greater_than[0]|less_than[5]',
         ];
+
+        if (! $this->validate($rules)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', $this->validator->getErrors());
+        }
+
+        $tipo              = $this->request->getPost('perfil_tipo');
+        $permisosMarcados  = (array) ($this->request->getPost('permisos') ?? []);
+        $permisosCompania  = $this->perfilModel->getPermisosDisponibles('compania');
+        $permisosInternos  = $this->perfilModel->getPermisosDisponibles('interno');
+        $permisosFiltrados = $this->filtrarPermisos($tipo, $permisosMarcados, $permisosCompania, $permisosInternos);
+
+        $data = [
+            'perfil_nombre'      => trim((string) $this->request->getPost('perfil_nombre')),
+            'perfil_tipo'        => $tipo,
+            'perfil_descripcion' => (string) $this->request->getPost('perfil_descripcion'),
+            'perfil_permisos'    => $permisosFiltrados,
+            'perfil_nivel'       => (int) $this->request->getPost('perfil_nivel'),
+            'perfil_habil'       => (int) $this->request->getPost('perfil_habil'),
+        ];
+
+        // Si tu PerfilModel NO json_encode automáticamente, usa:
+        // $data['perfil_permisos'] = json_encode($permisosFiltrados, JSON_UNESCAPED_UNICODE);
 
         if ($this->perfilModel->update($id, $data)) {
             return redirect()->to('/perfiles')->with('success', 'Perfil actualizado exitosamente');
-        } else {
-            return redirect()->back()->withInput()->with('error', 'Error al actualizar el perfil');
         }
+
+        return redirect()->back()->withInput()->with('error', 'Error al actualizar el perfil');
     }
 
     /**
@@ -171,44 +177,38 @@ class Perfiles extends BaseController
      */
     public function delete($id)
     {
+        $id     = (int) $id;
         $perfil = $this->perfilModel->find($id);
-        
-        if (!$perfil) {
+        if (! $perfil) {
             return redirect()->to('/perfiles')->with('error', 'Perfil no encontrado');
         }
 
-        // Verificar si se puede eliminar
-        if (!$this->perfilModel->canDelete($id)) {
+        if (! $this->perfilModel->canDelete($id)) {
             return redirect()->to('/perfiles')->with('error', 'No se puede eliminar el perfil porque tiene usuarios asociados');
         }
 
         if ($this->perfilModel->delete($id)) {
             return redirect()->to('/perfiles')->with('success', 'Perfil eliminado exitosamente');
-        } else {
-            return redirect()->to('/perfiles')->with('error', 'Error al eliminar el perfil');
         }
+
+        return redirect()->to('/perfiles')->with('error', 'Error al eliminar el perfil');
     }
 
     /**
-     * Cambiar estado de perfil (AJAX)
+     * Cambiar estado (AJAX)
      */
     public function toggleStatus($id)
     {
-        if (!$this->request->isAJAX()) {
+        if (! $this->request->isAJAX()) {
             return redirect()->to('/perfiles');
         }
 
-        if ($this->perfilModel->toggleStatus($id)) {
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Estado actualizado correctamente'
-            ]);
-        } else {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Error al actualizar el estado'
-            ]);
-        }
+        $ok = $this->perfilModel->toggleStatus((int) $id);
+
+        return $this->response->setJSON([
+            'success' => (bool) $ok,
+            'message' => $ok ? 'Estado actualizado correctamente' : 'Error al actualizar el estado',
+        ]);
     }
 
     /**
@@ -216,12 +216,13 @@ class Perfiles extends BaseController
      */
     public function getByTipo($tipo = null)
     {
-        if (!$this->request->isAJAX()) {
+        if (! $this->request->isAJAX()) {
             return redirect()->to('/perfiles');
         }
 
+        $tipo = in_array($tipo, ['compania', 'interno'], true) ? $tipo : null;
         $perfiles = $this->perfilModel->getPerfilesByTipo($tipo);
-        
+
         return $this->response->setJSON($perfiles);
     }
 
@@ -230,13 +231,39 @@ class Perfiles extends BaseController
      */
     public function getSelect()
     {
-        if (!$this->request->isAJAX()) {
+        if (! $this->request->isAJAX()) {
             return redirect()->to('/perfiles');
         }
 
         $tipo = $this->request->getGet('tipo');
+        $tipo = in_array($tipo, ['compania', 'interno'], true) ? $tipo : null;
+
         $perfiles = $this->perfilModel->getPerfilesByTipo($tipo);
-        
         return $this->response->setJSON($perfiles);
+    }
+
+    // =======================
+    // Helpers privados
+    // =======================
+
+    /**
+     * Filtra y normaliza los permisos marcados según el tipo.
+     * Devuelve array asociativo: ['clave_permiso' => true, ...]
+     */
+    private function filtrarPermisos(string $tipo, array $marcados, array $compania, array $interno): array
+    {
+        // Lista blanca según tipo
+        $permitidos = ($tipo === 'compania') ? array_keys($compania) : array_keys($interno);
+
+        // Mantener solo los que están permitidos
+        $marcados = array_values(array_unique(array_map('strval', $marcados)));
+        $marcados = array_intersect($marcados, array_map('strval', $permitidos));
+
+        // Volver asociativo key => true
+        $asoc = [];
+        foreach ($marcados as $k) {
+            $asoc[(string) $k] = true;
+        }
+        return $asoc;
     }
 }

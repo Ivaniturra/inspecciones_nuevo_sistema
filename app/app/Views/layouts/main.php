@@ -1,478 +1,519 @@
- <!DOCTYPE html>
+<?php
+$theme        = theme();
+$appTitle     = $theme['title'] ?? 'InspectZu';
+$brandTitle   = $theme['brand_title'] ?? $appTitle;
+$brandLogo    = $theme['logo'] ?? null;
+$navBg        = $theme['nav_bg'] ?? '#6c3dd1';
+$navText      = $theme['nav_text'] ?? '#ffffff';
+$sideStart    = $theme['sidebar_start'] ?? '#667eea';
+$sideEnd      = $theme['sidebar_end'] ?? '#764ba2';
+?>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title><?= $this->renderSection('title') ?> - <?= env('APP_TITLE', 'InspectZu') ?></title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-    
-    <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
-    
-    <!-- Custom CSS -->
-    <style>
-        :root {
-            --primary-color: #0d6efd;
-            --secondary-color: #6c757d;
-            --success-color: #198754;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --info-color: #0dcaf0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= $this->renderSection('title') ?> - <?= esc($appTitle) ?></title>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f8f9fa;
-        }
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<!-- DataTables -->
+<link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
+<!-- SweetAlert2 -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
 
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
+<style>
+:root{
+  --nav-h: 56px;
+  --rail-collapsed: 72px;
+  --rail-expanded: 240px;
+  --hover-bg: rgba(255,255,255,.14);
+  --active-bg: rgba(255,255,255,.22);
+  --accent: #0d6efd;
 
-        .sidebar {
-            min-height: calc(100vh - 56px);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 2px 0 10px rgba(0,0,0,.1);
-        }
+  --brand-nav-bg:   <?= esc($navBg) ?>;
+  --brand-nav-text: <?= esc($navText) ?>;
+  --brand-side-start: <?= esc($sideStart) ?>;
+  --brand-side-end:   <?= esc($sideEnd) ?>;
+}
 
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.85);
-            padding: 0.75rem 1rem;
-            margin: 0.25rem 0.5rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
+/* NAVBAR */
+.navbar.brandbar{ background: var(--brand-nav-bg) !important; }
+.navbar.brandbar .navbar-brand,
+.navbar.brandbar .nav-link,
+.navbar.brandbar .navbar-toggler,
+.navbar.brandbar .dropdown-item{ color: var(--brand-nav-text) !important; }
 
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            color: #fff;
-            background-color: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-        }
+.brand-logo{ height:22px; width:auto; display:block; cursor:pointer; }
+@media (min-width:576px){ .brand-logo{ height:26px; } }
+.brand-text{ color:var(--brand-nav-text); }
 
-        .sidebar .nav-link i {
-            width: 20px;
-            margin-right: 0.5rem;
-        }
+/* aseguro clic de hamburguesa por encima */
+.navbar .navbar-toggler{ position:relative; z-index:1060; }
+.navbar .navbar-brand{ position:relative; z-index:1050; }
 
-        .main-content {
-            background-color: #fff;
-            min-height: calc(100vh - 56px);
-            border-radius: 15px 0 0 0;
-            box-shadow: -2px 0 10px rgba(0,0,0,.05);
-        }
+/* SIDEBAR */
+.sidebar-rail{
+  position: fixed; top: var(--nav-h); left: 0;
+  width: var(--rail-collapsed);
+  height: calc(100vh - var(--nav-h));
+  overflow-y: auto;
+  background: linear-gradient(180deg,var(--brand-side-start) 0%,var(--brand-side-end) 100%);
+  z-index: 1030;
+  transition: width .18s ease, transform .18s ease;
+  box-shadow: 2px 0 10px rgba(0,0,0,.06);
+}
+.sidebar-rail .rail-header{
+  height:48px; display:flex; align-items:center; justify-content:flex-end;
+  padding:0 .5rem; border-bottom:1px solid rgba(255,255,255,.25);
+}
+.sidebar-rail .pin-btn{ border:0; background:transparent; color:#f8f9fa; width:34px; height:34px; border-radius:8px; }
 
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+.sidebar-rail .nav{ padding:.5rem .5rem 1rem }
+.sidebar-rail .nav-link{
+  display:flex; align-items:center; gap:.75rem;
+  color:#212529; border-radius:10px;
+  padding:.6rem .75rem; margin:.15rem .25rem;
+  white-space:nowrap; background:transparent;
+  transition: background .15s ease, color .15s ease;
+}
+.sidebar-rail .nav-link .icon{ width:22px; text-align:center; font-size:1.05rem; }
+.sidebar-rail .nav-link .label{ opacity:0; transform:translateX(-6px); transition:opacity .15s, transform .15s; }
+.sidebar-rail .nav-link:hover{ background:var(--hover-bg); color:#111; }
+.sidebar-rail .nav-link.active{ background:var(--active-bg); color:var(--accent); }
 
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0,0,0,.12);
-        }
+.sidebar-rail .rail-section{
+  font-size:.72rem; letter-spacing:.02em;
+  color:rgba(255,255,255,.85);
+  padding:.65rem .9rem .25rem; text-transform:uppercase;
+}
 
-        .btn {
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
+/* expandido por pin */
+.sidebar-rail.pinned{ width: var(--rail-expanded); }
+.sidebar-rail.pinned .label{ opacity:1; transform:none }
 
-        .btn:hover {
-            transform: translateY(-1px);
-        }
+/* CONTENIDO */
+.main-wrap{ padding-left: var(--rail-collapsed); transition: padding-left .18s ease; }
+main.main-content{ min-height: calc(100vh - var(--nav-h)); }
+.sidebar-rail.pinned ~ .main-wrap{ padding-left: var(--rail-expanded); }
 
-        .table th {
-            border-top: none;
-            font-weight: 600;
-            color: #495057;
-            background-color: #f8f9fa;
-        }
+/* MÓVIL */
+@media (max-width:991.98px){
+  .sidebar-rail{ transform: translateX(-100%); width: var(--rail-expanded); }
+  .sidebar-rail.show{ transform: translateX(0); }
+  .main-wrap{ padding-left:0; }
+  .sidebar-backdrop{
+    position: fixed; inset: var(--nav-h) 0 0 0;
+    background: rgba(0,0,0,.35); z-index:1029; display:none;
+  }
+}
+.sidebar-backdrop { pointer-events: none; }
+.sidebar-backdrop.show { display:block; pointer-events: auto; }
 
-        .badge {
-            font-weight: 500;
-        }
+/* Ocultar títulos colapsado */
+.sidebar-rail .rail-section { display: none; }
+.sidebar-rail.pinned .rail-section { display: block; }
+.sidebar-rail.pinned .label { opacity: 1; transform: none; }
+@media (max-width: 991.98px){
+  .sidebar-rail.show .rail-section { display: block; }
+  .sidebar-rail.show .label { opacity: 1; transform: none; }
+}
+/* Asegura que el tooltip NO capture el mouse (evita flicker) */
+/* Evita layout shift en hover */
+.tooltip{ pointer-events: none !important; }
 
-        .form-control,
-        .form-select {
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
+</style>
 
-        .form-control:focus,
-        .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-
-        .alert {
-            border: none;
-            border-radius: 10px;
-        }
-
-        .navbar {
-            box-shadow: 0 2px 10px rgba(0,0,0,.1);
-        }
-
-        .breadcrumb {
-            background: none;
-            padding: 0;
-        }
-
-        .breadcrumb-item + .breadcrumb-item::before {
-            content: "›";
-            font-weight: 600;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-
-        /* Loading animation */
-        .spinner-border-sm {
-            width: 1rem;
-            height: 1rem;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                top: 56px;
-                left: 0;
-                z-index: 1040;
-                width: 250px;
-                height: calc(100vh - 56px);
-                margin-left: -250px;
-                transition: margin-left 0.3s ease;
-                box-shadow: 2px 0 10px rgba(0,0,0,.3);
-            }
-            
-            .sidebar.show {
-                margin-left: 0;
-            }
-            
-            .main-content {
-                border-radius: 0;
-                margin-left: 0 !important;
-            }
-            
-            /* Overlay para cerrar sidebar */
-            .sidebar.show::before {
-                content: '';
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                height: 100vh;
-                background: rgba(0,0,0,0.5);
-                z-index: -1;
-            }
-        }
-    </style>
-
-    <?= $this->renderSection('styles') ?>
+<?= $this->renderSection('styles') ?>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
-        <div class="container-fluid">
-            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <a class="navbar-brand" href="<?= base_url() ?>">
-                <i class="fas fa-shield-alt me-2"></i>
-                <?= env('APP_TITLE', 'InspectZu') ?>
-            </a>
 
-            <div class="navbar-nav ms-auto">
-                <div class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-2"></i>
-                        <span class="d-none d-md-inline">Usuario Admin</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </nav>
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark brandbar sticky-top" style="height:var(--nav-h);">
+  <div class="container-fluid">
+    <!-- Hamburguesa (móvil) -->
+    <button class="navbar-toggler d-lg-none me-1" type="button" id="toggleRailBtn" aria-label="Abrir menú">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-lg-2 d-lg-block sidebar collapse" id="sidebar">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="<?= base_url() ?>">
-                                <i class="fas fa-tachometer-alt"></i>
-                                Dashboard
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
-                                <span>ADMINISTRACIÓN</span>
-                            </h6>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= base_url('cias') ?>">
-                                <i class="fas fa-building"></i>
-                                Compañías
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= base_url('perfiles') ?>">
-                                <i class="fas fa-user-tag"></i>
-                                Perfiles
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= base_url('users') ?>">
-                                <i class="fas fa-users"></i>
-                                Usuarios
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
-                                <span>INSPECCIONES</span>
-                            </h6>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-clipboard-list"></i>
-                                Inspecciones
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-chart-bar"></i>
-                                Reportes
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
-                                <span>CONFIGURACIÓN</span>
-                            </h6>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-cogs"></i>
-                                Sistema
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-
-            <!-- Main Content -->
-            <main class="col-lg-10 ms-sm-auto px-md-4 main-content">
-                <div class="pt-3 pb-2">
-                    <!-- Breadcrumb -->
-                    <?= $this->renderSection('breadcrumb') ?>
-                    
-                    <!-- Page Content -->
-                    <?= $this->renderSection('content') ?>
-                </div>
-            </main>
-        </div>
+    <!-- Marca: logo (botón) + texto con href -->
+    <div class="navbar-brand d-flex align-items-center">
+      <?php if (!empty($brandLogo)): ?>
+        <img id="brandPinLogo"
+             src="<?= strpos($brandLogo, 'http') === 0 ? esc($brandLogo) : esc(base_url($brandLogo)) ?>"
+             alt="<?= esc($brandTitle) ?>"
+             class="brand-logo me-3"
+             role="button"
+             aria-pressed="false">
+      <?php else: ?>
+        <i class="fas fa-shield-alt me-3" role="button" id="brandPinLogo"></i>
+      <?php endif; ?>
+      <a href="<?= base_url('/') ?>" class="brand-text text-decoration-none d-none d-sm-inline">
+        <?= esc($brandTitle) ?>
+      </a>
     </div>
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-    
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
-    
-    <!-- Custom JS -->
-    <script>
-        $(document).ready(function() {
-            // Auto-hide alerts after 5 seconds
-            $('.alert').delay(5000).fadeOut();
-            
-            // Sidebar toggle mejorado
-            let sidebarOpen = false;
-            
-            $('.navbar-toggler').on('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const sidebar = $('#sidebar');
-                
-                if (sidebarOpen) {
-                    sidebar.removeClass('show');
-                    sidebarOpen = false;
-                } else {
-                    sidebar.addClass('show');
-                    sidebarOpen = true;
-                }
-            });
-            
-            // Cerrar sidebar al hacer click fuera (solo en móvil)
-            $(document).on('click', function(e) {
-                if (window.innerWidth <= 768 && sidebarOpen) {
-                    if (!$(e.target).closest('#sidebar, .navbar-toggler').length) {
-                        $('#sidebar').removeClass('show');
-                        sidebarOpen = false;
-                    }
-                }
-            });
-            
-            // Cerrar sidebar cuando se cambia a desktop
-            $(window).on('resize', function() {
-                if (window.innerWidth > 768) {
-                    $('#sidebar').removeClass('show');
-                    sidebarOpen = false;
-                }
-            });
-            
-            // Active navigation mejorado
-            const currentPath = window.location.pathname;
-            $('.sidebar .nav-link').removeClass('active');
-            
-            // Buscar coincidencia exacta primero
-            let exactMatch = false;
-            $('.sidebar .nav-link').each(function() {
-                const linkPath = new URL(this.href).pathname;
-                if (currentPath === linkPath) {
-                    $(this).addClass('active');
-                    exactMatch = true;
-                    return false; // break
-                }
-            });
-            
-            // Si no hay coincidencia exacta, buscar por coincidencia de inicio
-            if (!exactMatch) {
-                $('.sidebar .nav-link').each(function() {
-                    const linkPath = new URL(this.href).pathname;
-                    if (linkPath !== '/' && currentPath.startsWith(linkPath)) {
-                        $(this).addClass('active');
-                        return false; // break
-                    }
-                });
-            }
-            
-            // Tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-            
-            // Confirm dialogs
-            $('.btn-danger[data-confirm]').on('click', function(e) {
-                e.preventDefault();
-                const form = $(this).closest('form');
-                const message = $(this).data('confirm') || '¿Estás seguro de realizar esta acción?';
-                
-                Swal.fire({
-                    title: 'Confirmar acción',
-                    text: message,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc3545',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Sí, continuar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
-                });
-            });
-        });
-        
-        // Global AJAX setup for CSRF
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-                }
-            }
-        });
-        
-        // Success message function
-        function showSuccess(message) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: message,
-                timer: 3000,
-                showConfirmButton: false
-            });
-        }
-        
-        // Error message function
-        function showError(message) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: message
-            });
-        }
-        
-        // Loading function
-        function showLoading() {
-            Swal.fire({
-                title: 'Procesando...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-        }
-    </script>
+    <div class="ms-auto d-flex align-items-center">
+      <!-- Pin/unpin (desktop) -->
+      <button class="btn btn-sm btn-outline-light me-2 d-none d-lg-inline-flex" id="btnPin" title="Fijar/soltar menú">
+        <i class="fas fa-thumbtack"></i>
+      </button>
 
-    <?= $this->renderSection('scripts') ?>
+      <!-- Usuario -->
+      <div class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown">
+          <i class="fas fa-user-circle me-2"></i>
+          <span class="d-none d-sm-inline"><?= esc(session('user_name') ?? 'Usuario') ?></span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
+          <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Salir</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="sidebar-rail">
+  <div class="rail-header">
+    <button class="pin-btn" id="btnPinHeader" title="Expandir/Colapsar"><i class="fa-solid fa-thumbtack"></i></button>
+  </div>
+
+  <nav class="nav flex-column">
+    <div class="rail-section">General</div>
+    <a class="nav-link <?= url_is('/') ? 'active' : '' ?>" href="<?= base_url('/') ?>" data-bs-toggle="tooltip" data-bs-title="Dashboard">
+      <i class="icon fa-solid fa-chart-simple"></i><span class="label">Dashboard</span>
+    </a>
+
+    <div class="rail-section">Administración</div>
+    <a class="nav-link <?= url_is('cias') || url_is('cias/*') ? 'active' : '' ?>" href="<?= base_url('cias') ?>" data-bs-toggle="tooltip" data-bs-title="Compañías">
+      <i class="icon fa-solid fa-building"></i><span class="label">Compañías</span>
+    </a>
+    <a class="nav-link <?= url_is('perfiles') || url_is('perfiles/*') ? 'active' : '' ?>" href="<?= base_url('perfiles') ?>" data-bs-toggle="tooltip" data-bs-title="Perfiles">
+      <i class="icon fa-solid fa-id-badge"></i><span class="label">Perfiles</span>
+    </a>
+    <a class="nav-link <?= url_is('users') || url_is('users/*') ? 'active' : '' ?>" href="<?= base_url('users') ?>" data-bs-toggle="tooltip" data-bs-title="Usuarios">
+      <i class="icon fa-solid fa-user-group"></i><span class="label">Usuarios</span>
+    </a>
+
+    <div class="rail-section">Operación</div>
+    <a class="nav-link <?= url_is('inspecciones') || url_is('inspecciones/*') ? 'active' : '' ?>" href="<?= base_url('inspecciones') ?>" data-bs-toggle="tooltip" data-bs-title="Inspecciones">
+      <i class="icon fa-solid fa-clipboard-list"></i><span class="label">Inspecciones</span>
+    </a>
+    <a class="nav-link <?= url_is('reportes') || url_is('reportes/*') ? 'active' : '' ?>" href="<?= base_url('reportes') ?>" data-bs-toggle="tooltip" data-bs-title="Reportes">
+      <i class="icon fa-solid fa-chart-bar"></i><span class="label">Reportes</span>
+    </a>
+
+    <div class="rail-section">Sistema</div>
+    <a class="nav-link <?= url_is('sistema') || url_is('sistema/*') ? 'active' : '' ?>" href="<?= base_url('sistema') ?>" data-bs-toggle="tooltip" data-bs-title="Sistema">
+      <i class="icon fa-solid fa-gear"></i><span class="label">Sistema</span>
+    </a>
+  </nav>
+</aside>
+
+<div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+<!-- CONTENIDO -->
+<div class="main-wrap">
+  <main class="main-content px-3 px-md-4 pt-3 pb-4">
+    <?= $this->renderSection('breadcrumb') ?>
+    <?= $this->renderSection('content') ?>
+  </main>
+</div>
+
+<!-- JS libs -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+<!-- === Lógica de Sidebar con tooltips estables === -->
+<script>
+(() => {
+  const sidebar   = document.getElementById('sidebar');
+  const backdrop  = document.getElementById('sidebarBackdrop');
+  const btnOpen   = document.getElementById('toggleRailBtn');
+  const btnPins = [
+    document.getElementById('btnPin'),
+    document.getElementById('btnPinHeader'),
+    document.getElementById('pinRailBtn')
+  ].filter(Boolean);
+  const brandPinLogo = document.getElementById('brandPinLogo');
+
+  const isDesktop = () => window.innerWidth >= 992;
+
+  // Persistencia de pin solo para desktop
+  const getPrefPinned = () => localStorage.getItem('railPinned') === '1';
+  const setPrefPinned = (v) => localStorage.setItem('railPinned', v ? '1' : '0');
+
+ // === TOOLTIP HELPERS (anclados al ícono, pegados) ===
+/* === TOOLTIP HELPERS sin parpadeo, anclados al ícono === */
+/* === TOOLTIP HELPERS (robustos, sin flicker, anclados al ícono) === */
+/* === TOOLTIP HELPERS: anclado al .icon, hover desde el <a> === */
+const enableTooltips = () => {
+  const DIST = 4; // distancia desde el borde derecho del icono (px)
+
+  document.querySelectorAll('#sidebar a.nav-link').forEach(link => {
+    const icon = link.querySelector('.icon') || link; // fallback
+
+    // 1) Tomar título (data-bs-title / title / .label)
+    let title =
+      icon.getAttribute('data-bs-title') ||
+      icon.getAttribute('title') ||
+      link.getAttribute('data-bs-title') ||
+      link.getAttribute('title') ||
+      (link.querySelector('.label')?.textContent || '');
+
+    title = (title || '').trim();
+    if (!title) return;
+
+    // 2) Destruir instancias previas y limpiar attrs en ambos
+    [link, icon].forEach(el => {
+      const t = bootstrap.Tooltip.getInstance(el);
+      if (t) t.dispose();
+      el.removeAttribute('title');
+      el.removeAttribute('data-bs-title');
+      el.removeAttribute('data-bs-toggle');
+    });
+
+    // 3) Crear tooltip SOLO en el icono (posición perfecta)
+    icon.setAttribute('data-bs-toggle', 'tooltip');
+    icon.setAttribute('data-bs-title', title);
+
+    const tip = new bootstrap.Tooltip(icon, {
+      placement: 'right',
+      container: 'body',
+      boundary: 'viewport',
+      trigger: 'manual',          // lo manejamos nosotros para evitar flicker
+      delay: { show: 120, hide: 120 },
+      popperConfig: (def) => {
+        const cfg = typeof def === 'function' ? def() : (def || {});
+        const mods = (cfg.modifiers || []).filter(m => m.name !== 'offset');
+        mods.push(
+          { name: 'offset', options: { offset: [0, DIST] } },
+          { name: 'flip', options: { fallbackPlacements: ['right-start','right-end'] } },
+          { name: 'preventOverflow', options: { padding: 4, tether: true } }
+        );
+        return { ...cfg, modifiers: mods };
+      }
+    });
+
+    // 4) Reenviar hover del LINK al tooltip del ICONO (sin parpadeo)
+    let inside = false, hideTimer = null;
+    const show = () => { clearTimeout(hideTimer); if (!inside) { inside = true; tip.show(); } };
+    const hide = () => { hideTimer = setTimeout(() => { inside = false; tip.hide(); }, 100); };
+
+    link.addEventListener('mouseenter', show);
+    link.addEventListener('mouseleave', hide);
+    // también por accesibilidad
+    link.addEventListener('focusin', show);
+    link.addEventListener('focusout', hide);
+  });
+};
+
+const disableTooltips = () => {
+  document.querySelectorAll('#sidebar a.nav-link, #sidebar a.nav-link .icon').forEach(el => {
+    const t = bootstrap.Tooltip.getInstance(el);
+    if (t) t.dispose();
+    el.removeAttribute('title');
+    el.removeAttribute('data-bs-title');
+    el.removeAttribute('data-bs-toggle');
+  });
+};
+  const refreshTooltipsAfterTransition = () => {
+    // tooltips solo cuando el rail está colapsado en desktop
+    const shouldEnable = isDesktop() && !sidebar.classList.contains('pinned') && !sidebar.classList.contains('show');
+    if (shouldEnable) enableTooltips();
+  };
+
+  // Estado inicial según viewport
+  const applyDesktopState = () => {
+    sidebar.classList.remove('show');
+    backdrop.classList.remove('show');
+    const wantPinned = getPrefPinned();
+    sidebar.classList.toggle('pinned', wantPinned);
+    if (wantPinned) disableTooltips(); else enableTooltips();
+  };
+  const applyMobileState = () => {
+    sidebar.classList.remove('pinned');
+    disableTooltips();
+  };
+
+  // Acciones
+  const togglePinned = () => {
+    if (!isDesktop()) return;
+    disableTooltips(); // descartar antes del cambio
+
+    const nowPinned = !sidebar.classList.contains('pinned');
+    sidebar.classList.toggle('pinned', nowPinned);
+    setPrefPinned(nowPinned);
+
+    sidebar.classList.remove('show');
+    backdrop.classList.remove('show');
+
+    const onEnd = (e) => {
+      if (e.propertyName === 'width' || e.propertyName === 'transform') {
+        sidebar.removeEventListener('transitionend', onEnd);
+        refreshTooltipsAfterTransition();
+      }
+    };
+    sidebar.addEventListener('transitionend', onEnd);
+  };
+
+  const toggleMobile = () => {
+    disableTooltips();            // descartar antes del slide
+    sidebar.classList.remove('pinned'); // en móvil no usamos pinned
+
+    const isOpen = sidebar.classList.contains('show');
+    sidebar.classList.toggle('show', !isOpen);
+    backdrop.classList.toggle('show', !isOpen);
+
+    const onEnd = (e) => {
+      if (e.propertyName === 'transform') {
+        sidebar.removeEventListener('transitionend', onEnd);
+        refreshTooltipsAfterTransition();
+      }
+    };
+    sidebar.addEventListener('transitionend', onEnd);
+  };
+
+  const closeMobile = () => {
+    sidebar.classList.remove('show');
+    backdrop.classList.remove('show');
+  };
+
+  // Eventos
+  document.querySelectorAll('#toggleRailBtn, .navbar-toggler').forEach(el=>{
+    el.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); toggleMobile(); });
+  });
+  btnPins.forEach(btn => btn.addEventListener('click', () => isDesktop() ? togglePinned() : toggleMobile()));
+  if (brandPinLogo) {
+    brandPinLogo.addEventListener('click', (e) => {
+      e.preventDefault?.(); e.stopPropagation?.();
+      if (isDesktop()) togglePinned(); else toggleMobile();
+    });
+  }
+  backdrop.addEventListener('click', closeMobile);
+  sidebar.querySelectorAll('a.nav-link').forEach(a => a.addEventListener('click', () => { if (!isDesktop()) closeMobile(); }));
+
+  // Resize: cambiar de modo limpio
+  let lastIsDesktop = isDesktop();
+  const handleResize = () => {
+    const now = isDesktop();
+    if (now !== lastIsDesktop) {
+      disableTooltips();
+      if (now) applyDesktopState(); else applyMobileState();
+      refreshTooltipsAfterTransition();
+      lastIsDesktop = now;
+    }
+  };
+  window.addEventListener('resize', handleResize);
+
+  // Estado inicial
+  if (isDesktop()) applyDesktopState(); else applyMobileState();
+
+  // API opcional
+  window.Sidebar = { toggleMobile, closeMobile, togglePinned, isDesktop };
+})();
+</script>
+
+<!-- === Tus scripts jQuery integrados === -->
+<script>
+$(document).ready(function() {
+  // Auto-hide alerts
+  $('.alert').delay(5000).fadeOut();
+
+  // Sidebar toggle via API común (evita estados duplicados)
+  $('.navbar-toggler').on('click', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    window.Sidebar?.toggleMobile();
+  });
+
+  // Cerrar al hacer click fuera (móvil)
+  $(document).on('click', function(e) {
+    if (!window.Sidebar?.isDesktop() && $('#sidebar').hasClass('show')) {
+      if (!$(e.target).closest('#sidebar, .navbar-toggler, #brandPinLogo').length) {
+        window.Sidebar?.closeMobile();
+      }
+    }
+  });
+
+  // Active navigation mejorado
+  const currentPath = window.location.pathname;
+  $('.sidebar-rail .nav-link').removeClass('active');
+  let exactMatch = false;
+  $('.sidebar-rail .nav-link').each(function() {
+    const linkPath = new URL(this.href, window.location.origin).pathname;
+    if (currentPath === linkPath) {
+      $(this).addClass('active');
+      exactMatch = true;
+      return false;
+    }
+  });
+  if (!exactMatch) {
+    $('.sidebar-rail .nav-link').each(function() {
+      const linkPath = new URL(this.href, window.location.origin).pathname;
+      if (linkPath !== '/' && currentPath.startsWith(linkPath)) {
+        $(this).addClass('active');
+        return false;
+      }
+    });
+  }
+
+  // Tooltips globales (fuera del rail), también pegados
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]:not(#sidebar [data-bs-toggle="tooltip"])'));
+  tooltipTriggerList.map(function (el) {
+    return new bootstrap.Tooltip(el, { placement: 'top', offset: [0, 6] });
+  });
+
+  // Confirm dialogs
+  $('.btn-danger[data-confirm]').on('click', function(e) {
+    e.preventDefault();
+    const form = $(this).closest('form');
+    const message = $(this).data('confirm') || '¿Estás seguro de realizar esta acción?';
+    Swal.fire({
+      title: 'Confirmar acción',
+      text: message,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, continuar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => { if (result.isConfirmed) form.submit(); });
+  });
+});
+
+// Global AJAX setup básico (puedes añadir CSRF headers aquí si los necesitas)
+$.ajaxSetup({
+  beforeSend: function(xhr, settings) {
+    if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+      xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    }
+  }
+});
+
+// Helpers SweetAlert globales
+function showSuccess(message) {
+  Swal.fire({ icon: 'success', title: 'Éxito', text: message, timer: 3000, showConfirmButton: false });
+}
+function showError(message) {
+  Swal.fire({ icon: 'error', title: 'Error', text: message });
+}
+function showLoading() {
+  Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+}
+</script>
+
+<?= $this->renderSection('scripts') ?>
 </body>
 </html>

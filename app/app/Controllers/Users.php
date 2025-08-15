@@ -36,6 +36,7 @@ class Users extends BaseController
             'canCreate' => $this->hasPermission('create_users'),
             'canEdit'   => $this->hasPermission('update_users'),
             'canDelete' => $this->hasPermission('delete_users'),
+            'canReset' => $this->hasPermission('reset_users'),
         ];
 
         $this->logAuditAction('users_index_viewed', ['total_users' => $stats['total']]);
@@ -62,12 +63,20 @@ class Users extends BaseController
         helper(['form']);
         log_message('debug', 'Users::store POST => ' . json_encode($this->request->getPost()));
 
+        // === Reglas de validación (coinciden con update y el front) ===
         $rules = [
-            'user_nombre' => 'required|min_length[3]|max_length[100]|alpha_space',
-            'user_email'  => 'required|valid_email|is_unique[users.user_email]',
+            'user_nombre' => [
+                'label' => 'Nombre',
+                // permite letras unicode, espacios, punto, apóstrofe y guion
+                'rules' => 'required|min_length[3]|max_length[100]',
+            ],
+            'user_email'  => 'required|valid_email|max_length[255]|is_unique[users.user_email]',
             'user_perfil' => 'required|integer',
-            'user_clave'  => 'required|min_length[8]',
+            // password fuerte, sin espacios
+            'user_clave'  => 'required|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])(?=\S+$).{8,}$/]',
             'confirmar_clave' => 'required|matches[user_clave]',
+            // avatar opcional
+            'user_avatar' => 'permit_empty|is_image[user_avatar]|mime_in[user_avatar,image/jpg,image/jpeg,image/png]|max_size[user_avatar,1024]',
         ];
 
         if (!$this->validate($rules)) {
@@ -75,26 +84,64 @@ class Users extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        // Validación de negocio perfil/compañía
+        $customErrors = $this->userModel->validateUserByProfileType($this->request->getPost());
+        if (!empty($customErrors)) {
+            return redirect()->back()->withInput()->with('errors', $customErrors);
+        }
+
+        // === Manejo de avatar (carpeta PÚBLICA) ===
+        $avatarName = null;
+        $file = $this->request->getFile('user_avatar');
+        if ($file && $file->isValid() && $file->getError() === UPLOAD_ERR_OK) {
+            $publicDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
+            if (!is_dir($publicDir)) {
+                @mkdir($publicDir, 0755, true);
+            }
+            $avatarName = $file->getRandomName();
+            $file->move($publicDir, $avatarName);
+        }
+
+        // Normalización de datos
+        $ciaId = $this->request->getPost('cia_id');
+        $ciaId = ($ciaId === '' || $ciaId === null) ? null : (int)$ciaId;
+
         $data = [
-            'user_nombre' => trim((string)$this->request->getPost('user_nombre')),
-            'user_email'  => strtolower(trim((string)$this->request->getPost('user_email'))),
+            'user_nombre'   => trim((string)$this->request->getPost('user_nombre')),
+            'user_email'    => strtolower(trim((string)$this->request->getPost('user_email'))),
             'user_telefono' => trim((string)$this->request->getPost('user_telefono')),
-            'user_perfil' => (int)$this->request->getPost('user_perfil'),
-            'cia_id'      => ($this->request->getPost('cia_id') === '' ? null : (int)$this->request->getPost('cia_id')),
-            'user_clave'  => $this->request->getPost('user_clave'), // el modelo la hashea
-            'user_habil'  => (int)($this->request->getPost('user_habil') ?? 1),
+            'user_perfil'   => (int)$this->request->getPost('user_perfil'),
+            'cia_id'        => $ciaId,
+            'user_clave'    => (string)$this->request->getPost('user_clave'), // el modelo la hashea en beforeInsert
+            'user_habil'    => (int)($this->request->getPost('user_habil') ?? 1),
+            'user_avatar'   => $avatarName, // puede ser null
         ];
 
         try {
-            if ($id = $this->userModel->insert($data)) {
+            // Saltamos la validación del modelo (ya validamos aquí)
+            $id = $this->userModel->skipValidation(true)->insert($data, true);
+            if ($id) {
                 log_message('debug', 'INSERT OK user_id=' . $id);
-                return redirect()->to('/users')->with('success', 'Usuario creado exitosamente')->with('new_user_id', $id);
-            } else {
-                log_message('error', 'MODEL ERRORS: ' . json_encode($this->userModel->errors()));
-                return redirect()->back()->withInput()->with('errors', $this->userModel->errors() ?: ['insert' => 'Error al crear el usuario']);
+                return redirect()->to('/users')
+                    ->with('success', 'Usuario creado exitosamente')
+                    ->with('new_user_id', $id);
             }
+
+            log_message('error', 'MODEL ERRORS: ' . json_encode($this->userModel->errors()));
+            return redirect()->back()->withInput()->with(
+                'errors',
+                $this->userModel->errors() ?: ['insert' => 'Error al crear el usuario']
+            );
+
         } catch (\Throwable $e) {
             log_message('critical', 'EXCEPTION store(): ' . $e->getMessage());
+
+            // Si falló y se subió avatar, intenta borrar el archivo huérfano
+            if (!empty($avatarName)) {
+                $path = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars' . DIRECTORY_SEPARATOR . $avatarName;
+                if (is_file($path)) @unlink($path);
+            }
+
             return redirect()->back()->withInput()->with('error', 'Error inesperado al crear el usuario');
         }
     }
@@ -161,13 +208,14 @@ class Users extends BaseController
     }
 
     /** Actualizar */
-    public function update($id)
+   public function update($id)
     {
         $usuario = $this->userModel->find($id);
-        if (! $usuario) {
+        if (!$usuario) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Usuario no encontrado');
         }
 
+        // === Reglas de validación (controlador) ===
         $rules = [
             'user_nombre' => [
                 'label' => 'Nombre',
@@ -178,53 +226,64 @@ class Users extends BaseController
             'user_avatar' => 'permit_empty|is_image[user_avatar]|mime_in[user_avatar,image/jpg,image/jpeg,image/png]|max_size[user_avatar,1024]',
         ];
 
-        // Contraseña opcional
-        if (! empty($this->request->getPost('user_clave'))) {
-            $rules['user_clave']       = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/]';
-            $rules['confirmar_clave']  = 'matches[user_clave]';
+        // Contraseña opcional (misma regla que usarás en el front)
+        if (!empty($this->request->getPost('user_clave'))) {
+           $rules['user_clave'] = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]'; 
+            $rules['confirmar_clave'] = 'matches[user_clave]';
         }
 
-        if (! $this->validate($rules)) {
+        if (!$this->validate($rules)) {
             return redirect()->back()->withInput()
                 ->with('errors', $this->validator->getErrors());
         }
 
+        // Validaciones personalizadas según perfil/compañía
         $customErrors = $this->userModel->validateUserByProfileType($this->request->getPost());
-        if (! empty($customErrors)) {
+        if (!empty($customErrors)) {
             return redirect()->back()->withInput()->with('errors', $customErrors);
         }
 
-        // Avatar
+        // === Avatar a carpeta PÚBLICA ===
         $avatarName = $usuario['user_avatar'];
         $file = $this->request->getFile('user_avatar');
-        if ($file && $file->isValid() && ! $file->hasMoved()) {
-            // borra anterior si existe
-            $dir = WRITEPATH . 'uploads/avatars';
-            if ($avatarName) {
-                $oldPath = $dir . DIRECTORY_SEPARATOR . $avatarName;
+        if ($file && $file->isValid() && $file->getError() === UPLOAD_ERR_OK) {
+            $publicDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
+            if (!is_dir($publicDir)) {
+                @mkdir($publicDir, 0755, true);
+            }
+            // eliminar anterior si existe
+            if (!empty($avatarName)) {
+                $oldPath = $publicDir . DIRECTORY_SEPARATOR . $avatarName;
                 if (is_file($oldPath)) { @unlink($oldPath); }
             }
-            $avatarName = $this->processAvatar($file);
+            // mover nuevo
+            $newName = $file->getRandomName();
+            $file->move($publicDir, $newName);
+            $avatarName = $newName;
         }
 
+        // cia_id null si viene vacío
         $ciaId = $this->request->getPost('cia_id');
         $ciaId = ($ciaId === '' || $ciaId === null) ? null : (int) $ciaId;
 
+        // === Datos a actualizar ===
         $data = [
-            'user_nombre' => $this->sanitizeInput($this->request->getPost('user_nombre')),
-            'user_email'  => strtolower(trim((string) $this->request->getPost('user_email'))),
-            'user_telefono'=> $this->sanitizeInput($this->request->getPost('user_telefono')),
-            'user_perfil' => (int) $this->request->getPost('user_perfil'),
-            'cia_id'      => $ciaId,
-            'user_avatar' => $avatarName,
-            'user_habil'  => (int) $this->request->getPost('user_habil'),
+            'user_nombre'   => $this->sanitizeInput($this->request->getPost('user_nombre')),
+            'user_email'    => strtolower(trim((string) $this->request->getPost('user_email'))),
+            'user_telefono' => $this->sanitizeInput($this->request->getPost('user_telefono')),
+            'user_perfil'   => (int) $this->request->getPost('user_perfil'),
+            'cia_id'        => $ciaId,
+            'user_avatar'   => $avatarName,
+            'user_habil'    => (int) $this->request->getPost('user_habil'),
         ];
 
-        if (! empty($this->request->getPost('user_clave'))) {
-            $data['user_clave']              = (string) $this->request->getPost('user_clave');
-            $data['user_debe_cambiar_clave'] = 0;
+        // Contraseña solo si viene; el modelo la hashea en beforeUpdate
+        if (!empty($this->request->getPost('user_clave'))) {
+            $data['user_clave']               = (string) $this->request->getPost('user_clave');
+            $data['user_debe_cambiar_clave']  = 0;
         }
 
+        // Para auditoría
         $oldData = [
             'nombre' => $usuario['user_nombre'],
             'email'  => $usuario['user_email'],
@@ -232,7 +291,8 @@ class Users extends BaseController
             'habil'  => $usuario['user_habil'],
         ];
 
-        if ($this->userModel->update($id, $data)) {
+        // === IMPORTANTE: saltar validación del MODELO (ya validamos en el controlador) ===
+        if ($this->userModel->skipValidation(true)->update($id, $data)) {
             $this->logAuditAction('user_updated', [
                 'user_id'    => $id,
                 'old_data'   => $oldData,

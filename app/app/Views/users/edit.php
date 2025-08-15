@@ -133,10 +133,10 @@ Editar Usuario
                                                 Avatar Actual
                                             </label>
                                             <div class="border rounded p-3 bg-light text-center">
-                                                <img src="<?= base_url('uploads/avatars/' . $usuario['user_avatar']) ?>" 
-                                                     alt="<?= esc($usuario['user_nombre']) ?>" 
-                                                     class="rounded-circle"
-                                                     style="width: 100px; height: 100px; object-fit: cover;">
+                                                <img src="<?= base_url('uploads/avatars/'.$usuario['user_avatar']) . '?v=' . urlencode($usuario['updated_at'] ?? time()) ?>"
+                                                alt="<?= esc($usuario['user_nombre']) ?>"
+                                                class="rounded-circle"
+                                                style="width:100px;height:100px;object-fit:cover;">
                                                 <div class="mt-2">
                                                     <small class="text-muted">
                                                         <i class="fas fa-file me-1"></i>
@@ -368,19 +368,17 @@ Editar Usuario
 <script>
 $(document).ready(function() {
     const originalData = {
-        nombre: $('#user_nombre').val(),
-        email: $('#user_email').val(),
+        nombre:   $('#user_nombre').val(),
+        email:    $('#user_email').val(),
         telefono: $('#user_telefono').val(),
-        perfil: $('#user_perfil').val(),
-        cia: $('#cia_id').val(),
-        estado: $('#user_habil').val()
+        perfil:   $('#user_perfil').val(),
+        cia:      $('#cia_id').val(),
+        estado:   $('#user_habil').val()
     };
 
-    // Mostrar/ocultar campos según el tipo de perfil
-    $('#user_perfil').on('change', function() {
-        const selectedOption = $(this).find('option:selected');
-        const tipo = selectedOption.data('tipo');
-        
+    // ===== Perfil: mostrar/ocultar compañía según tipo =====
+    function applyPerfilUI() {
+        const tipo = $('#user_perfil').find('option:selected').data('tipo');
         if (tipo === 'compania') {
             $('#cia-container').show();
             $('#cia_id').prop('required', true);
@@ -394,263 +392,189 @@ $(document).ready(function() {
             $('#cia_id').prop('required', false).val('');
             $('#interno-info').hide();
         }
-    });
-    
-    // Trigger inicial para mostrar campos del perfil actual
-    $('#user_perfil').trigger('change');
-    
+    }
+    $('#user_perfil').on('change', applyPerfilUI);
+    applyPerfilUI(); // inicial
+
+    // ===== Password fuerte (igual al backend) =====
+    const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
+
     // Mostrar/ocultar confirmar contraseña
     $('#user_clave').on('input', function() {
-        if ($(this).val().length > 0) {
-            $('#confirm-password-container').show();
-            $('#confirmar_clave').prop('required', true);
-        } else {
-            $('#confirm-password-container').hide();
-            $('#confirmar_clave').prop('required', false).val('');
+        const hasVal = $(this).val().length > 0;
+        $('#confirm-password-container').toggle(hasVal);
+        $('#confirmar_clave').prop('required', hasVal);
+        if (!hasVal) {
+            $('#confirmar_clave').val('').removeClass('is-invalid');
+            $(this).removeClass('is-invalid is-valid');
         }
     });
-    
-    // Preview de avatar
+
+    // Validar coincidencia en vivo
+    $('#confirmar_clave').on('input', function() {
+        const password = $('#user_clave').val();
+        const confirm  = $(this).val();
+        if (confirm && password !== confirm) {
+            $(this).addClass('is-invalid').siblings('.invalid-feedback')
+                .text('Las contraseñas no coinciden');
+        } else {
+            $(this).removeClass('is-invalid');
+        }
+    });
+
+    // ===== Preview de avatar =====
     $('#user_avatar').on('change', function() {
         const file = this.files[0];
         const $preview = $('#avatarPreview');
         const $previewImg = $('#previewImg');
-        
+
         if (file) {
-            // Validar tipo de archivo
             const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
             if (!validTypes.includes(file.type)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Archivo no válido',
-                    text: 'Solo se permiten archivos JPG, JPEG y PNG'
-                });
-                $(this).val('');
-                $preview.hide();
-                return;
+                Swal.fire({ icon:'error', title:'Archivo no válido', text:'Solo JPG, JPEG y PNG' });
+                $(this).val(''); $preview.hide(); return;
             }
-            
-            // Validar tamaño (1MB = 1048576 bytes)
-            if (file.size > 1048576) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Archivo muy grande',
-                    text: 'El archivo no debe superar 1MB'
-                });
-                $(this).val('');
-                $preview.hide();
-                return;
+            if (file.size > 1048576) { // 1MB
+                Swal.fire({ icon:'error', title:'Archivo muy grande', text:'Máximo 1MB' });
+                $(this).val(''); $preview.hide(); return;
             }
-            
-            // Mostrar preview
             const reader = new FileReader();
-            reader.onload = function(e) {
-                $previewImg.attr('src', e.target.result);
-                $preview.show();
-            };
+            reader.onload = e => { $previewImg.attr('src', e.target.result); $preview.show(); };
             reader.readAsDataURL(file);
         } else {
             $preview.hide();
         }
     });
-    
-    // Toggle password visibility
-    $('#togglePassword').on('click', function() {
-        const passwordField = $('#user_clave');
-        const icon = $(this).find('i');
-        
-        if (passwordField.attr('type') === 'password') {
-            passwordField.attr('type', 'text');
-            icon.removeClass('fa-eye').addClass('fa-eye-slash');
-        } else {
-            passwordField.attr('type', 'password');
-            icon.removeClass('fa-eye-slash').addClass('fa-eye');
-        }
-    });
-    
-    $('#toggleConfirmPassword').on('click', function() {
-        const passwordField = $('#confirmar_clave');
-        const icon = $(this).find('i');
-        
-        if (passwordField.attr('type') === 'password') {
-            passwordField.attr('type', 'text');
-            icon.removeClass('fa-eye').addClass('fa-eye-slash');
-        } else {
-            passwordField.attr('type', 'password');
-            icon.removeClass('fa-eye-slash').addClass('fa-eye');
-        }
-    });
-    
-    // Validar que las contraseñas coincidan
-    $('#confirmar_clave').on('input', function() {
-        const password = $('#user_clave').val();
-        const confirmPassword = $(this).val();
-        
-        if (confirmPassword && password !== confirmPassword) {
-            $(this).addClass('is-invalid');
-            $(this).siblings('.invalid-feedback').text('Las contraseñas no coinciden');
-        } else {
-            $(this).removeClass('is-invalid');
-        }
-    });
-    
-    // Detectar cambios en el formulario
+
+    // ===== Detectar cambios =====
     function hasChanges() {
         return (
-            $('#user_nombre').val() !== originalData.nombre ||
-            $('#user_email').val() !== originalData.email ||
+            $('#user_nombre').val()   !== originalData.nombre ||
+            $('#user_email').val()    !== originalData.email  ||
             $('#user_telefono').val() !== originalData.telefono ||
-            $('#user_perfil').val() !== originalData.perfil ||
-            $('#cia_id').val() !== originalData.cia ||
-            $('#user_habil').val() !== originalData.estado ||
+            $('#user_perfil').val()   !== originalData.perfil ||
+            $('#cia_id').val()        !== originalData.cia    ||
+            $('#user_habil').val()    !== originalData.estado ||
             $('#user_clave').val().length > 0 ||
-            $('#user_avatar')[0].files.length > 0
+            ($('#user_avatar')[0].files && $('#user_avatar')[0].files.length > 0)
         );
     }
-    
-    // Validación del formulario
+
+    // ===== Validación del formulario =====
     $('#userForm').on('submit', function(e) {
-        // Verificar si hay cambios
+        // Sin cambios → evita request innecesario
         if (!hasChanges()) {
             e.preventDefault();
-            Swal.fire({
-                icon: 'info',
-                title: 'Sin cambios',
-                text: 'No se han detectado cambios en los datos'
-            });
+            Swal.fire({ icon:'info', title:'Sin cambios', text:'No se han detectado cambios' });
             return;
         }
 
+        // Nombre
         const nombre = $('#user_nombre').val().trim();
-        const email = $('#user_email').val().trim();
-        const perfil = $('#user_perfil').val();
-        const password = $('#user_clave').val();
-        const confirmPassword = $('#confirmar_clave').val();
-        
-        // Validaciones básicas
         if (nombre.length < 3) {
             e.preventDefault();
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                text: 'El nombre debe tener al menos 3 caracteres'
-            });
-            $('#user_nombre').focus();
-            return;
+            Swal.fire({ icon:'error', title:'Error de validación', text:'El nombre debe tener al menos 3 caracteres' });
+            $('#user_nombre').focus(); return;
         }
-        
-        if (!email || !email.includes('@')) {
+
+        // Email
+        const email = $('#user_email').val().trim();
+        const emailBasic = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailBasic.test(email)) {
             e.preventDefault();
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                text: 'Debe ingresar un email válido'
-            });
-            $('#user_email').focus();
-            return;
+            Swal.fire({ icon:'error', title:'Error de validación', text:'Debe ingresar un email válido' });
+            $('#user_email').focus(); return;
         }
-        
+
+        // Perfil
+        const perfil = $('#user_perfil').val();
         if (!perfil) {
             e.preventDefault();
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                text: 'Debe seleccionar un perfil'
-            });
-            $('#user_perfil').focus();
-            return;
+            Swal.fire({ icon:'error', title:'Error de validación', text:'Debe seleccionar un perfil' });
+            $('#user_perfil').focus(); return;
         }
-        
-        // Validar compañía si es perfil de compañía
-        const selectedOption = $('#user_perfil').find('option:selected');
-        const tipo = selectedOption.data('tipo');
+
+        // Compañía si aplica
+        const tipo = $('#user_perfil').find('option:selected').data('tipo');
         if (tipo === 'compania' && !$('#cia_id').val()) {
             e.preventDefault();
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                text: 'Debe seleccionar una compañía para este tipo de perfil'
-            });
-            $('#cia_id').focus();
-            return;
+            Swal.fire({ icon:'error', title:'Error de validación', text:'Debe seleccionar una compañía' });
+            $('#cia_id').focus(); return;
         }
-        
-        // Validar contraseña si se proporciona
+
+        // Password (opcional en edición, pero si viene debe ser fuerte)
+        const password = $('#user_clave').val();
+        const confirm  = $('#confirmar_clave').val();
         if (password.length > 0) {
-            if (password.length < 6) {
+            if (!strongRegex.test(password)) {
                 e.preventDefault();
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error de validación',
-                    text: 'La contraseña debe tener al menos 6 caracteres'
+                    icon:'error',
+                    title:'Contraseña débil',
+                    text:'Mínimo 8 caracteres e incluir mayúscula, minúscula, número y símbolo.'
                 });
-                $('#user_clave').focus();
-                return;
+                $('#user_clave').addClass('is-invalid').focus(); return;
             }
-            
-            if (password !== confirmPassword) {
+            if (password !== confirm) {
                 e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de validación',
-                    text: 'Las contraseñas no coinciden'
-                });
-                $('#confirmar_clave').focus();
-                return;
+                Swal.fire({ icon:'error', title:'Error', text:'Las contraseñas no coinciden' });
+                $('#confirmar_clave').addClass('is-invalid').focus(); return;
             }
         }
     });
-    
-    // Restaurar datos originales
+
+    // ===== Restaurar =====
     $('#resetBtn').on('click', function(e) {
         e.preventDefault();
-        
         Swal.fire({
             title: '¿Restaurar datos originales?',
-            text: 'Se perderán todos los cambios realizados',
+            text: 'Se perderán todos los cambios',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Sí, restaurar',
             cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
+        }).then((r) => {
+            if (r.isConfirmed) {
                 $('#user_nombre').val(originalData.nombre);
                 $('#user_email').val(originalData.email);
                 $('#user_telefono').val(originalData.telefono);
                 $('#user_perfil').val(originalData.perfil).trigger('change');
                 $('#cia_id').val(originalData.cia);
                 $('#user_habil').val(originalData.estado);
-                $('#user_clave').val('');
-                $('#confirmar_clave').val('');
+                $('#user_clave').val('').removeClass('is-invalid is-valid');
+                $('#confirmar_clave').val('').removeClass('is-invalid is-valid');
                 $('#user_avatar').val('');
                 $('#avatarPreview').hide();
                 $('#confirm-password-container').hide();
                 $('.form-control, .form-select').removeClass('is-invalid is-valid');
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Datos restaurados',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
+
+                Swal.fire({ icon:'success', title:'Datos restaurados', timer: 1500, showConfirmButton: false });
             }
         });
     });
-    
-    // Advertencia al salir si hay cambios sin guardar
+
+    // ===== Aviso al salir con cambios =====
     $(window).on('beforeunload', function() {
-        if (hasChanges()) {
-            return 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
-        }
+        if (hasChanges()) return 'Tienes cambios sin guardar. ¿Salir igualmente?';
     });
-    
-    // Remover advertencia al enviar formulario
-    $('#userForm').on('submit', function() {
-        $(window).off('beforeunload');
-    });
-    
-    // Auto-focus en el primer campo
+    $('#userForm').on('submit', function() { $(window).off('beforeunload'); });
+
+    // Focus inicial
     $('#user_nombre').focus().select();
+    $('#togglePassword').on('click', function() {
+    const passwordField = $('#user_clave');
+    const icon = $(this).find('i');
+
+    if (passwordField.attr('type') === 'password') {
+        passwordField.attr('type', 'text');
+        icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+        passwordField.attr('type', 'password');
+        icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+});
 });
 </script>
+
 <?= $this->endSection() ?>

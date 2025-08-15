@@ -32,17 +32,22 @@ $routes->group('perfiles', function($routes) {
     $routes->post('toggleStatus/(:num)', 'Perfiles::toggleStatus/$1');
     $routes->get('getByTipo/(:segment)', 'Perfiles::getByTipo/$1');
     $routes->get('getSelect', 'Perfiles::getSelect');
-    $routes->match(['post','put'], 'update/(:num)', 'Perfiles::update/$1');
+    $routes->match(['POST','PUT'], 'update/(:num)', 'Perfiles::update/$1');
 
 });
-
 $routes->group('users', static function($routes) {
     $routes->get('/', 'Users::index');
     $routes->get('create', 'Users::create');
     $routes->post('store', 'Users::store');
     $routes->get('show/(:num)', 'Users::show/$1');
     $routes->get('edit/(:num)', 'Users::edit/$1');
-    $routes->post('update/(:num)', 'Users::update/$1');
+
+    // Acepta PUT real y POST (spoofing o compatibilidad)
+    $routes->match(['PUT','POST'], 'update/(:num)', 'Users::update/$1');
+
+    // Si DELETE real diera problemas en tu hosting, añade POST también:
+    // $routes->match(['DELETE','POST'], 'delete/(:num)', 'Users::delete/$1');
+
     $routes->delete('delete/(:num)', 'Users::delete/$1');
     $routes->post('toggleStatus/(:num)', 'Users::toggleStatus/$1');
     $routes->post('resetPassword/(:num)', 'Users::resetPassword/$1');

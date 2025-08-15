@@ -297,14 +297,18 @@ Gestión de Usuarios
                                             <?php endif; ?>
                                             <!-- Eliminar -->
                                             <?php if (!empty($canDelete) && $canDelete): ?>
-                                            <form method="post" action="<?= base_url('users/delete/' . $usuario['user_id']) ?>" style="display:inline;">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="_method" value="DELETE">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                        onclick="return confirm('¿Estás seguro de eliminar este usuario?')">
-                                                <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                                <form method="post" 
+                                                    action="<?= base_url('users/delete/' . $usuario['user_id']) ?>" 
+                                                    class="delete-user-form" 
+                                                    style="display:inline;">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="_method" value="DELETE">
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-danger delete-user-btn"
+                                                            data-name="<?= esc($usuario['user_nombre']) ?>">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
                                             <?php endif; ?>
                                         </div>
                                     </td>
@@ -454,8 +458,26 @@ $(document).ready(function() {
                 text: 'Error de conexión'
             });
         });
-    });
+    }); 
+    $('.delete-user-btn').on('click', function() {  
+        const form = this.closest('form');
+        const userName = this.dataset.name || 'este usuario';
 
+        Swal.fire({
+            title: '¿Eliminar usuario?',
+            text: `Se eliminará ${userName}. Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        }); 
+    }); 
     // Reset password
     $('.reset-password-btn').on('click', function() {
         const id = $(this).data('id');

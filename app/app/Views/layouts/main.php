@@ -26,6 +26,23 @@ $sideEnd      = $theme['sidebar_end'] ?? '#764ba2';
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
 
 <style>
+/* Dropdown oscuro dentro de la navbar brandbar */
+.navbar.brandbar .dropdown-menu{
+  background: #1f2340;            /* o usa var(--brand-nav-bg) si quieres */
+  border: 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+.navbar.brandbar .dropdown-item{
+  color: #f8f9fa !important;
+}
+.navbar.brandbar .dropdown-item:hover,
+.navbar.brandbar .dropdown-item:focus{
+  background: rgba(255,255,255,.08);
+  color: #fff !important;
+}
+.navbar.brandbar .dropdown-divider{
+  border-color: rgba(255,255,255,.15);
+}
 :root{
   --nav-h: 56px;
   --rail-collapsed: 72px;
@@ -151,32 +168,35 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
       <?php else: ?>
         <i class="fas fa-shield-alt me-3" role="button" id="brandPinLogo"></i>
       <?php endif; ?>
-      <a href="<?= base_url('/') ?>" class="brand-text text-decoration-none d-none d-sm-inline">
+      <a href="#" class="brand-text text-decoration-none d-none d-sm-inline">
         <?= esc($brandTitle) ?>
       </a>
     </div>
-
     <div class="ms-auto d-flex align-items-center">
-      <!-- Pin/unpin (desktop) -->
-      <button class="btn btn-sm btn-outline-light me-2 d-none d-lg-inline-flex" id="btnPin" title="Fijar/soltar menú">
-        <i class="fas fa-thumbtack"></i>
-      </button>
+        <!-- Pin/unpin (desktop) -->
+        <button class="btn btn-sm btn-outline-light me-2 d-none d-lg-inline-flex" id="btnPin" title="Fijar/soltar menú">
+            <i class="fas fa-thumbtack"></i>
+        </button>
 
-      <!-- Usuario -->
-      <div class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown">
-          <i class="fas fa-user-circle me-2"></i>
-          <span class="d-none d-sm-inline"><?= esc(session('user_name') ?? 'Usuario') ?></span>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
-          <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Salir</a></li>
-        </ul>
-      </div>
+        <!-- Switch Light/Dark -->
+        <button id="themeToggle" class="btn btn-sm btn-outline-light me-2" title="Cambiar tema">
+            <i class="fas fa-moon"></i>
+        </button>
+
+        <!-- Usuario -->
+        <div class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown">
+            <i class="fas fa-user-circle me-2"></i>
+            <span class="d-none d-sm-inline"><?= esc(session('user_name') ?? 'Usuario') ?></span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="<?= base_url('users/edit/'.session('user_id')) ?>"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
+            <!--<li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>-->
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Salir</a></li>
+            </ul>
+        </div>
     </div>
-  </div>
 </nav>
 
 <!-- SIDEBAR -->
@@ -187,7 +207,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
 
   <nav class="nav flex-column">
     <div class="rail-section">General</div>
-    <a class="nav-link <?= url_is('/') ? 'active' : '' ?>" href="<?= base_url('/') ?>" data-bs-toggle="tooltip" data-bs-title="Dashboard">
+    <a class="nav-link <?= url_is('/dashboard') ? 'active' : '' ?>" href="<?= base_url('/dashboard') ?>" data-bs-toggle="tooltip" data-bs-title="Dashboard">
       <i class="icon fa-solid fa-chart-simple"></i><span class="label">Dashboard</span>
     </a>
 
@@ -238,6 +258,34 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
 
 <!-- === Lógica de Sidebar con tooltips estables === -->
 <script>
+ const themeToggle = document.getElementById("themeToggle");
+const html = document.documentElement;
+
+// Si ya hay preferencia guardada
+if (localStorage.getItem("theme")) {
+html.setAttribute("data-bs-theme", localStorage.getItem("theme"));
+themeToggle.innerHTML = localStorage.getItem("theme") === "dark"
+    ? '<i class="fas fa-sun"></i>'
+    : '<i class="fas fa-moon"></i>';
+} else {
+// Detectar tema del sistema si no hay preferencia
+const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+html.setAttribute("data-bs-theme", prefersDark ? "dark" : "light");
+themeToggle.innerHTML = prefersDark 
+    ? '<i class="fas fa-sun"></i>'
+    : '<i class="fas fa-moon"></i>';
+}
+
+// Alternar manualmente
+themeToggle.addEventListener("click", () => {
+let current = html.getAttribute("data-bs-theme");
+let next = current === "light" ? "dark" : "light";
+html.setAttribute("data-bs-theme", next);
+localStorage.setItem("theme", next);
+themeToggle.innerHTML = next === "dark"
+    ? '<i class="fas fa-sun"></i>'
+    : '<i class="fas fa-moon"></i>';
+});
 (() => {
   const sidebar   = document.getElementById('sidebar');
   const backdrop  = document.getElementById('sidebarBackdrop');

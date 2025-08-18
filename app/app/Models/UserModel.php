@@ -13,10 +13,11 @@ class UserModel extends Model
     protected $protectFields    = true;
 
     protected $allowedFields = [
-        'user_nombre','user_email','user_telefono','user_perfil','cia_id',
-        'user_clave','user_avatar','user_ultimo_acceso','user_intentos_login',
-        'user_token_reset','user_habil','user_debe_cambiar_clave',
-        'user_metadata','user_preferences','user_security_settings','user_login_history',
+    'user_nombre','user_email','user_telefono','user_perfil','cia_id',
+    'user_clave','user_avatar','user_ultimo_acceso','user_intentos_login',
+    'user_token_reset','user_habil','user_debe_cambiar_clave',
+    'user_metadata','user_preferences','user_security_settings','user_login_history', 
+    'user_remember_selector','user_remember_validator_hash','user_remember_expires',
     ];
 
     protected $useTimestamps = true;
@@ -280,7 +281,7 @@ class UserModel extends Model
         $email = strtolower(trim($email));
         $row = $this->select(
                 'users.*,' .
-                'cias.cia_nombre,' .
+                'cias.*,' .
                 'perfiles.perfil_nombre,' .
                 'perfiles.perfil_tipo,' .
                 'perfiles.perfil_permisos'

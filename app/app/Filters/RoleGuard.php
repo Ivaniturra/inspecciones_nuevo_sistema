@@ -16,24 +16,25 @@ class RoleGuard implements FilterInterface
             return redirect()->to(base_url('/'));
         }
 
-        // Roles permitidos: vienen como ['7'] o ['7,3'] o ['7|3|2']
-        $allowed = [];
-        if (!empty($arguments[0])) {
-            $allowed = preg_split('/[,\|]/', (string)$arguments[0]); // admite coma o pipe
-            $allowed = array_map('trim', $allowed);
+        // --- Normalizar argumentos: soporta ['3,7'] y ['3','7'] indistintamente ---
+        $allowed = ['7']; // default si no pasas nada: solo superadmin
+        if (!empty($arguments)) {
+            $flat = [];
+            foreach ((array)$arguments as $arg) {
+                foreach (preg_split('/[,\|]/', (string)$arg) as $p) {
+                    $p = trim($p);
+                    if ($p !== '') $flat[] = $p;
+                }
+            }
+            if ($flat) $allowed = array_values(array_unique($flat));
         }
 
-        // Si no se pasaron roles, negar por seguro
-        if (empty($allowed)) {
-            return redirect()->to(base_url('forbidden'));
-        }
+        // Por si quieres ver qué llega realmente:
+        // log_message('debug', 'RoleGuard args='.json_encode($arguments).' allowed='.json_encode($allowed));
 
         $userPerfil = (string) (session('user_perfil') ?? session('user_perfil_id') ?? '');
 
-        // Permitir si el perfil del usuario está en la lista
-        if (! in_array($userPerfil, $allowed, true)) {
-            // Opciones: 403 o redirigir a una vista/route propia
-            // return service('response')->setStatusCode(403, 'No autorizado');
+        if (!in_array($userPerfil, $allowed, true)) {
             return redirect()->to(base_url('forbidden'));
         }
     }

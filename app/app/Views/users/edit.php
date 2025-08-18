@@ -346,10 +346,7 @@ Editar Usuario
                                 <div class="d-flex justify-content-end gap-2">
                                     <a href="<?= base_url('users') ?>" class="btn btn-outline-secondary">
                                         <i class="fas fa-times"></i> Cancelar
-                                    </a>
-                                    <button type="button" class="btn btn-outline-warning" id="resetBtn">
-                                        <i class="fas fa-undo"></i> Restaurar
-                                    </button>
+                                    </a> 
                                     <button type="submit" class="btn btn-warning">
                                         <i class="fas fa-save"></i> Actualizar Usuario
                                     </button>

@@ -1,12 +1,11 @@
 <?php
-$theme        = theme();
-$appTitle     = $theme['title'] ?? 'InspectZu';
-$brandTitle   = $theme['brand_title'] ?? $appTitle;
-$brandLogo    = $theme['logo'] ?? null;
-$navBg        = $theme['nav_bg'] ?? '#6c3dd1';
-$navText      = $theme['nav_text'] ?? '#ffffff';
-$sideStart    = $theme['sidebar_start'] ?? '#667eea';
-$sideEnd      = $theme['sidebar_end'] ?? '#764ba2';
+$appTitle   = session('app_title')   ?? env('app.title');
+$brandTitle = session('brand_title') ?? env('app.brand_title');
+$brandLogo  = session('brand_logo')  ?? env('app.brand_logo');
+$navBg      = session('nav_bg')      ?? env('app.nav_bg');
+$navText    = session('nav_text')    ?? env('app.nav_text');
+$sideStart  = session('sidebar_start') ?? env('app.sidebar_start');
+$sideEnd    = session('sidebar_end')   ?? env('app.sidebar_end');
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -158,19 +157,21 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
 
     <!-- Marca: logo (botón) + texto con href -->
     <div class="navbar-brand d-flex align-items-center">
-      <?php if (!empty($brandLogo)): ?>
-        <img id="brandPinLogo"
-             src="<?= strpos($brandLogo, 'http') === 0 ? esc($brandLogo) : esc(base_url($brandLogo)) ?>"
-             alt="<?= esc($brandTitle) ?>"
-             class="brand-logo me-3"
-             role="button"
-             aria-pressed="false">
-      <?php else: ?>
-        <i class="fas fa-shield-alt me-3" role="button" id="brandPinLogo"></i>
-      <?php endif; ?>
-      <a href="#" class="brand-text text-decoration-none d-none d-sm-inline">
-        <?= esc($brandTitle) ?>
-      </a>
+        <?php if (!empty($brandLogo)): ?>
+            <img id="brandPinLogo"
+                src="<?= strpos($brandLogo, 'http') === 0 ? esc($brandLogo) : esc(base_url($brandLogo)) ?>"
+                alt="<?= esc($brandTitle) ?>"
+                class="brand-logo me-3"
+                role="button"
+                aria-pressed="false"
+                onerror="this.style.display='none'; this.insertAdjacentHTML('beforebegin','<i class=&quot;fas fa-shield-alt me-3&quot;></i>');">
+        <?php else: ?>
+            <i class="fas fa-shield-alt me-3" role="button" id="brandPinLogo"></i>
+        <?php endif; ?>
+
+        <a href="#" class="brand-text text-decoration-none d-none d-sm-inline">
+            <?= esc($brandTitle) ?>
+        </a>
     </div>
     <div class="ms-auto d-flex align-items-center">
         <!-- Pin/unpin (desktop) -->
@@ -193,7 +194,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
             <li><a class="dropdown-item" href="<?= base_url('users/edit/'.session('user_id')) ?>"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
             <!--<li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>-->
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Salir</a></li>
+            <li><a class="dropdown-item" href="<?= base_url('logout') ?>"><i class="fas fa-sign-out-alt me-2"></i>Salir</a></li>
             </ul>
         </div>
     </div>
@@ -221,7 +222,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
     <a class="nav-link <?= url_is('users') || url_is('users/*') ? 'active' : '' ?>" href="<?= base_url('users') ?>" data-bs-toggle="tooltip" data-bs-title="Usuarios">
       <i class="icon fa-solid fa-user-group"></i><span class="label">Usuarios</span>
     </a>
-
+<!--
     <div class="rail-section">Operación</div>
     <a class="nav-link <?= url_is('inspecciones') || url_is('inspecciones/*') ? 'active' : '' ?>" href="<?= base_url('inspecciones') ?>" data-bs-toggle="tooltip" data-bs-title="Inspecciones">
       <i class="icon fa-solid fa-clipboard-list"></i><span class="label">Inspecciones</span>
@@ -233,7 +234,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
     <div class="rail-section">Sistema</div>
     <a class="nav-link <?= url_is('sistema') || url_is('sistema/*') ? 'active' : '' ?>" href="<?= base_url('sistema') ?>" data-bs-toggle="tooltip" data-bs-title="Sistema">
       <i class="icon fa-solid fa-gear"></i><span class="label">Sistema</span>
-    </a>
+    </a>-->
   </nav>
 </aside>
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= esc($title ?? 'Iniciar sesión') ?> - <?= esc($appTitle ?? 'InspectZu') ?></title>
+  <title>Iniciar sesión - <?= env('app.title') ?></title>
 
   <!-- Aplica tema guardado (o el del sistema) ANTES de cargar CSS para evitar FOUC -->
   <script>
@@ -104,15 +104,12 @@
     </button>
     <div class="overlay"></div>
     <div class="inner">
-      <div>
-        <?php if (!empty($brandLogo ?? null)): ?>
-          <img src="<?= strpos($brandLogo,'http')===0 ? esc($brandLogo) : esc(base_url($brandLogo)) ?>"
-               alt="<?= esc($brandTitle ?? 'InspectZu') ?>" style="height:48px" class="mb-3">
-        <?php endif; ?>
-        <h1 class="brand-title"><?= esc($brandTitle ?? 'InspectZu') ?></h1>
+      <div> 
+          <img src="<?= env('app.ubicacion_logo_pagina').env('app.imagen_nomb_logo') ?>"  style="height:48px" class="mb-3"> 
+        <h1 class="brand-title"><?= env('app.title') ?></h1>
         <p class="mb-4 opacity-75">Bienvenido. Ingresa tus credenciales para continuar.</p>
         <!-- Imagen ilustrativa (cámbiala si quieres) -->
-        <img class="hero-img" src="<?= esc(base_url('assets/img/login-hero.jpg')) ?>"
+        <img class="hero-img" src="<?= env('app.ubicacion_logo_pagina').env('app.imagen_nomb_logo2') ?>"
              alt="Ilustración de acceso">
       </div>
     </div>
@@ -180,7 +177,7 @@
         </form>
       </div>
       <div class="card-footer text-center small">
-        © <?= date('Y') ?> <?= esc($brandTitle ?? 'InspectZu') ?>
+        © <?= date('Y') ?> <?= env('app.title') ?>
       </div>
     </div>
   </section>

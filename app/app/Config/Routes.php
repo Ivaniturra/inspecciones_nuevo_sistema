@@ -8,9 +8,10 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/',        'Auth::login');
 $routes->post('login',   'Auth::attempt');
 $routes->get('logout',   'Auth::logout');
-$routes->get('forgot',   'Auth::forgot');
-$routes->post('forgot',  'Auth::sendReset');
-$routes->get('forbidden','Errors::forbidden');
+$routes->get('forgot',        'Auth::forgot');       // formulario "olvidaste"
+$routes->post('forgot',       'Auth::sendReset');    // procesa envío del mail
+$routes->get('reset/(:segment)', 'Auth::reset/$1'); // formulario para nueva clave
+$routes->post('reset',        'Auth::processReset'); // procesa nueva clave
 
 // === PROTEGIDAS ===
 $routes->group('', ['filter' => 'auth'], static function($routes) {
@@ -44,7 +45,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     });
 
     // USERS (3,7)
-    $routes->group('users', ['filter' => 'role:3,7'], static function($routes) {
+    $routes->group('users',['filter' => 'role:3,7'], static function($routes) {
         $routes->get('/',                 'Users::index');
         $routes->get('create',            'Users::create');
         $routes->post('store',            'Users::store');

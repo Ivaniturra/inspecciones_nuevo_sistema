@@ -222,6 +222,10 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
     <a class="nav-link <?= url_is('users') || url_is('users/*') ? 'active' : '' ?>" href="<?= base_url('users') ?>" data-bs-toggle="tooltip" data-bs-title="Usuarios">
       <i class="icon fa-solid fa-user-group"></i><span class="label">Usuarios</span>
     </a>
+    <a class="nav-link <?= url_is('comentarios') || url_is('comentarios/*') ? 'active' : '' ?>" href="<?= base_url('comentarios') ?>" data-bs-toggle="tooltip" data-bs-title="Comentarios">
+      <i class="icon fa-solid fa-comments"></i>
+      <span class="label">Comentarios</span>
+    </a>
 <!--
     <div class="rail-section">Operación</div>
     <a class="nav-link <?= url_is('inspecciones') || url_is('inspecciones/*') ? 'active' : '' ?>" href="<?= base_url('inspecciones') ?>" data-bs-toggle="tooltip" data-bs-title="Inspecciones">

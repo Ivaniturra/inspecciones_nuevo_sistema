@@ -4,12 +4,12 @@ use CodeIgniter\Router\RouteCollection;
 
 /** @var RouteCollection $routes */
 
-// === PÚBLICAS ===
+// === PÃšBLICAS ===
 $routes->get('/',        'Auth::login');
 $routes->post('login',   'Auth::attempt');
 $routes->get('logout',   'Auth::logout');
 $routes->get('forgot',        'Auth::forgot');       // formulario "olvidaste"
-$routes->post('forgot',       'Auth::sendReset');    // procesa envío del mail
+$routes->post('forgot',       'Auth::sendReset');    // procesa envÃ­o del mail
 $routes->get('reset/(:segment)', 'Auth::reset/$1'); // formulario para nueva clave
 $routes->post('reset',        'Auth::processReset'); // procesa nueva clave
 
@@ -58,5 +58,20 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->post('resetPassword/(:num)','Users::resetPassword/$1');
         $routes->get('getByCompany/(:num)',  'Users::getByCompany/$1');
         $routes->get('getStats',             'Users::getStats');
+    });
+    // Comentarios (Web)
+    $routes->group('comentarios', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
+        $routes->get('/',                 'Comentarios::index');              // listado
+        $routes->get('create',            'Comentarios::create');             // formulario crear
+        $routes->post('store',            'Comentarios::store');              // guarda nuevo
+        $routes->get('show/(:num)',       'Comentarios::show/$1');            // detalle
+        $routes->get('edit/(:num)',       'Comentarios::edit/$1');            // formulario editar
+        $routes->match(['post','put'],    'update/(:num)', 'Comentarios::update/$1'); // actualiza
+        $routes->match(['post','delete'], 'delete/(:num)', 'Comentarios::delete/$1'); // elimina
+
+        // Si usas los switches AJAX en el index, define sus endpoints (opcional):
+        $routes->post('toggleDevuelve/(:num)',     'Comentarios::toggleDevuelve/$1');
+        $routes->post('toggleElimina/(:num)',      'Comentarios::toggleElimina/$1');
+        $routes->post('toggleEnviarCorreo/(:num)', 'Comentarios::toggleEnviarCorreo/$1');
     });
 });

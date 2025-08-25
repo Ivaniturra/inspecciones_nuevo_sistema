@@ -225,7 +225,15 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
     <a class="nav-link <?= url_is('comentarios') || url_is('comentarios/*') ? 'active' : '' ?>" href="<?= base_url('comentarios') ?>" data-bs-toggle="tooltip" data-bs-title="Comentarios">
       <i class="icon fa-solid fa-comments"></i>
       <span class="label">Comentarios</span>
+    </a> 
+    <a class="nav-link <?= url_is('estados') || url_is('estados/*') ? 'active' : '' ?>" href="<?= base_url('estados') ?>" data-bs-toggle="tooltip" data-bs-title="Estados">
+      <i class="icon fa-solid fa-tags"></i>
+      <span class="label">Estados</span>
     </a>
+    <a class="nav-link <?= url_is('valores-comunas') || url_is('valores-comunas/*') ? 'active' : '' ?>" href="<?= base_url('valores-comunas') ?>" data-bs-toggle="tooltip" data-bs-title="Valores por Comuna">
+  <i class="icon fa-solid fa-dollar-sign"></i>
+  <span class="label">Valores Comuna</span>
+</a>
 <!--
     <div class="rail-section">Operación</div>
     <a class="nav-link <?= url_is('inspecciones') || url_is('inspecciones/*') ? 'active' : '' ?>" href="<?= base_url('inspecciones') ?>" data-bs-toggle="tooltip" data-bs-title="Inspecciones">

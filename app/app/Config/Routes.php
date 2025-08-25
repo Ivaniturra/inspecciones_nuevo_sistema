@@ -74,4 +74,22 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->post('toggleElimina/(:num)',      'Comentarios::toggleElimina/$1');
         $routes->post('toggleEnviarCorreo/(:num)', 'Comentarios::toggleEnviarCorreo/$1');
     });
+    // Rutas para Estados (solo lectura)
+    $routes->group('estados', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
+        $routes->get('/', 'Estados::index');
+        $routes->get('show/(:num)', 'Estados::show/$1');
+        $routes->post('getSelect', 'Estados::getSelect'); // Para AJAX si lo necesitas
+    });
+    $routes->group('valores-comunas',['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
+        $routes->get('/', 'ValoresComunas::index');
+        $routes->get('create', 'ValoresComunas::create');
+        $routes->post('store', 'ValoresComunas::store');
+        $routes->get('show/(:num)', 'ValoresComunas::show/$1');
+        $routes->get('edit/(:num)', 'ValoresComunas::edit/$1');
+        $routes->post('update/(:num)', 'ValoresComunas::update/$1');
+        $routes->post('delete/(:num)', 'ValoresComunas::delete/$1');
+        $routes->post('toggleStatus/(:num)', 'ValoresComunas::toggleStatus/$1');
+        $routes->get('filter', 'ValoresComunas::filter');
+        $routes->get('getComunasByRegion/(:num)', 'ValoresComunas::getComunasByRegion/$1');
+    });
 });

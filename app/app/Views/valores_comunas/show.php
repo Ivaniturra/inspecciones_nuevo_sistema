@@ -1,0 +1,478 @@
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('title') ?>
+<?= esc($title ?? 'Detalles del Valor') ?>
+<?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="h3 mb-0">
+                            $<?= number_format($valor['valor'], 0, ',', '.') ?> 
+                            <small class="text-muted"><?= esc($valor['moneda'] ?? 'CLP') ?></small>
+                        </h1>
+                        <p class="text-muted mb-0">
+                            <span class="badge <?= $valor['activo'] ? 'bg-success' : 'bg-danger' ?>">
+                                <?= $valor['activo'] ? 'Activo' : 'Inactivo' ?>
+                            </span>
+                            <span class="badge bg-info ms-2">
+                                ID: <?= (int)$valor['valores_id'] ?>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <a href="<?= base_url('valores-comunas/edit/' . $valor['valores_id']) ?>" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                    <a href="<?= base_url('valores-comunas') ?>" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Columna principal -->
+        <div class="col-lg-8">
+            <!-- Información principal -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Información del Valor
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Compañía -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-building text-primary me-1"></i>
+                                Compañía
+                            </label>
+                            <p class="form-control-plaintext">
+                                <?= esc($valor['cia_nombre'] ?? 'N/A') ?>
+                            </p>
+                        </div>
+
+                        <!-- Comuna -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                                Comuna
+                            </label>
+                            <p class="form-control-plaintext">
+                                <?= esc($valor['comuna_nombre'] ?? 'Comuna: ' . $valor['comuna_codigo']) ?>
+                                <br><small class="text-muted">Código: <?= esc($valor['comuna_codigo']) ?></small>
+                            </p>
+                        </div>
+
+                        <!-- Región -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-globe-americas text-warning me-1"></i>
+                                Región
+                            </label>
+                            <p class="form-control-plaintext">
+                                <?= esc($valor['region_nombre'] ?? 'N/A') ?>
+                            </p>
+                        </div>
+
+                        <!-- Tipo de Usuario -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-user-tag text-info me-1"></i>
+                                Tipo de Usuario
+                            </label>
+                            <p class="form-control-plaintext">
+                                <span class="badge fs-6 bg-secondary">
+                                    <?= ucfirst(esc($valor['tipo_usuario'])) ?>
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- Valor y Moneda -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-dollar-sign text-success me-1"></i>
+                                Valor
+                            </label>
+                            <p class="form-control-plaintext">
+                                <span class="fs-4 text-success fw-bold">
+                                    $<?= number_format($valor['valor'], 2, ',', '.') ?>
+                                </span>
+                                <span class="badge bg-success ms-2">
+                                    <?= esc($valor['moneda'] ?? 'CLP') ?>
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-toggle-on text-success me-1"></i>
+                                Estado
+                            </label>
+                            <p class="form-control-plaintext">
+                                <span class="badge fs-6 <?= $valor['activo'] ? 'bg-success' : 'bg-danger' ?>">
+                                    <i class="fas <?= $valor['activo'] ? 'fa-check' : 'fa-times' ?> me-1"></i>
+                                    <?= $valor['activo'] ? 'Activo' : 'Inactivo' ?>
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- Descripción -->
+                        <?php if (!empty($valor['descripcion'])): ?>
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-align-left text-info me-1"></i>
+                                    Descripción
+                                </label>
+                                <p class="form-control-plaintext">
+                                    <?= nl2br(esc($valor['descripcion'])) ?>
+                                </p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de vigencia -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Vigencia del Valor
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar-plus text-success me-1"></i>
+                                Vigente desde
+                            </label>
+                            <p class="form-control-plaintext">
+                                <span class="badge bg-success fs-6">
+                                    <i class="fas fa-play me-1"></i>
+                                    <?= date('d/m/Y', strtotime($valor['fecha_vigencia_desde'])) ?>
+                                </span>
+                            </p>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar-times text-danger me-1"></i>
+                                Vigente hasta
+                            </label>
+                            <p class="form-control-plaintext">
+                                <?php if (!empty($valor['fecha_vigencia_hasta'])): ?>
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="fas fa-stop me-1"></i>
+                                        <?= date('d/m/Y', strtotime($valor['fecha_vigencia_hasta'])) ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge bg-primary fs-6">
+                                        <i class="fas fa-infinity me-1"></i>
+                                        Vigencia indefinida
+                                    </span>
+                                <?php endif; ?>
+                            </p>
+                        </div>
+
+                        <!-- Estado de vigencia -->
+                        <div class="col-12">
+                            <?php 
+                            $hoy = date('Y-m-d');
+                            $vigenciaDesde = $valor['fecha_vigencia_desde'];
+                            $vigenciaHasta = $valor['fecha_vigencia_hasta'];
+                            
+                            $esVigente = ($hoy >= $vigenciaDesde) && 
+                                        (empty($vigenciaHasta) || $hoy <= $vigenciaHasta) && 
+                                        $valor['activo'];
+                            ?>
+                            <div class="alert <?= $esVigente ? 'alert-success' : 'alert-warning' ?>" role="alert">
+                                <i class="fas <?= $esVigente ? 'fa-check-circle' : 'fa-exclamation-triangle' ?> me-2"></i>
+                                <strong>Estado actual:</strong>
+                                <?php if ($esVigente): ?>
+                                    Este valor está <strong>vigente y activo</strong> en la fecha actual.
+                                <?php elseif (!$valor['activo']): ?>
+                                    Este valor está <strong>inactivo</strong>.
+                                <?php elseif ($hoy < $vigenciaDesde): ?>
+                                    Este valor <strong>aún no entra en vigencia</strong>.
+                                <?php else: ?>
+                                    Este valor ya <strong>no está vigente</strong>.
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna lateral -->
+        <div class="col-lg-4">
+            <!-- Información del sistema -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        Información del Sistema
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-primary"><?= (int)$valor['valores_id'] ?></h4>
+                                <small class="text-muted">ID Único</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="<?= $valor['activo'] ? 'text-success' : 'text-danger' ?>">
+                                <i class="fas <?= $valor['activo'] ? 'fa-check' : 'fa-times' ?>"></i>
+                            </h4>
+                            <small class="text-muted">Estado</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="small text-muted">
+                        <div class="mb-2">
+                            <i class="fas fa-calendar-plus me-2"></i>
+                            <strong>Creado:</strong><br>
+                            <?= date('d/m/Y H:i:s', strtotime($valor['created_at'])) ?>
+                        </div>
+                        
+                        <?php if (!empty($valor['updated_at']) && $valor['updated_at'] !== $valor['created_at']): ?>
+                            <div class="mb-2">
+                                <i class="fas fa-calendar-edit me-2"></i>
+                                <strong>Última modificación:</strong><br>
+                                <?= date('d/m/Y H:i:s', strtotime($valor['updated_at'])) ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones rápidas -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Acciones Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="<?= base_url('valores-comunas/edit/' . $valor['valores_id']) ?>" class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>
+                            Editar Valor
+                        </a>
+                        
+                        <button type="button" 
+                                class="btn <?= $valor['activo'] ? 'btn-outline-danger' : 'btn-outline-success' ?>"
+                                onclick="toggleStatus(<?= (int)$valor['valores_id'] ?>)">
+                            <i class="fas <?= $valor['activo'] ? 'fa-pause' : 'fa-play' ?> me-2"></i>
+                            <?= $valor['activo'] ? 'Desactivar' : 'Activar' ?>
+                        </button>
+                        
+                        <a href="<?= base_url('valores-comunas/create?cia_id=' . $valor['cia_id'] . '&comuna_codigo=' . $valor['comuna_codigo']) ?>" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-copy me-2"></i>
+                            Crear Valor Similar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-dollar-sign fa-3x text-danger mb-3"></i>
+                    <h5>¿Eliminar valor?</h5>
+                    <p class="mb-3">
+                        Estás a punto de eliminar el valor de 
+                        <strong>$<?= number_format($valor['valor'], 0, ',', '.') ?></strong>
+                        para <strong><?= esc($valor['cia_nombre'] ?? 'N/A') ?></strong>
+                    </p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <form method="post" action="<?= base_url('valores-comunas/delete/' . $valor['valores_id']) ?>" style="display: inline;">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash"></i> Sí, Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<?= $this->endSection() ?>
+
+<?= $this->section('styles') ?>
+<style>
+.form-control-plaintext {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0;
+}
+
+.badge.fs-6 {
+    font-size: 0.9rem !important;
+    padding: 0.5rem 0.75rem;
+}
+
+.border-end {
+    border-right: 1px solid #dee2e6 !important;
+}
+
+@media (max-width: 768px) {
+    .border-end {
+        border-right: none !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+
+.card { 
+    border: none; 
+    border-radius: 15px; 
+}
+
+.card-header { 
+    border-radius: 15px 15px 0 0 !important; 
+    font-weight: 600; 
+}
+</style>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+$(document).ready(function() {
+    // Confirmar eliminación
+    $('#confirmDeleteBtn').on('click', function(e) {
+        e.preventDefault();
+        const form = $(this).closest('form');
+        
+        Swal.fire({
+            title: 'Última confirmación',
+            text: 'Esta acción eliminará permanentemente el valor',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar definitivamente',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ 
+                    title: 'Eliminando...', 
+                    allowOutsideClick: false, 
+                    didOpen: () => Swal.showLoading() 
+                });
+                form.submit();
+            }
+        });
+    });
+});
+
+// Cambiar estado del valor
+function toggleStatus(id) {
+    const isActive = <?= $valor['activo'] ? 'true' : 'false' ?>;
+    const action = isActive ? 'desactivar' : 'activar';
+    const newStatus = isActive ? 'inactivo' : 'activo';
+    
+    Swal.fire({
+        title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} valor?`,
+        text: `El valor quedará ${newStatus}`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: isActive ? '#dc3545' : '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: `Sí, ${action}`,
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Procesando...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+            
+            $.post('<?= base_url('valores-comunas/toggleStatus') ?>/' + id, {
+                '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+            })
+            .done(function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Estado actualizado',
+                        text: response.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message
+                    });
+                }
+            })
+            .fail(function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor'
+                });
+            });
+        }
+    });
+}
+</script>
+<?= $this->endSection() ?>

@@ -23,11 +23,11 @@ class PerfilModel extends Model
         'perfil_habil',
     ];
 
-    // Fechas
+    // Fechas - ACTUALIZADO con nomenclatura perfil_XXXX
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
+    protected $createdField  = 'perfil_created_at';  // ← CAMBIO AQUÍ
+    protected $updatedField  = 'perfil_updated_at';  // ← CAMBIO AQUÍ
 
     // Validación
     protected $validationRules = [
@@ -216,21 +216,21 @@ class PerfilModel extends Model
                 'gestionar_perfiles'    => 'Gestionar perfiles',
                 'configurar_sistema'    => 'Configurar sistema',
                 'auditar_sistema'       => 'Auditar sistema',
-                'delete_users'          => 'Eliminar usuarios',       // ← NUEVO
+                'delete_users'          => 'Eliminar usuarios',
                 'acceso_total'          => 'Acceso total', 
-                'reset_passwords'     => 'Resetear contraseñas',  
+                'reset_passwords'       => 'Resetear contraseñas',  
             ];
         }
 
         return [
-            'ver_reportes'         => 'Ver reportes',
-            'ver_inspecciones'     => 'Ver inspecciones de su compañía',
-            'generar_reportes'     => 'Generar reportes',
-            'crear_usuarios'       => 'Crear usuarios de la compañía',
-            'gestionar_usuarios'   => 'Gestionar usuarios de la compañía',
+            'ver_reportes'          => 'Ver reportes',
+            'ver_inspecciones'      => 'Ver inspecciones de su compañía',
+            'generar_reportes'      => 'Generar reportes',
+            'crear_usuarios'        => 'Crear usuarios de la compañía',
+            'gestionar_usuarios'    => 'Gestionar usuarios de la compañía',
             'solicitar_inspecciones'=> 'Solicitar inspecciones',
-            'ver_estadisticas'     => 'Ver estadísticas',
-            'delete_users'         => 'Eliminar usuarios de la compañía',   
+            'ver_estadisticas'      => 'Ver estadísticas',
+            'delete_users'          => 'Eliminar usuarios de la compañía',   
         ];
     }
 

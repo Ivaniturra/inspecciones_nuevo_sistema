@@ -41,13 +41,13 @@ class Cias extends BaseController
     {
         // Validación principal (logo opcional)
         $rules = [
-            'cia_nombre'      => 'required|min_length[3]|max_length[255]',
-            'cia_direccion'   => 'permit_empty|max_length[500]',
-            'display_name'    => 'permit_empty|max_length[100]',
-            'brand_nav_bg'    => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-            'brand_nav_text'  => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-            'brand_side_start'=> 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-            'brand_side_end'  => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
+            'cia_nombre'            => 'required|min_length[3]|max_length[255]',
+            'cia_direccion'         => 'permit_empty|max_length[500]',
+            'cia_display_name'      => 'permit_empty|max_length[150]',
+            'cia_brand_nav_bg'      => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
+            'cia_brand_nav_text'    => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
+            'cia_brand_side_start'  => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
+            'cia_brand_side_end'    => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
         ];
 
         if (! $this->validate($rules)) {
@@ -79,33 +79,33 @@ class Cias extends BaseController
         }
 
         // Colores con fallback
-        $navBg     = $this->hexOrDefault($this->request->getPost('brand_nav_bg'), '#0d6efd');
-        $navText   = $this->hexOrDefault($this->request->getPost('brand_nav_text'), '#ffffff');
-        $sideStart = $this->hexOrDefault($this->request->getPost('brand_side_start'), '#667eea');
-        $sideEnd   = $this->hexOrDefault($this->request->getPost('brand_side_end'), '#764ba2');
+        $navBg     = $this->hexOrDefault($this->request->getPost('cia_brand_nav_bg'), '#0d6efd');
+        $navText   = $this->hexOrDefault($this->request->getPost('cia_brand_nav_text'), '#ffffff');
+        $sideStart = $this->hexOrDefault($this->request->getPost('cia_brand_side_start'), '#667eea');
+        $sideEnd   = $this->hexOrDefault($this->request->getPost('cia_brand_side_end'), '#764ba2');
 
         $nombre  = trim((string) $this->request->getPost('cia_nombre'));
         $slug    = $this->makeSlug($nombre);
 
         // Datos a guardar
         $data = [
-            'cia_nombre'        => $nombre,
-            'display_name'      => trim((string) $this->request->getPost('display_name')) ?: null,
-            'slug'              => $slug,
-            'cia_direccion'     => trim((string) $this->request->getPost('cia_direccion')),
-            'cia_logo'          => $logoName,
-            'cia_habil'         => (int) ($this->request->getPost('cia_habil') ?? 1),
-            'brand_nav_bg'      => $navBg,
-            'brand_nav_text'    => $navText,
-            'brand_side_start'  => $sideStart,
-            'brand_side_end'    => $sideEnd,
+            'cia_nombre'            => $nombre,
+            'cia_display_name'      => trim((string) $this->request->getPost('cia_display_name')) ?: null,
+            'cia_slug'              => $slug,
+            'cia_direccion'         => trim((string) $this->request->getPost('cia_direccion')),
+            'cia_logo'              => $logoName,
+            'cia_habil'             => (int) ($this->request->getPost('cia_habil') ?? 1),
+            'cia_brand_nav_bg'      => $navBg,
+            'cia_brand_nav_text'    => $navText,
+            'cia_brand_side_start'  => $sideStart,
+            'cia_brand_side_end'    => $sideEnd,
         ];
 
         if ($this->ciaModel->save($data)) {
 
             // Tema en sesión (útil mientras no hay login/selector de compañía)
             session()->set('theme', [
-                'title'         => $data['display_name'] ?: $data['cia_nombre'],
+                'title'         => $data['cia_display_name'] ?: $data['cia_nombre'],
                 'logo'          => $logoName ? base_url('uploads/logos/' . $logoName) : base_url('assets/img/app-logo.svg'),
                 'nav_bg'        => $navBg,
                 'nav_text'      => $navText,
@@ -157,13 +157,13 @@ class Cias extends BaseController
         }
 
         $rules = [
-            'cia_nombre'       => 'required|min_length[3]|max_length[255]',
-            'cia_direccion'    => 'permit_empty|max_length[500]',
-            'display_name'     => 'permit_empty|max_length[100]',
-            'brand_nav_bg'     => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-            'brand_nav_text'   => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-            'brand_side_start' => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-            'brand_side_end'   => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
+            'cia_nombre'            => 'required|min_length[3]|max_length[255]',
+            'cia_direccion'         => 'permit_empty|max_length[500]',
+            'cia_display_name'      => 'permit_empty|max_length[150]',
+            'cia_brand_nav_bg'      => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
+            'cia_brand_nav_text'    => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
+            'cia_brand_side_start'  => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
+            'cia_brand_side_end'    => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
         ];
 
         if (! $this->validate($rules)) {
@@ -201,32 +201,32 @@ class Cias extends BaseController
         }
 
         // Colores
-        $navBg     = $this->hexOrDefault($this->request->getPost('brand_nav_bg'), $cia['brand_nav_bg'] ?? '#0d6efd');
-        $navText   = $this->hexOrDefault($this->request->getPost('brand_nav_text'), $cia['brand_nav_text'] ?? '#ffffff');
-        $sideStart = $this->hexOrDefault($this->request->getPost('brand_side_start'), $cia['brand_side_start'] ?? '#667eea');
-        $sideEnd   = $this->hexOrDefault($this->request->getPost('brand_side_end'), $cia['brand_side_end'] ?? '#764ba2');
+        $navBg     = $this->hexOrDefault($this->request->getPost('cia_brand_nav_bg'), $cia['cia_brand_nav_bg'] ?? '#0d6efd');
+        $navText   = $this->hexOrDefault($this->request->getPost('cia_brand_nav_text'), $cia['cia_brand_nav_text'] ?? '#ffffff');
+        $sideStart = $this->hexOrDefault($this->request->getPost('cia_brand_side_start'), $cia['cia_brand_side_start'] ?? '#667eea');
+        $sideEnd   = $this->hexOrDefault($this->request->getPost('cia_brand_side_end'), $cia['cia_brand_side_end'] ?? '#764ba2');
 
         $nombre = trim((string) $this->request->getPost('cia_nombre'));
-        $slug   = $cia['slug'] ?: $this->makeSlug($nombre);
+        $slug   = $cia['cia_slug'] ?: $this->makeSlug($nombre);
 
         $data = [
-            'cia_nombre'        => $nombre,
-            'display_name'      => trim((string) $this->request->getPost('display_name')) ?: null,
-            'slug'              => $slug,
-            'cia_direccion'     => trim((string) $this->request->getPost('cia_direccion')),
-            'cia_logo'          => $logoName,
-            'cia_habil'         => (int) $this->request->getPost('cia_habil'),
-            'brand_nav_bg'      => $navBg,
-            'brand_nav_text'    => $navText,
-            'brand_side_start'  => $sideStart,
-            'brand_side_end'    => $sideEnd,
+            'cia_nombre'            => $nombre,
+            'cia_display_name'      => trim((string) $this->request->getPost('cia_display_name')) ?: null,
+            'cia_slug'              => $slug,
+            'cia_direccion'         => trim((string) $this->request->getPost('cia_direccion')),
+            'cia_logo'              => $logoName,
+            'cia_habil'             => (int) $this->request->getPost('cia_habil'),
+            'cia_brand_nav_bg'      => $navBg,
+            'cia_brand_nav_text'    => $navText,
+            'cia_brand_side_start'  => $sideStart,
+            'cia_brand_side_end'    => $sideEnd,
         ];
 
         if ($this->ciaModel->update($id, $data)) {
 
             // Refrescar theme en sesión (mientras no hay login/selector)
             session()->set('theme', [
-                'title'         => $data['display_name'] ?: $data['cia_nombre'],
+                'title'         => $data['cia_display_name'] ?: $data['cia_nombre'],
                 'logo'          => $logoName ? base_url('uploads/logos/' . $logoName) : base_url('assets/img/app-logo.svg'),
                 'nav_bg'        => $navBg,
                 'nav_text'      => $navText,

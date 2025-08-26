@@ -214,14 +214,14 @@ Detalles del Perfil
                         <div class="mb-2">
                             <i class="fas fa-calendar-plus me-2"></i>
                             <strong>Creado:</strong><br>
-                            <?= date('d/m/Y H:i:s', strtotime($perfil['created_at'])) ?>
+                            <?= date('d/m/Y H:i:s', strtotime($perfil['perfil_created_at'])) ?>
                         </div>
                         
-                        <?php if (!empty($perfil['updated_at']) && $perfil['updated_at'] !== $perfil['created_at']): ?>
+                        <?php if (!empty($perfil['perfil_updated_at']) && $perfil['perfil_updated_at'] !== $perfil['perfil_created_at']): ?>
                         <div class="mb-2">
                             <i class="fas fa-calendar-edit me-2"></i>
                             <strong>Última modificación:</strong><br>
-                            <?= date('d/m/Y H:i:s', strtotime($perfil['updated_at'])) ?>
+                            <?= date('d/m/Y H:i:s', strtotime($perfil['perfil_updated_at'])) ?>
                         </div>
                         <?php endif; ?>
                     </div>

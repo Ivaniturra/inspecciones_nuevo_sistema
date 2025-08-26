@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main') ?>
+ <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 Editar Perfil
@@ -249,11 +249,11 @@ Editar Perfil
                                         </h6>
                                         <small class="text-muted">
                                             <strong>ID:</strong> <?= (int)$perfil['perfil_id'] ?><br>
-                                            <?php if (!empty($perfil['created_at'])): ?>
-                                                <strong>Creado:</strong> <?= date('d/m/Y H:i', strtotime($perfil['created_at'])) ?><br>
+                                            <?php if (!empty($perfil['perfil_created_at'])): ?>
+                                                <strong>Creado:</strong> <?= date('d/m/Y H:i', strtotime($perfil['perfil_created_at'])) ?><br>
                                             <?php endif; ?>
-                                            <?php if (!empty($perfil['updated_at'])): ?>
-                                                <strong>Última modificación:</strong> <?= date('d/m/Y H:i', strtotime($perfil['updated_at'])) ?>
+                                            <?php if (!empty($perfil['perfil_updated_at'])): ?>
+                                                <strong>Última modificación:</strong> <?= date('d/m/Y H:i', strtotime($perfil['perfil_updated_at'])) ?>
                                             <?php endif; ?>
                                         </small>
                                     </div>
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function () {
         comp.style.display = (t === 'compania') ? '' : 'none';
         inte.style.display = (t === 'interno')  ? '' : 'none';
 
-        // Evita “permisos cruzados” al cambiar tipo
+        // Evita "permisos cruzados" al cambiar tipo
         if (t === 'compania') {
             inte.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
         } else if (t === 'interno') {

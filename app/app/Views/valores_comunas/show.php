@@ -79,8 +79,8 @@
                                 Comuna
                             </label>
                             <p class="form-control-plaintext">
-                                <?= esc($valor['comuna_nombre'] ?? 'Comuna: ' . $valor['comuna_codigo']) ?>
-                                <br><small class="text-muted">Código: <?= esc($valor['comuna_codigo']) ?></small>
+                                <?= esc($valor['comunas_nombre'] ?? 'Comuna: ' . $valor['comunas_id']) ?>
+                                <br><small class="text-muted">Código: <?= esc($valor['comunas_id']) ?></small>
                             </p>
                         </div>
 
@@ -91,7 +91,7 @@
                                 Región
                             </label>
                             <p class="form-control-plaintext">
-                                <?= esc($valor['region_nombre'] ?? 'N/A') ?>
+                                <?= esc($valor['regiones_nombre'] ?? 'N/A') ?>
                             </p>
                         </div>
 
@@ -295,7 +295,7 @@
                             <?= $valor['activo'] ? 'Desactivar' : 'Activar' ?>
                         </button>
                         
-                        <a href="<?= base_url('valores-comunas/create?cia_id=' . $valor['cia_id'] . '&comuna_codigo=' . $valor['comuna_codigo']) ?>" 
+                        <a href="<?= base_url('valores-comunas/create?cia_id=' . $valor['cia_id'] . '&comunas_id=' . $valor['comunas_id']) ?>" 
                            class="btn btn-outline-primary">
                             <i class="fas fa-copy me-2"></i>
                             Crear Valor Similar

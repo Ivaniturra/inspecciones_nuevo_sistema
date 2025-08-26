@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main') ?>
+ <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 Editar Compañía
@@ -99,18 +99,18 @@ Editar Compañía
 
                             <!-- Display Name (título de marca) -->
                             <div class="col-md-3 mb-3">
-                                <label for="display_name" class="form-label">
+                                <label for="cia_display_name" class="form-label">
                                     <i class="fas fa-signature text-info me-1"></i>
                                     Nombre comercial / Título
                                 </label>
                                 <input type="text"
-                                       class="form-control <?= (session('errors.display_name')) ? 'is-invalid' : '' ?>"
-                                       id="display_name"
-                                       name="display_name"
-                                       value="<?= old('display_name', $cia['display_name'] ?? $cia['cia_nombre']) ?>"
+                                       class="form-control <?= (session('errors.cia_display_name')) ? 'is-invalid' : '' ?>"
+                                       id="cia_display_name"
+                                       name="cia_display_name"
+                                       value="<?= old('cia_display_name', $cia['cia_display_name'] ?? $cia['cia_nombre']) ?>"
                                        placeholder="Texto que verás en el header">
                                 <div class="invalid-feedback">
-                                    <?= session('errors.display_name') ?>
+                                    <?= session('errors.cia_display_name') ?>
                                 </div>
                             </div>
                         </div>
@@ -184,38 +184,38 @@ Editar Compañía
                                             <div class="col-md-6">
                                                 <label class="form-label">Color barra superior (fondo)</label>
                                                 <input type="color"
-                                                       class="form-control form-control-color <?= (session('errors.brand_nav_bg')) ? 'is-invalid' : '' ?>"
-                                                       id="brand_nav_bg"
-                                                       name="brand_nav_bg"
-                                                       value="<?= old('brand_nav_bg', $cia['brand_nav_bg'] ?? '#0D6EFD') ?>">
-                                                <div class="invalid-feedback"><?= session('errors.brand_nav_bg') ?></div>
+                                                       class="form-control form-control-color <?= (session('errors.cia_brand_nav_bg')) ? 'is-invalid' : '' ?>"
+                                                       id="cia_brand_nav_bg"
+                                                       name="cia_brand_nav_bg"
+                                                       value="<?= old('cia_brand_nav_bg', $cia['cia_brand_nav_bg'] ?? '#0D6EFD') ?>">
+                                                <div class="invalid-feedback"><?= session('errors.cia_brand_nav_bg') ?></div>
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Color barra superior (texto/iconos)</label>
                                                 <input type="color"
-                                                       class="form-control form-control-color <?= (session('errors.brand_nav_text')) ? 'is-invalid' : '' ?>"
-                                                       id="brand_nav_text"
-                                                       name="brand_nav_text"
-                                                       value="<?= old('brand_nav_text', $cia['brand_nav_text'] ?? '#FFFFFF') ?>">
-                                                <div class="invalid-feedback"><?= session('errors.brand_nav_text') ?></div>
+                                                       class="form-control form-control-color <?= (session('errors.cia_brand_nav_text')) ? 'is-invalid' : '' ?>"
+                                                       id="cia_brand_nav_text"
+                                                       name="cia_brand_nav_text"
+                                                       value="<?= old('cia_brand_nav_text', $cia['cia_brand_nav_text'] ?? '#FFFFFF') ?>">
+                                                <div class="invalid-feedback"><?= session('errors.cia_brand_nav_text') ?></div>
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Sidebar degradado (inicio)</label>
                                                 <input type="color"
-                                                       class="form-control form-control-color <?= (session('errors.brand_side_start')) ? 'is-invalid' : '' ?>"
-                                                       id="brand_side_start"
-                                                       name="brand_side_start"
-                                                       value="<?= old('brand_side_start', $cia['brand_side_start'] ?? '#667EEA') ?>">
-                                                <div class="invalid-feedback"><?= session('errors.brand_side_start') ?></div>
+                                                       class="form-control form-control-color <?= (session('errors.cia_brand_side_start')) ? 'is-invalid' : '' ?>"
+                                                       id="cia_brand_side_start"
+                                                       name="cia_brand_side_start"
+                                                       value="<?= old('cia_brand_side_start', $cia['cia_brand_side_start'] ?? '#667EEA') ?>">
+                                                <div class="invalid-feedback"><?= session('errors.cia_brand_side_start') ?></div>
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Sidebar degradado (fin)</label>
                                                 <input type="color"
-                                                       class="form-control form-control-color <?= (session('errors.brand_side_end')) ? 'is-invalid' : '' ?>"
-                                                       id="brand_side_end"
-                                                       name="brand_side_end"
-                                                       value="<?= old('brand_side_end', $cia['brand_side_end'] ?? '#764BA2') ?>">
-                                                <div class="invalid-feedback"><?= session('errors.brand_side_end') ?></div>
+                                                       class="form-control form-control-color <?= (session('errors.cia_brand_side_end')) ? 'is-invalid' : '' ?>"
+                                                       id="cia_brand_side_end"
+                                                       name="cia_brand_side_end"
+                                                       value="<?= old('cia_brand_side_end', $cia['cia_brand_side_end'] ?? '#764BA2') ?>">
+                                                <div class="invalid-feedback"><?= session('errors.cia_brand_side_end') ?></div>
                                             </div>
                                         </div>
 
@@ -227,7 +227,7 @@ Editar Compañía
                                                     <img id="previewLogo"
                                                          src="<?= !empty($cia['cia_logo']) ? base_url('uploads/logos/' . $cia['cia_logo']) : 'https://via.placeholder.com/32x32?text=IZ' ?>"
                                                          alt="logo" class="me-2" style="width:32px;height:32px;object-fit:contain;">
-                                                    <strong id="previewTitle"><?= esc(old('display_name', $cia['display_name'] ?? $cia['cia_nombre'])) ?></strong>
+                                                    <strong id="previewTitle"><?= esc(old('cia_display_name', $cia['cia_display_name'] ?? $cia['cia_nombre'])) ?></strong>
                                                 </div>
                                                 <div id="previewSidebar" class="p-3 text-white" style="background:linear-gradient(135deg,#667EEA,#764BA2); min-height:100px;">
                                                     <div class="mb-2"><i class="fas fa-circle me-2"></i>Menú 1</div>
@@ -253,9 +253,9 @@ Editar Compañía
                                         </h6>
                                         <small class="text-muted">
                                             <strong>ID:</strong> <?= $cia['cia_id'] ?><br>
-                                            <strong>Creado:</strong> <?= date('d/m/Y H:i', strtotime($cia['created_at'])) ?><br>
-                                            <?php if (!empty($cia['updated_at'])): ?>
-                                                <strong>Última modificación:</strong> <?= date('d/m/Y H:i', strtotime($cia['updated_at'])) ?>
+                                            <strong>Creado:</strong> <?= date('d/m/Y H:i', strtotime($cia['cia_created_at'])) ?><br>
+                                            <?php if (!empty($cia['cia_updated_at'])): ?>
+                                                <strong>Última modificación:</strong> <?= date('d/m/Y H:i', strtotime($cia['cia_updated_at'])) ?>
                                             <?php endif; ?>
                                         </small>
                                     </div>
@@ -283,11 +283,11 @@ Editar Compañía
 <?= $this->section('scripts') ?>
 <script>
 (function() {
-    const navBg   = document.getElementById('brand_nav_bg');
-    const navText = document.getElementById('brand_nav_text');
-    const sideA   = document.getElementById('brand_side_start');
-    const sideB   = document.getElementById('brand_side_end');
-    const disp    = document.getElementById('display_name');
+    const navBg   = document.getElementById('cia_brand_nav_bg');
+    const navText = document.getElementById('cia_brand_nav_text');
+    const sideA   = document.getElementById('cia_brand_side_start');
+    const sideB   = document.getElementById('cia_brand_side_end');
+    const disp    = document.getElementById('cia_display_name');
 
     const prevTop = document.getElementById('previewTopbar');
     const prevSide= document.getElementById('previewSidebar');

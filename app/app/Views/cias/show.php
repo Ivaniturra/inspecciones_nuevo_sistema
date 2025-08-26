@@ -17,11 +17,11 @@
 <?= $this->section('content') ?>
 <?php
     // Fallbacks de branding por si no existen
-    $displayName   = $cia['display_name']      ?? $cia['cia_nombre'];
-    $navBg         = $cia['brand_nav_bg']      ?? '#0D6EFD';
-    $navText       = $cia['brand_nav_text']    ?? '#FFFFFF';
-    $sideStart     = $cia['brand_side_start']  ?? '#667EEA';
-    $sideEnd       = $cia['brand_side_end']    ?? '#764BA2';
+    $displayName   = $cia['cia_display_name']      ?? $cia['cia_nombre'];
+    $navBg         = $cia['cia_brand_nav_bg']      ?? '#0D6EFD';
+    $navText       = $cia['cia_brand_nav_text']    ?? '#FFFFFF';
+    $sideStart     = $cia['cia_brand_side_start']  ?? '#667EEA';
+    $sideEnd       = $cia['cia_brand_side_end']    ?? '#764BA2';
     $logoUrl       = !empty($cia['cia_logo'])
                         ? base_url('uploads/logos/' . $cia['cia_logo'])
                         : 'https://via.placeholder.com/200x120?text=Sin+logo';
@@ -266,13 +266,13 @@
                         <div class="mb-2">
                             <i class="fas fa-calendar-plus me-2"></i>
                             <strong>Creado:</strong><br>
-                            <?= date('d/m/Y H:i:s', strtotime($cia['created_at'])) ?>
+                            <?= date('d/m/Y H:i:s', strtotime($cia['cia_created_at'])) ?>
                         </div>
-                        <?php if (!empty($cia['updated_at']) && $cia['updated_at'] !== $cia['created_at']): ?>
+                        <?php if (!empty($cia['cia_updated_at']) && $cia['cia_updated_at'] !== $cia['cia_created_at']): ?>
                             <div class="mb-2">
                                 <i class="fas fa-calendar-edit me-2"></i>
                                 <strong>Última modificación:</strong><br>
-                                <?= date('d/m/Y H:i:s', strtotime($cia['updated_at'])) ?>
+                                <?= date('d/m/Y H:i:s', strtotime($cia['cia_updated_at'])) ?>
                             </div>
                         <?php endif; ?>
                     </div>

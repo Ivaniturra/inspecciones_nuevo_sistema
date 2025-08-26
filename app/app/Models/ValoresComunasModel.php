@@ -7,7 +7,7 @@ use CodeIgniter\Model;
 class ValoresComunasModel extends Model
 {
     protected $table            = 'valores_comunas';
-    protected $primaryKey       = 'valores_id';
+    protected $primaryKey       = 'valores_id';  // ← Asegúrate que sea esto
     protected $useAutoIncrement = true;
 
     protected $returnType     = 'array';
@@ -15,9 +15,11 @@ class ValoresComunasModel extends Model
     protected $protectFields  = true;
 
     protected $allowedFields = [
-        'comuna_codigo',
+        'comunas_id',
         'cia_id',
         'tipo_usuario',
+        'tipo_vehiculo_id',
+        'unidad_medida',
         'valor',
         'moneda',
         'descripcion',
@@ -34,18 +36,22 @@ class ValoresComunasModel extends Model
 
     // Validación
     protected $validationRules = [
-        'comuna_codigo'         => 'required|max_length[10]',
-        'cia_id'               => 'required|integer',
-        'tipo_usuario'         => 'required|max_length[50]',
+        'region_id'            => 'required|is_natural_no_zero',
+        'provincias_id'        => 'required|is_natural_no_zero',
+        'comunas_id'           => 'required|is_natural_no_zero',
+        'cia_id'               => 'required|is_natural_no_zero',
+        'tipo_usuario'         => 'required',
+        'tipo_vehiculo_id'     => 'required|is_natural_no_zero',
+        'unidad_medida'        => 'required|in_list[UF,CLP,UTM]',
+        'moneda'               => 'permit_empty|in_list[UF,CLP,UTM]',
         'valor'                => 'required|decimal',
-        'moneda'               => 'permit_empty|max_length[3]',
         'fecha_vigencia_desde' => 'required|valid_date',
         'fecha_vigencia_hasta' => 'permit_empty|valid_date',
         'activo'               => 'required|in_list[0,1]',
     ];
 
     protected $validationMessages = [
-        'comuna_codigo' => [
+        'comunas_id' => [
             'required' => 'El código de comuna es obligatorio',
         ],
         'cia_id' => [
@@ -92,13 +98,14 @@ class ValoresComunasModel extends Model
      */
     public function getValoresWithDetails(): array
     {
-        return $this->select('valores_comunas.*, comunas.comuna_nombre, regiones.region_nombre, cias.cia_nombre')
-                    ->join('comunas', 'comunas.comuna_codigo = valores_comunas.comuna_codigo', 'left')
-                    ->join('regiones', 'regiones.region_id = comunas.region_id', 'left')
+        return $this->select('valores_comunas.*, comunas.comunas_nombre, regiones.region_nombre, cias.cia_nombre')
+                    ->join('comunas',    'comunas.comunas_id = valores_comunas.comunas_id', 'left')
+                    ->join('provincias', 'provincias.provincias_id = comunas.provincias_id', 'left')
+                    ->join('regiones',   'regiones.region_id = provincias.regiones_id', 'left')
                     ->join('cias', 'cias.cia_id = valores_comunas.cia_id', 'left')
                     ->where('valores_comunas.activo', 1)
                     ->orderBy('cias.cia_nombre', 'ASC')
-                    ->orderBy('comunas.comuna_nombre', 'ASC')
+                    ->orderBy('comunas.comunas_nombre', 'ASC')
                     ->orderBy('valores_comunas.tipo_usuario', 'ASC')
                     ->findAll();
     }
@@ -108,12 +115,13 @@ class ValoresComunasModel extends Model
      */
     public function getValoresByCia($ciaId): array
     {
-        return $this->select('valores_comunas.*, comunas.comuna_nombre, regiones.region_nombre')
-                    ->join('comunas', 'comunas.comuna_codigo = valores_comunas.comuna_codigo', 'left')
-                    ->join('regiones', 'regiones.region_id = comunas.region_id', 'left')
+        return $this->select('valores_comunas.*, comunas.comunas_nombre, regiones.region_nombre')
+                    ->join('comunas',    'comunas.comunas_id = valores_comunas.comunas_id', 'left')
+                    ->join('provincias', 'provincias.provincias_id = comunas.provincias_id', 'left')
+                    ->join('regiones',   'regiones.region_id = provincias.regiones_id', 'left')
                     ->where('valores_comunas.cia_id', $ciaId)
                     ->where('valores_comunas.activo', 1)
-                    ->orderBy('comunas.comuna_nombre', 'ASC')
+                    ->orderBy('comunas.comunas_nombre', 'ASC')
                     ->orderBy('valores_comunas.tipo_usuario', 'ASC')
                     ->findAll();
     }
@@ -123,10 +131,10 @@ class ValoresComunasModel extends Model
      */
     public function getValoresByComuna($comunaCodigo): array
     {
-        return $this->select('valores_comunas.*, cias.cia_nombre, comunas.comuna_nombre')
+        return $this->select('valores_comunas.*, cias.cia_nombre, comunas.comunas_nombre')
                     ->join('cias', 'cias.cia_id = valores_comunas.cia_id', 'left')
-                    ->join('comunas', 'comunas.comuna_codigo = valores_comunas.comuna_codigo', 'left')
-                    ->where('valores_comunas.comuna_codigo', $comunaCodigo)
+                    ->join('comunas', 'comunas.comunas_id = valores_comunas.comuncomunas_ida_codigo', 'left')
+                    ->where('valores_comunas.comunas_id', $comunaCodigo)
                     ->where('valores_comunas.activo', 1)
                     ->orderBy('cias.cia_nombre', 'ASC')
                     ->orderBy('valores_comunas.tipo_usuario', 'ASC')
@@ -140,7 +148,7 @@ class ValoresComunasModel extends Model
     {
         $today = date('Y-m-d');
         
-        return $this->where('comuna_codigo', $comunaCodigo)
+        return $this->where('comunas_id', $comunaCodigo)
                     ->where('cia_id', $ciaId)
                     ->where('tipo_usuario', $tipoUsuario)
                     ->where('activo', 1)
@@ -154,13 +162,15 @@ class ValoresComunasModel extends Model
     }
 
     /**
-     * Verificar si existe un valor para los parámetros dados
+     * Verificar si existe un valor para los parámetros dados (versión completa)
      */
-    public function existeValor($comunaCodigo, $ciaId, $tipoUsuario, $excludeId = null): bool
+    public function existeValorCompleto($comunaCodigo, $ciaId, $tipoUsuario, $tipoVehiculoId, $unidadMedida, $excludeId = null): bool
     {
-        $builder = $this->where('comuna_codigo', $comunaCodigo)
+        $builder = $this->where('comunas_id', $comunaCodigo)
                         ->where('cia_id', $ciaId)
                         ->where('tipo_usuario', $tipoUsuario)
+                        ->where('tipo_vehiculo_id', $tipoVehiculoId)
+                        ->where('unidad_medida', $unidadMedida)
                         ->where('activo', 1);
 
         if ($excludeId) {
@@ -204,7 +214,7 @@ class ValoresComunasModel extends Model
         return [
             'total_valores'   => $this->where('activo', 1)->countAllResults(),
             'total_companias' => $this->select('cia_id')->distinct()->where('activo', 1)->countAllResults(),
-            'total_comunas'   => $this->select('comuna_codigo')->distinct()->where('activo', 1)->countAllResults(),
+            'total_comunas'   => $this->select('comunas_id')->distinct()->where('activo', 1)->countAllResults(),
             'tipos_usuario'   => count($this->getTiposUsuario()),
         ];
     }

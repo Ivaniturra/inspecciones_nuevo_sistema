@@ -51,18 +51,18 @@ Nueva Compañía
 
                         <!-- Nombre para mostrar (branding) -->
                         <div class="mb-3">
-                            <label for="display_name" class="form-label">
+                            <label for="cia_display_name" class="form-label">
                                 Nombre para mostrar (marca)
                             </label>
                             <input
                                 type="text"
-                                class="form-control <?= session('errors.display_name') ? 'is-invalid' : '' ?>"
-                                id="display_name"
-                                name="display_name"
-                                value="<?= esc(old('display_name')) ?>"
+                                class="form-control <?= session('errors.cia_display_name') ? 'is-invalid' : '' ?>"
+                                id="cia_display_name"
+                                name="cia_display_name"
+                                value="<?= esc(old('cia_display_name')) ?>"
                                 placeholder="Ej. InspectZu Chile"
                             >
-                            <div class="invalid-feedback"><?= session('errors.display_name') ?></div>
+                            <div class="invalid-feedback"><?= session('errors.cia_display_name') ?></div>
                             <div class="form-text">Se usa en el header y títulos (opcional).</div>
                         </div>
 
@@ -127,9 +127,9 @@ Nueva Compañía
                                             <input
                                                 type="color"
                                                 class="form-control form-control-color p-1"
-                                                id="brand_nav_bg"
-                                                name="brand_nav_bg"
-                                                value="<?= esc(old('brand_nav_bg', '#0d6efd')) ?>"
+                                                id="cia_brand_nav_bg"
+                                                name="cia_brand_nav_bg"
+                                                value="<?= esc(old('cia_brand_nav_bg', '#0d6efd')) ?>"
                                                 title="Color de fondo barra superior"
                                             >
                                         </div>
@@ -140,9 +140,9 @@ Nueva Compañía
                                             <input
                                                 type="color"
                                                 class="form-control form-control-color p-1"
-                                                id="brand_nav_text"
-                                                name="brand_nav_text"
-                                                value="<?= esc(old('brand_nav_text', '#ffffff')) ?>"
+                                                id="cia_brand_nav_text"
+                                                name="cia_brand_nav_text"
+                                                value="<?= esc(old('cia_brand_nav_text', '#ffffff')) ?>"
                                                 title="Color de texto barra superior"
                                             >
                                         </div>
@@ -162,9 +162,9 @@ Nueva Compañía
                                             <input
                                                 type="color"
                                                 class="form-control form-control-color p-1"
-                                                id="brand_side_start"
-                                                name="brand_side_start"
-                                                value="<?= esc(old('brand_side_start', '#667eea')) ?>"
+                                                id="cia_brand_side_start"
+                                                name="cia_brand_side_start"
+                                                value="<?= esc(old('cia_brand_side_start', '#667eea')) ?>"
                                                 title="Color inicio degradado"
                                             >
                                         </div>
@@ -175,9 +175,9 @@ Nueva Compañía
                                             <input
                                                 type="color"
                                                 class="form-control form-control-color p-1"
-                                                id="brand_side_end"
-                                                name="brand_side_end"
-                                                value="<?= esc(old('brand_side_end', '#764ba2')) ?>"
+                                                id="cia_brand_side_end"
+                                                name="cia_brand_side_end"
+                                                value="<?= esc(old('cia_brand_side_end', '#764ba2')) ?>"
                                                 title="Color fin degradado"
                                             >
                                         </div>
@@ -195,7 +195,7 @@ Nueva Compañía
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="rounded-circle d-inline-block" style="width:8px;height:8px;background:currentColor;opacity:.9"></span>
                                         <strong id="preview-title" class="small mb-0">
-                                            <?= esc(old('display_name') ?: (old('cia_nombre') ?: 'Marca')) ?>
+                                            <?= esc(old('cia_display_name') ?: (old('cia_nombre') ?: 'Marca')) ?>
                                         </strong>
                                     </div>
                                     <img id="preview-logo" src="" alt="Logo" style="height:24px; display:none;">
@@ -249,13 +249,13 @@ Nueva Compañía
     const $title    = document.getElementById('preview-title');
     const $logo     = document.getElementById('preview-logo');
 
-    const $navBg    = document.getElementById('brand_nav_bg');
-    const $navTxt   = document.getElementById('brand_nav_text');
-    const $sideA    = document.getElementById('brand_side_start');
-    const $sideB    = document.getElementById('brand_side_end');
+    const $navBg    = document.getElementById('cia_brand_nav_bg');
+    const $navTxt   = document.getElementById('cia_brand_nav_text');
+    const $sideA    = document.getElementById('cia_brand_side_start');
+    const $sideB    = document.getElementById('cia_brand_side_end');
 
     const $ciaNombre   = document.getElementById('cia_nombre');
-    const $displayName = document.getElementById('display_name');
+    const $displayName = document.getElementById('cia_display_name');
     const $logoInput   = document.getElementById('cia_logo');
 
     function applyPreview() {

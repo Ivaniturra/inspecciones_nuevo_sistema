@@ -1,4 +1,4 @@
- <?= $this->extend('layouts/main') ?>
+<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 <?= esc($title ?? 'Gestión de Valores por Comuna') ?>
@@ -44,6 +44,7 @@
     <?php endif; ?>
 
     <!-- Estadísticas -->
+    <?php if (isset($estadisticas)): ?>
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card border-0 shadow-sm">
@@ -121,6 +122,7 @@
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Filtros -->
     <div class="card shadow-sm mb-4">
@@ -130,14 +132,13 @@
             </h6>
         </div>
         <div class="card-body">
-            <form method="get" action="<?= base_url('valores-comunas/filter') ?>" id="filtrosForm">
+            <form method="get" action="<?= base_url('valores-comunas/filter') ?>">
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Compañía</label>
-                        <select name="cia_id" class="form-select" id="filterCiaSelect">
+                        <select name="cia_id" class="form-select">
                             <option value="">Todas las compañías</option>
                             <?php
-                            // Obtener compañías disponibles
                             $db = \Config\Database::connect();
                             $cias = $db->table('cias')
                                       ->select('cia_id, cia_nombre')
@@ -158,10 +159,9 @@
                         <label class="form-label">Tipo de Usuario</label>
                         <select name="tipo_usuario" class="form-select">
                             <option value="">Todos los tipos</option>
-                            <option value="general" <?= (isset($filtros['tipo_usuario']) && $filtros['tipo_usuario'] == 'general') ? 'selected' : '' ?>>General</option>
                             <option value="inspector" <?= (isset($filtros['tipo_usuario']) && $filtros['tipo_usuario'] == 'inspector') ? 'selected' : '' ?>>Inspector</option>
+                            <option value="compania" <?= (isset($filtros['tipo_usuario']) && $filtros['tipo_usuario'] == 'compania') ? 'selected' : '' ?>>Compañía</option>
                             <option value="supervisor" <?= (isset($filtros['tipo_usuario']) && $filtros['tipo_usuario'] == 'supervisor') ? 'selected' : '' ?>>Supervisor</option>
-                            <option value="administrador" <?= (isset($filtros['tipo_usuario']) && $filtros['tipo_usuario'] == 'administrador') ? 'selected' : '' ?>>Administrador</option>
                         </select>
                     </div>
 
@@ -204,7 +204,7 @@
         </div>
 
         <div class="card-body p-0">
-            <?php if (empty($valores)): ?>
+            <?php if (!isset($valores) || empty($valores)): ?>
                 <div class="text-center py-5">
                     <i class="fas fa-dollar-sign fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">No hay valores registrados</h5>
@@ -220,8 +220,8 @@
                             <tr>
                                 <th class="border-0">Compañía</th>
                                 <th class="border-0">Comuna</th>
-                                <th class="border-0">Región</th>
-                                <th class="border-0">Tipo Usuario</th>
+                                <th class="border-0">Usuario</th>
+                                <th class="border-0">Vehículo</th>
                                 <th class="border-0">Valor</th>
                                 <th class="border-0">Vigencia</th>
                                 <th class="border-0 text-center">Estado</th>
@@ -247,27 +247,33 @@
                                                 <i class="fas fa-map-marker-alt text-info"></i>
                                             </div>
                                             <div>
-                                                <?= esc($valor['comuna_nombre'] ?? 'Comuna: ' . $valor['comuna_codigo']) ?>
-                                                <br><small class="text-muted"><?= esc($valor['comuna_codigo']) ?></small>
+                                                <?= esc($valor['comunas_nombre'] ?? 'Comuna: ' . $valor['comunas_id']) ?>
+                                                <br><small class="text-muted"><?= esc($valor['region_nombre'] ?? 'N/A') ?></small>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="align-middle">
-                                        <small class="text-muted">
-                                            <?= esc($valor['region_nombre'] ?? 'N/A') ?>
-                                        </small>
-                                    </td>
-                                    <td class="align-middle">
-                                        <span class="badge bg-secondary">
-                                            <?= ucfirst(esc($valor['tipo_usuario'])) ?>
+                                        <span class="badge bg-<?= $valor['tipo_usuario'] == 'inspector' ? 'primary' : 'success' ?>">
+                                            <?= ucfirst(esc($valor['tipo_usuario'] ?? '')) ?>
                                         </span>
                                     </td>
                                     <td class="align-middle">
                                         <div>
+                                            <span class="badge bg-secondary">
+                                                <?= ucfirst(esc($valor['tipo_vehiculo_nombre'] ?? 'N/A')) ?>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div>
                                             <strong class="text-success">
-                                                $<?= number_format($valor['valor'], 0, ',', '.') ?>
+                                                <?php if (isset($valor['unidad_medida']) && $valor['unidad_medida'] == 'UF'): ?>
+                                                    <?= number_format($valor['valor'], 2, ',', '.') ?>
+                                                <?php else: ?>
+                                                    $<?= number_format($valor['valor'], 0, ',', '.') ?>
+                                                <?php endif; ?>
                                             </strong>
-                                            <small class="text-muted d-block"><?= esc($valor['moneda'] ?? 'CLP') ?></small>
+                                            <small class="text-muted d-block"><?= esc($valor['unidad_medida'] ?? $valor['moneda'] ?? 'CLP') ?></small>
                                         </div>
                                     </td>
                                     <td class="align-middle">
@@ -311,7 +317,7 @@
                                             </button>
                                             <button type="button" 
                                                     class="btn btn-outline-danger" 
-                                                    onclick="confirmDelete(<?= (int)$valor['valores_id'] ?>, '<?= esc($valor['cia_nombre'] . ' - ' . ($valor['comuna_nombre'] ?? $valor['comuna_codigo'])) ?>')"
+                                                    onclick="confirmDelete(<?= (int)$valor['valores_id'] ?>, '<?= esc($valor['cia_nombre'] . ' - ' . ($valor['comunas_nombre'] ?? $valor['comunas_id'])) ?>')"
                                                     data-bs-toggle="tooltip" title="Eliminar">
                                                 <i class="fas fa-trash"></i>
                                             </button>

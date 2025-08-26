@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main') ?>
+ <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 <?= esc($title ?? 'Gestión de Valores por Comuna') ?>
@@ -138,20 +138,13 @@
                         <label class="form-label">Compañía</label>
                         <select name="cia_id" class="form-select">
                             <option value="">Todas las compañías</option>
-                            <?php
-                            $db = \Config\Database::connect();
-                            $cias = $db->table('cias')
-                                      ->select('cia_id, cia_nombre')
-                                      ->where('cia_habil', 1)
-                                      ->orderBy('cia_nombre', 'ASC')
-                                      ->get()
-                                      ->getResultArray();
-                            
-                            foreach ($cias as $cia): ?>
-                                <option value="<?= $cia['cia_id'] ?>" <?= (isset($filtros['cia_id']) && $filtros['cia_id'] == $cia['cia_id']) ? 'selected' : '' ?>>
-                                    <?= esc($cia['cia_nombre']) ?>
-                                </option>
-                            <?php endforeach; ?>
+                            <?php if (!empty($cias)): ?>
+                                <?php foreach ($cias as $id => $nombre): ?>
+                                    <option value="<?= $id ?>" <?= (isset($filtros['cia_id']) && $filtros['cia_id'] == $id) ? 'selected' : '' ?>>
+                                        <?= esc($nombre) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
                     </div>
                     
@@ -247,77 +240,83 @@
                                                 <i class="fas fa-map-marker-alt text-info"></i>
                                             </div>
                                             <div>
-                                                <?= esc($valor['comunas_nombre'] ?? 'Comuna: ' . $valor['comunas_id']) ?>
+                                                <?= esc($valor['comunas_nombre'] ?? ('Comuna: ' . ($valor['comunas_id'] ?? 'N/A'))) ?>
                                                 <br><small class="text-muted"><?= esc($valor['region_nombre'] ?? 'N/A') ?></small>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="align-middle">
-                                        <span class="badge bg-<?= $valor['tipo_usuario'] == 'inspector' ? 'primary' : 'success' ?>">
-                                            <?= ucfirst(esc($valor['tipo_usuario'] ?? '')) ?>
+                                        <?php $tipo = $valor['tipo_usuario'] ?? $valor['valores_tipo_usuario'] ?? null; ?>
+                                        <span class="badge bg-<?= $tipo === 'inspector' ? 'primary' : ($tipo ? 'success' : 'secondary') ?>">
+                                            <?= $tipo ? ucfirst(esc($tipo)) : 'N/A' ?>
                                         </span>
                                     </td>
                                     <td class="align-middle">
                                         <div>
                                             <span class="badge bg-secondary">
-                                                <?= ucfirst(esc($valor['tipo_vehiculo_nombre'] ?? 'N/A')) ?>
+                                                <?= esc($valor['tipo_vehiculo_nombre'] ?? 'N/A') ?>
                                             </span>
                                         </div>
                                     </td>
                                     <td class="align-middle">
+                                        <?php
+                                            $unidad  = $valor['unidad_medida'] ?? $valor['valores_unidad_medida'] ?? 'CLP';
+                                            $moneda  = $valor['moneda']        ?? $valor['valores_moneda']        ?? $unidad;
+                                            $monto   = (float)($valor['valores_valor'] ?? $valor['valor'] ?? 0);
+                                            $simbolo = ($unidad === 'UF') ? 'UF' : (($unidad === 'UTM') ? 'UTM' : '$');
+                                            $fmt     = ($simbolo === '$')
+                                                        ? number_format($monto, 0, ',', '.')
+                                                        : number_format($monto, 2, ',', '.');
+                                        ?>
                                         <div>
-                                            <strong class="text-success">
-                                                <?php if (isset($valor['unidad_medida']) && $valor['unidad_medida'] == 'UF'): ?>
-                                                    <?= number_format($valor['valor'], 2, ',', '.') ?>
-                                                <?php else: ?>
-                                                    $<?= number_format($valor['valor'], 0, ',', '.') ?>
-                                                <?php endif; ?>
-                                            </strong>
-                                            <small class="text-muted d-block"><?= esc($valor['unidad_medida'] ?? $valor['moneda'] ?? 'CLP') ?></small>
+                                            <strong class="text-success"><?= $simbolo . ' ' . $fmt ?></strong>
+                                            <small class="text-muted d-block"><?= esc($moneda) ?></small>
                                         </div>
                                     </td>
                                     <td class="align-middle">
                                         <div>
-                                            <small class="text-success">
-                                                <i class="fas fa-play me-1"></i>
-                                                <?= date('d/m/Y', strtotime($valor['fecha_vigencia_desde'])) ?>
-                                            </small>
-                                            <?php if (!empty($valor['fecha_vigencia_hasta'])): ?>
+                                            <?php if (!empty($valor['valores_fecha_vigencia_desde'])): ?>
+                                                <small class="text-success">
+                                                    <i class="fas fa-play me-1"></i>
+                                                    <?= date('d/m/Y', strtotime($valor['valores_fecha_vigencia_desde'])) ?>
+                                                </small>
+                                            <?php endif; ?>
+                                            <?php if (!empty($valor['valores_fecha_vigencia_hasta'])): ?>
                                                 <br>
                                                 <small class="text-danger">
                                                     <i class="fas fa-stop me-1"></i>
-                                                    <?= date('d/m/Y', strtotime($valor['fecha_vigencia_hasta'])) ?>
+                                                    <?= date('d/m/Y', strtotime($valor['valores_fecha_vigencia_hasta'])) ?>
                                                 </small>
                                             <?php endif; ?>
                                         </div>
                                     </td>
                                     <td class="align-middle text-center">
-                                        <span class="badge <?= $valor['activo'] ? 'bg-success' : 'bg-danger' ?>">
-                                            <?= $valor['activo'] ? 'Activo' : 'Inactivo' ?>
+                                        <span class="badge <?= !empty($valor['valores_activo']) ? 'bg-success' : 'bg-danger' ?>">
+                                            <?= !empty($valor['valores_activo']) ? 'Activo' : 'Inactivo' ?>
                                         </span>
                                     </td>
                                     <td class="align-middle text-center">
                                         <div class="btn-group btn-group-sm">
-                                            <a href="<?= base_url('valores-comunas/show/' . $valor['valores_id']) ?>" 
+                                            <a href="<?= base_url('valores-comunas/show/' . (int)$valor['valores_id']) ?>" 
                                                class="btn btn-outline-info" 
                                                data-bs-toggle="tooltip" title="Ver detalles">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="<?= base_url('valores-comunas/edit/' . $valor['valores_id']) ?>" 
+                                            <a href="<?= base_url('valores-comunas/edit/' . (int)$valor['valores_id']) ?>" 
                                                class="btn btn-outline-warning"
                                                data-bs-toggle="tooltip" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <button type="button" 
-                                                    class="btn btn-outline-<?= $valor['activo'] ? 'danger' : 'success' ?>" 
-                                                    onclick="toggleStatus(<?= (int)$valor['valores_id'] ?>, '<?= $valor['activo'] ? 'desactivar' : 'activar' ?>')"
+                                                    class="btn btn-outline-<?= !empty($valor['valores_activo']) ? 'danger' : 'success' ?>" 
+                                                    onclick="toggleStatus(<?= (int)$valor['valores_id'] ?>, '<?= !empty($valor['valores_activo']) ? 'desactivar' : 'activar' ?>')"
                                                     data-bs-toggle="tooltip" 
-                                                    title="<?= $valor['activo'] ? 'Desactivar' : 'Activar' ?>">
-                                                <i class="fas fa-<?= $valor['activo'] ? 'pause' : 'play' ?>"></i>
+                                                    title="<?= !empty($valor['valores_activo']) ? 'Desactivar' : 'Activar' ?>">
+                                                <i class="fas fa-<?= !empty($valor['valores_activo']) ? 'pause' : 'play' ?>"></i>
                                             </button>
                                             <button type="button" 
                                                     class="btn btn-outline-danger" 
-                                                    onclick="confirmDelete(<?= (int)$valor['valores_id'] ?>, '<?= esc($valor['cia_nombre'] . ' - ' . ($valor['comunas_nombre'] ?? $valor['comunas_id'])) ?>')"
+                                                    onclick="confirmDelete(<?= (int)$valor['valores_id'] ?>, '<?= esc(($valor['cia_nombre'] ?? '') . ' - ' . ($valor['comunas_nombre'] ?? ($valor['comunas_id'] ?? ''))) ?>')"
                                                     data-bs-toggle="tooltip" title="Eliminar">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -467,28 +466,22 @@ function toggleStatus(id, action) {
     });
 }
 
-// Función para confirmar eliminación
+// Confirmar eliminación
 function confirmDelete(id, info) {
     $('#valorInfo').text(info);
     $('#deleteForm').attr('action', '<?= base_url('valores-comunas/delete') ?>/' + id);
     $('#deleteModal').modal('show');
 }
 
-// Manejar envío del formulario de eliminación
+// Envío del form de eliminación
 $(document).on('submit', '#deleteForm', function (e) {
     e.preventDefault();
-    
     Swal.fire({
         title: 'Eliminando valor...',
         allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        didOpen: () => { Swal.showLoading(); }
     });
-    
-    setTimeout(() => {
-        this.submit();
-    }, 500);
+    setTimeout(() => { this.submit(); }, 500);
 });
 </script>
 <?= $this->endSection() ?>

@@ -18,12 +18,13 @@ class UserModel extends Model
     'user_token_reset','user_habil','user_debe_cambiar_clave',
     'user_metadata','user_preferences','user_security_settings','user_login_history', 
     'user_remember_selector','user_remember_validator_hash','user_remember_expires',
+    'user_token_reset_expires'
     ];
 
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at'; 
+    protected $createdField  = 'user_created_at';  // CAMBIADO
+    protected $updatedField  = 'user_updated_at';  // CAMBIADO
 
     /** Validación mínima (el controlador aplica la validación fuerte) */
     protected $validationRules = [
@@ -226,10 +227,10 @@ class UserModel extends Model
             )
             ->join('cias', 'cias.cia_id = users.cia_id', 'left')
             ->join('perfiles', 'perfiles.perfil_id = users.user_perfil', 'left')
-            ->orderBy('users.user_id', 'DESC')      // ✅ más reciente arriba (robusto)
-            // ->orderBy('users.created_at', 'DESC') // ✅ usa este si tienes created_at
+            ->orderBy('users.user_id', 'DESC')      // ✅ más reciente arriba
             ->findAll();
     }
+
     public function getUsersByCompany(int $ciaId): array
     {
         return $this->select(
@@ -438,7 +439,8 @@ class UserModel extends Model
         $meta = $user['user_metadata'] ?? [];
         $meta = is_string($meta) ? (json_decode($meta, true) ?? []) : $meta;
 
-        $last = $meta['last_password_change'] ?? $user['created_at'] ?? null;
+        // CAMBIADO: usar user_created_at en lugar de created_at
+        $last = $meta['last_password_change'] ?? $user['user_created_at'] ?? null;
         if ($last) {
             $days = (time() - strtotime($last)) / 86400;
             return $days > 90;

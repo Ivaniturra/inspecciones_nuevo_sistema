@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main') ?>
+ <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 <?= esc($title ?? 'Detalles del Valor') ?>
@@ -19,12 +19,18 @@
                     </div>
                     <div>
                         <h1 class="h3 mb-0">
-                            $<?= number_format($valor['valor'], 0, ',', '.') ?> 
-                            <small class="text-muted"><?= esc($valor['moneda'] ?? 'CLP') ?></small>
+                            <?php if ($valor['valores_unidad_medida'] == 'UF'): ?>
+                                UF <?= number_format($valor['valores_valor'], 2, ',', '.') ?>
+                            <?php elseif ($valor['valores_unidad_medida'] == 'UTM'): ?>
+                                UTM <?= number_format($valor['valores_valor'], 2, ',', '.') ?>
+                            <?php else: ?>
+                                $<?= number_format($valor['valores_valor'], 0, ',', '.') ?>
+                            <?php endif; ?>
+                            <small class="text-muted"><?= esc($valor['valores_moneda'] ?? 'CLP') ?></small>
                         </h1>
                         <p class="text-muted mb-0">
-                            <span class="badge <?= $valor['activo'] ? 'bg-success' : 'bg-danger' ?>">
-                                <?= $valor['activo'] ? 'Activo' : 'Inactivo' ?>
+                            <span class="badge <?= $valor['valores_activo'] ? 'bg-success' : 'bg-danger' ?>">
+                                <?= $valor['valores_activo'] ? 'Activo' : 'Inactivo' ?>
                             </span>
                             <span class="badge bg-info ms-2">
                                 ID: <?= (int)$valor['valores_id'] ?>
@@ -91,7 +97,7 @@
                                 Región
                             </label>
                             <p class="form-control-plaintext">
-                                <?= esc($valor['regiones_nombre'] ?? 'N/A') ?>
+                                <?= esc($valor['region_nombre'] ?? 'N/A') ?>
                             </p>
                         </div>
 
@@ -103,7 +109,20 @@
                             </label>
                             <p class="form-control-plaintext">
                                 <span class="badge fs-6 bg-secondary">
-                                    <?= ucfirst(esc($valor['tipo_usuario'])) ?>
+                                    <?= ucfirst(esc($valor['valores_tipo_usuario'])) ?>
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- Tipo de Vehículo -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-car text-primary me-1"></i>
+                                Tipo de Vehículo
+                            </label>
+                            <p class="form-control-plaintext">
+                                <span class="badge fs-6 bg-secondary">
+                                    <?= esc($valor['tipo_vehiculo_nombre'] ?? 'N/A') ?>
                                 </span>
                             </p>
                         </div>
@@ -116,10 +135,16 @@
                             </label>
                             <p class="form-control-plaintext">
                                 <span class="fs-4 text-success fw-bold">
-                                    $<?= number_format($valor['valor'], 2, ',', '.') ?>
+                                    <?php if ($valor['valores_unidad_medida'] == 'UF'): ?>
+                                        UF <?= number_format($valor['valores_valor'], 2, ',', '.') ?>
+                                    <?php elseif ($valor['valores_unidad_medida'] == 'UTM'): ?>
+                                        UTM <?= number_format($valor['valores_valor'], 2, ',', '.') ?>
+                                    <?php else: ?>
+                                        $<?= number_format($valor['valores_valor'], 2, ',', '.') ?>
+                                    <?php endif; ?>
                                 </span>
                                 <span class="badge bg-success ms-2">
-                                    <?= esc($valor['moneda'] ?? 'CLP') ?>
+                                    <?= esc($valor['valores_moneda'] ?? 'CLP') ?>
                                 </span>
                             </p>
                         </div>
@@ -131,22 +156,22 @@
                                 Estado
                             </label>
                             <p class="form-control-plaintext">
-                                <span class="badge fs-6 <?= $valor['activo'] ? 'bg-success' : 'bg-danger' ?>">
-                                    <i class="fas <?= $valor['activo'] ? 'fa-check' : 'fa-times' ?> me-1"></i>
-                                    <?= $valor['activo'] ? 'Activo' : 'Inactivo' ?>
+                                <span class="badge fs-6 <?= $valor['valores_activo'] ? 'bg-success' : 'bg-danger' ?>">
+                                    <i class="fas <?= $valor['valores_activo'] ? 'fa-check' : 'fa-times' ?> me-1"></i>
+                                    <?= $valor['valores_activo'] ? 'Activo' : 'Inactivo' ?>
                                 </span>
                             </p>
                         </div>
 
                         <!-- Descripción -->
-                        <?php if (!empty($valor['descripcion'])): ?>
+                        <?php if (!empty($valor['valores_descripcion'])): ?>
                             <div class="col-12 mb-3">
                                 <label class="form-label fw-bold">
                                     <i class="fas fa-align-left text-info me-1"></i>
                                     Descripción
                                 </label>
                                 <p class="form-control-plaintext">
-                                    <?= nl2br(esc($valor['descripcion'])) ?>
+                                    <?= nl2br(esc($valor['valores_descripcion'])) ?>
                                 </p>
                             </div>
                         <?php endif; ?>
@@ -172,7 +197,7 @@
                             <p class="form-control-plaintext">
                                 <span class="badge bg-success fs-6">
                                     <i class="fas fa-play me-1"></i>
-                                    <?= date('d/m/Y', strtotime($valor['fecha_vigencia_desde'])) ?>
+                                    <?= date('d/m/Y', strtotime($valor['valores_fecha_vigencia_desde'])) ?>
                                 </span>
                             </p>
                         </div>
@@ -183,10 +208,10 @@
                                 Vigente hasta
                             </label>
                             <p class="form-control-plaintext">
-                                <?php if (!empty($valor['fecha_vigencia_hasta'])): ?>
+                                <?php if (!empty($valor['valores_fecha_vigencia_hasta'])): ?>
                                     <span class="badge bg-danger fs-6">
                                         <i class="fas fa-stop me-1"></i>
-                                        <?= date('d/m/Y', strtotime($valor['fecha_vigencia_hasta'])) ?>
+                                        <?= date('d/m/Y', strtotime($valor['valores_fecha_vigencia_hasta'])) ?>
                                     </span>
                                 <?php else: ?>
                                     <span class="badge bg-primary fs-6">
@@ -201,19 +226,19 @@
                         <div class="col-12">
                             <?php 
                             $hoy = date('Y-m-d');
-                            $vigenciaDesde = $valor['fecha_vigencia_desde'];
-                            $vigenciaHasta = $valor['fecha_vigencia_hasta'];
+                            $vigenciaDesde = $valor['valores_fecha_vigencia_desde'];
+                            $vigenciaHasta = $valor['valores_fecha_vigencia_hasta'];
                             
                             $esVigente = ($hoy >= $vigenciaDesde) && 
                                         (empty($vigenciaHasta) || $hoy <= $vigenciaHasta) && 
-                                        $valor['activo'];
+                                        $valor['valores_activo'];
                             ?>
                             <div class="alert <?= $esVigente ? 'alert-success' : 'alert-warning' ?>" role="alert">
                                 <i class="fas <?= $esVigente ? 'fa-check-circle' : 'fa-exclamation-triangle' ?> me-2"></i>
                                 <strong>Estado actual:</strong>
                                 <?php if ($esVigente): ?>
                                     Este valor está <strong>vigente y activo</strong> en la fecha actual.
-                                <?php elseif (!$valor['activo']): ?>
+                                <?php elseif (!$valor['valores_activo']): ?>
                                     Este valor está <strong>inactivo</strong>.
                                 <?php elseif ($hoy < $vigenciaDesde): ?>
                                     Este valor <strong>aún no entra en vigencia</strong>.
@@ -246,8 +271,8 @@
                             </div>
                         </div>
                         <div class="col-6">
-                            <h4 class="<?= $valor['activo'] ? 'text-success' : 'text-danger' ?>">
-                                <i class="fas <?= $valor['activo'] ? 'fa-check' : 'fa-times' ?>"></i>
+                            <h4 class="<?= $valor['valores_activo'] ? 'text-success' : 'text-danger' ?>">
+                                <i class="fas <?= $valor['valores_activo'] ? 'fa-check' : 'fa-times' ?>"></i>
                             </h4>
                             <small class="text-muted">Estado</small>
                         </div>
@@ -259,14 +284,14 @@
                         <div class="mb-2">
                             <i class="fas fa-calendar-plus me-2"></i>
                             <strong>Creado:</strong><br>
-                            <?= date('d/m/Y H:i:s', strtotime($valor['created_at'])) ?>
+                            <?= date('d/m/Y H:i:s', strtotime($valor['valores_created_at'])) ?>
                         </div>
                         
-                        <?php if (!empty($valor['updated_at']) && $valor['updated_at'] !== $valor['created_at']): ?>
+                        <?php if (!empty($valor['valores_updated_at']) && $valor['valores_updated_at'] !== $valor['valores_created_at']): ?>
                             <div class="mb-2">
                                 <i class="fas fa-calendar-edit me-2"></i>
                                 <strong>Última modificación:</strong><br>
-                                <?= date('d/m/Y H:i:s', strtotime($valor['updated_at'])) ?>
+                                <?= date('d/m/Y H:i:s', strtotime($valor['valores_updated_at'])) ?>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -289,10 +314,10 @@
                         </a>
                         
                         <button type="button" 
-                                class="btn <?= $valor['activo'] ? 'btn-outline-danger' : 'btn-outline-success' ?>"
+                                class="btn <?= $valor['valores_activo'] ? 'btn-outline-danger' : 'btn-outline-success' ?>"
                                 onclick="toggleStatus(<?= (int)$valor['valores_id'] ?>)">
-                            <i class="fas <?= $valor['activo'] ? 'fa-pause' : 'fa-play' ?> me-2"></i>
-                            <?= $valor['activo'] ? 'Desactivar' : 'Activar' ?>
+                            <i class="fas <?= $valor['valores_activo'] ? 'fa-pause' : 'fa-play' ?> me-2"></i>
+                            <?= $valor['valores_activo'] ? 'Desactivar' : 'Activar' ?>
                         </button>
                         
                         <a href="<?= base_url('valores-comunas/create?cia_id=' . $valor['cia_id'] . '&comunas_id=' . $valor['comunas_id']) ?>" 
@@ -324,7 +349,13 @@
                     <h5>¿Eliminar valor?</h5>
                     <p class="mb-3">
                         Estás a punto de eliminar el valor de 
-                        <strong>$<?= number_format($valor['valor'], 0, ',', '.') ?></strong>
+                        <strong>
+                            <?php if ($valor['valores_unidad_medida'] == 'UF'): ?>
+                                UF <?= number_format($valor['valores_valor'], 2, ',', '.') ?>
+                            <?php else: ?>
+                                $<?= number_format($valor['valores_valor'], 0, ',', '.') ?>
+                            <?php endif; ?>
+                        </strong>
                         para <strong><?= esc($valor['cia_nombre'] ?? 'N/A') ?></strong>
                     </p>
                     <div class="alert alert-warning">
@@ -423,7 +454,7 @@ $(document).ready(function() {
 
 // Cambiar estado del valor
 function toggleStatus(id) {
-    const isActive = <?= $valor['activo'] ? 'true' : 'false' ?>;
+    const isActive = <?= $valor['valores_activo'] ? 'true' : 'false' ?>;
     const action = isActive ? 'desactivar' : 'activar';
     const newStatus = isActive ? 'inactivo' : 'activo';
     

@@ -133,7 +133,7 @@ Editar Usuario
                                                 Avatar Actual
                                             </label>
                                             <div class="border rounded p-3 bg-light text-center">
-                                                <img src="<?= base_url('uploads/avatars/'.$usuario['user_avatar']) . '?v=' . urlencode($usuario['updated_at'] ?? time()) ?>"
+                                                <img src="<?= base_url('uploads/avatars/'.$usuario['user_avatar']) . '?v=' . urlencode($usuario['user_updated_at'] ?? time()) ?>"
                                                 alt="<?= esc($usuario['user_nombre']) ?>"
                                                 class="rounded-circle"
                                                 style="width:100px;height:100px;object-fit:cover;">
@@ -324,9 +324,9 @@ Editar Usuario
                                         </h6>
                                         <small class="text-muted">
                                             <strong>ID:</strong> <?= $usuario['user_id'] ?><br>
-                                            <strong>Registrado:</strong> <?= date('d/m/Y H:i', strtotime($usuario['created_at'])) ?><br>
-                                            <?php if (!empty($usuario['updated_at'])): ?>
-                                                <strong>Última modificación:</strong> <?= date('d/m/Y H:i', strtotime($usuario['updated_at'])) ?><br>
+                                            <strong>Registrado:</strong> <?= date('d/m/Y H:i', strtotime($usuario['user_created_at'])) ?><br>
+                                            <?php if (!empty($usuario['user_updated_at'])): ?>
+                                                <strong>Última modificación:</strong> <?= date('d/m/Y H:i', strtotime($usuario['user_updated_at'])) ?><br>
                                             <?php endif; ?>
                                             <?php if (!empty($usuario['user_ultimo_acceso'])): ?>
                                                 <strong>Último acceso:</strong> <?= date('d/m/Y H:i', strtotime($usuario['user_ultimo_acceso'])) ?>

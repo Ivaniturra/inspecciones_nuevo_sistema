@@ -65,10 +65,10 @@ class Auth extends BaseController
             // Branding usable en tus vistas
             'brand_title'    => $user['cia_nombre'],
             'brand_logo'     => env('app.ubicacion_logo_avatar').$user['user_avatar'],
-            'nav_bg'         => $user['brand_nav_bg'],
-            'nav_text'       => $user['brand_nav_text'],
-            'sidebar_start'  => $user['brand_side_start'],
-            'sidebar_end'    => $user['brand_side_end'],
+            'nav_bg'         => $user['cia_brand_nav_bg'],
+            'nav_text'       => $user['cia_brand_nav_text'],
+            'sidebar_start'  => $user['cia_brand_side_start'],
+            'sidebar_end'    => $user['cia_brand_side_end'],
             // Opcional: título de app para <title>
             'app_title'      => $user['cia_nombre'],
         ]);

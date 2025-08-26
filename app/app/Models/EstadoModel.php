@@ -18,11 +18,11 @@ class EstadoModel extends Model
         'estado_nombre',
     ];
 
-    // Fechas
+    // Fechas - ACTUALIZADO con nomenclatura estado_XXXX
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
+    protected $createdField  = 'estado_created_at';  // ← CAMBIO AQUÍ
+    protected $updatedField  = 'estado_updated_at';  // ← CAMBIO AQUÍ
 
     // Validación
     protected $validationRules = [
@@ -62,11 +62,17 @@ class EstadoModel extends Model
 
     /* ===================== Consultas personalizadas ===================== */
 
+    /**
+     * Obtiene todos los estados ordenados por nombre
+     */
     public function getAllEstados(): array
     {
         return $this->orderBy('estado_nombre', 'ASC')->findAll();
     }
 
+    /**
+     * Obtiene estados para usar en selects
+     */
     public function getEstadoForSelect(): array
     {
         $estados = $this->select('estado_id, estado_nombre')
@@ -79,5 +85,41 @@ class EstadoModel extends Model
         }
 
         return $result;
+    }
+
+    /**
+     * Obtiene estados ordenados por ID (orden de flujo)
+     */
+    public function getEstadosPorFlujo(): array
+    {
+        return $this->orderBy('estado_id', 'ASC')->findAll();
+    }
+
+    /**
+     * Busca estados por nombre
+     */
+    public function buscarEstados(string $termino): array
+    {
+        return $this->like('estado_nombre', $termino)
+                    ->orderBy('estado_nombre', 'ASC')
+                    ->findAll();
+    }
+
+    /**
+     * Obtiene el estado por nombre exacto
+     */
+    public function getEstadoByNombre(string $nombre): ?array
+    {
+        return $this->where('estado_nombre', $nombre)->first();
+    }
+
+    /**
+     * Estadísticas de estados
+     */
+    public function getEstadisticas(): array
+    {
+        return [
+            'total_estados' => $this->countAllResults(false),
+        ];
     }
 }

@@ -188,10 +188,7 @@ class Users extends BaseController
     {
         $currentId = session('user_id');
         $role      = session('user_perfil'); // 7 = super admin, etc.
-
-        if ($role != 7 && $id != $currentId) {
-            return redirect()->to('forbidden'); // o dashboard
-        } 
+  
         $usuario = $this->userModel->find($id);
         if (! $usuario) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Usuario no encontrado');

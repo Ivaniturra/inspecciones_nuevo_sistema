@@ -97,4 +97,17 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         // (Opcional) compat anterior si algo aún llama esto:
         $routes->get('getComunasByRegion/(:num)',     'ValoresComunas::getComunasByRegion/$1');
     });
+    $routes->group('TipoVehiculos',['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
+        $routes->get('/', 'TipoVehiculos::index');
+        $routes->get('create', 'TipoVehiculos::create');
+        $routes->post('store', 'TipoVehiculos::store');
+        $routes->get('show/(:num)', 'TipoVehiculos::show/$1');
+        $routes->get('edit/(:num)', 'TipoVehiculos::edit/$1');
+        $routes->post('update/(:num)', 'TipoVehiculos::update/$1');
+        $routes->put('update/(:num)', 'TipoVehiculos::update/$1');
+        $routes->delete('delete/(:num)', 'TipoVehiculos::delete/$1');
+        $routes->post('delete/(:num)', 'TipoVehiculos::delete/$1');
+        $routes->post('toggleStatus/(:num)', 'TipoVehiculos::toggleStatus/$1');
+        $routes->get('getSelect', 'TipoVehiculos::getSelect');
+    });
 });

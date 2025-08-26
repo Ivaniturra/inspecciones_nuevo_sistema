@@ -5,21 +5,16 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\ValoresComunasModel;
 use App\Models\CiaModel;
-use App\Models\ComunaModel;
-use App\Models\RegionModel;
 
 class ValoresComunas extends BaseController
 {
     protected $valoresComunasModel;
     protected $ciaModel;
-    protected $comunaModel;
-    protected $regionModel;
 
     public function __construct()
     {
         $this->valoresComunasModel = new ValoresComunasModel();
         $this->ciaModel = new CiaModel();
-        // Nota: Necesitarás crear ComunaModel y RegionModel siguiendo el mismo patrón
         helper(['url', 'text', 'form']);
     }
 
@@ -29,7 +24,8 @@ class ValoresComunas extends BaseController
             'title'        => 'Gestión de Valores por Comuna',
             'valores'      => $this->valoresComunasModel->getValoresWithDetails(),
             'estadisticas' => $this->valoresComunasModel->getEstadisticas(),
-            'filtros'      => [], // Variable para los filtros aplicados
+            'filtros'      => [],
+            'cias'         => $this->getCiasForSelect(),
         ];
 
         return view('valores_comunas/index', $data);
@@ -39,11 +35,12 @@ class ValoresComunas extends BaseController
     public function create()
     {
         $data = [
-            'title'      => 'Nuevo Valor por Comuna',
-            'validation' => \Config\Services::validation(),
-            'cias'       => $this->getCiasForSelect(),
-            'regiones'   => $this->getRegionesForSelect(),
-            'tipos_usuario' => $this->getTiposUsuarioForSelect(),
+            'title'           => 'Nuevo Valor por Comuna',
+            'validation'      => \Config\Services::validation(),
+            'cias'            => $this->getCiasForSelect(),
+            'regiones'        => $this->getRegionesForSelect(),
+            'tipos_usuario'   => $this->getTiposUsuarioForSelect(),
+            'tipos_vehiculo'  => $this->getTiposVehiculoForSelect(),
         ];
 
         return view('valores_comunas/create', $data);
@@ -53,7 +50,7 @@ class ValoresComunas extends BaseController
     public function store()
     {
         $rules = [
-            'comunas_id'         => 'required',
+            'comunas_id'           => 'required',
             'cia_id'               => 'required|integer',
             'tipo_usuario'         => 'required',
             'tipo_vehiculo_id'     => 'required|integer',
@@ -79,17 +76,17 @@ class ValoresComunas extends BaseController
         }
 
         $data = [
-        'comunas_id'          => (int)$this->request->getPost('comunas_id'),
-        'cia_id'              => (int)$this->request->getPost('cia_id'),
-        'tipo_usuario'        => (string)$this->request->getPost('tipo_usuario'),
-        'tipo_vehiculo_id'    => (int)$this->request->getPost('tipo_vehiculo_id'),
-        'valor'               => (float)$this->request->getPost('valor'),
-        'unidad_medida'       => (string)$this->request->getPost('unidad_medida'),
-        'moneda'              => (string)($this->request->getPost('moneda') ?: $this->request->getPost('unidad_medida')),
-        'descripcion'         => (string)$this->request->getPost('descripcion'),
-        'fecha_vigencia_desde'=> (string)$this->request->getPost('fecha_vigencia_desde'),
-        'fecha_vigencia_hasta'=> $this->request->getPost('fecha_vigencia_hasta') ?: null,
-        'activo'              => 1,
+            'comunas_id'                     => (string)$this->request->getPost('comunas_id'),
+            'cia_id'                         => (int)$this->request->getPost('cia_id'),
+            'tipo_vehiculo_id'               => (int)$this->request->getPost('tipo_vehiculo_id'),
+            'valores_tipo_usuario'           => (string)$this->request->getPost('tipo_usuario'),
+            'valores_unidad_medida'          => (string)$this->request->getPost('unidad_medida'),
+            'valores_valor'                  => (float)$this->request->getPost('valor'),
+            'valores_moneda'                 => (string)($this->request->getPost('moneda') ?: $this->request->getPost('unidad_medida')),
+            'valores_descripcion'            => (string)$this->request->getPost('descripcion'),
+            'valores_fecha_vigencia_desde'   => (string)$this->request->getPost('fecha_vigencia_desde'),
+            'valores_fecha_vigencia_hasta'   => $this->request->getPost('fecha_vigencia_hasta') ?: null,
+            'valores_activo'                 => 1,
         ];
 
         if ($this->valoresComunasModel->save($data)) {
@@ -102,11 +99,7 @@ class ValoresComunas extends BaseController
     /** Ver detalle */
     public function show($id)
     {
-        $valor = $this->valoresComunasModel->select('valores_comunas.*, comunas.comunas_nombre, regiones.region_nombre, cias.cia_nombre')
-                                          ->join('comunas', 'comunas.comunas_id = valores_comunas.comunas_id', 'left')
-                                          ->join('regiones', 'regiones.region_id = comunas.region_id', 'left')
-                                          ->join('cias', 'cias.cia_id = valores_comunas.cia_id', 'left')
-                                          ->find($id);
+        $valor = $this->valoresComunasModel->getValorWithFullDetails($id);
 
         if (! $valor) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Valor no encontrado');
@@ -121,65 +114,47 @@ class ValoresComunas extends BaseController
     /** Formulario de edición */
     public function edit($id)
     {
+        $id = (int) $id; // por si acaso
+
         $db = \Config\Database::connect();
 
-        // Trae el valor + trilogía región/provincia/comuna (LEFT JOIN para no perder filas)
-     $valor = $db->table('valores_comunas vc')
-    ->select('
-        vc.*,
-        c.comunas_nombre,
-        p.provincias_id,
-        p.provincias_nombre,
-        r.region_id,
-        r.region_nombre
-    ')
-    ->join('comunas c',    'c.comunas_id    = vc.comunas_id',      'left')
-    ->join('provincias p', 'p.provincias_id = c.provincias_id',    'left')
-    ->join('regiones r',   'r.region_id     = p.regiones_id',      'left')
-    ->where('vc.valores_id', $id)   // PK real de valores_comunas
-    ->get()
-    ->getRowArray(); 
+        $builder = $db->table('valores_comunas AS vc');
+        $builder->select('
+            vc.*,
+            c.comunas_nombre,
+            p.provincias_id,
+            p.provincias_nombre,
+            r.region_id,
+            r.region_nombre
+        ');
+        $builder->join('comunas      AS c', 'c.comunas_id      = vc.comunas_id',   'left');
+        $builder->join('provincias   AS p', 'p.provincias_id   = c.provincias_id', 'left');
+        // OJO acá: usar p.regiones_id (no p.region_id)
+        $builder->join('regiones     AS r', 'r.region_id       = p.regiones_id',   'left');
+
+        $builder->where('vc.valores_id', $id);
+
+        $valor = $builder->get()->getRowArray();
+
         if (!$valor) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Valor no encontrado');
         }
 
-        // Listado completo de regiones (para el select)
-        $regiones = $db->table('regiones')
-            ->select('region_id, region_nombre')
-            ->orderBy('region_id', 'ASC')
-            ->get()->getResultArray();
+        $data = [
+            'title'          => 'Editar Valor por Comuna',
+            'valor'          => $valor,
+            'regiones'       => $this->getRegionesForSelect(),
+            'provincias'     => $this->getProvinciasByRegionHelper($valor['region_id']),
+            'comunas'        => $this->getComunasByProvinciaHelper($valor['provincias_id']),
+            'cias'           => $this->getCiasForSelect(),
+            'tipos_usuario'  => $this->getTiposUsuarioForSelect(),
+            'tipos_vehiculo' => $this->getTiposVehiculoForSelect(),
+            'validation'     => \Config\Services::validation(),
+        ];
 
-        // Precarga dependientes SOLO si tenemos IDs
-        $provincias = [];
-        if (!empty($valor['region_id'])) {                // ¡OJO!: en regiones la PK es region_id
-            $provincias = $db->table('provincias')
-                ->select('provincias_id, provincias_nombre')
-                ->where('regiones_id', $valor['region_id']) // en provincias la FK se llama regiones_id
-                ->orderBy('provincias_nombre', 'ASC')
-                ->get()->getResultArray();
-        }
-
-        $comunas = [];
-        if (!empty($valor['provincias_id'])) {
-            $comunas = $db->table('comunas')
-                ->select('comunas_id, comunas_nombre')
-                ->where('provincias_id', $valor['provincias_id'])
-                ->orderBy('comunas_nombre', 'ASC')
-                ->get()->getResultArray();
-        }
-
-        return view('valores_comunas/edit', [
-            'title'      => 'Editar Valor por Comuna',
-            'valor'      => $valor,
-            'regiones'   => $regiones,
-            'provincias' => $provincias,
-            'comunas'    => $comunas,
-            'validation' => \Config\Services::validation(),
-            // si también pasas $cias desde aquí, mejor:
-            // 'cias'    => $this->getCiasForSelect(),
-        ]);
         return view('valores_comunas/edit', $data);
     }
+
 
     /** Actualizar */
     public function update($id)
@@ -190,9 +165,10 @@ class ValoresComunas extends BaseController
         }
 
         $rules = [
-            'comunas_id'         => 'required',
+            'comunas_id'           => 'required',
             'cia_id'               => 'required|integer',
             'tipo_usuario'         => 'required',
+            'tipo_vehiculo_id'     => 'required|integer',
             'valor'                => 'required|decimal',
             'fecha_vigencia_desde' => 'required|valid_date',
             'fecha_vigencia_hasta' => 'permit_empty|valid_date',
@@ -203,24 +179,28 @@ class ValoresComunas extends BaseController
         }
 
         // Verificar si ya existe otro valor activo para estos parámetros (excluyendo el actual)
-        if ($this->valoresComunasModel->existeValor(
+        if ($this->valoresComunasModel->existeValorCompleto(
             $this->request->getPost('comunas_id'),
             $this->request->getPost('cia_id'),
             $this->request->getPost('tipo_usuario'),
-            $id
+            $this->request->getPost('tipo_vehiculo_id'),
+            $this->request->getPost('unidad_medida'),
+            $id // Excluir el registro actual
         )) {
             return redirect()->back()->withInput()->with('error', 'Ya existe otro valor activo para esta combinación');
         }
 
         $data = [
-            'comunas_id'         => $this->request->getPost('comunas_id'),
-            'cia_id'               => (int) $this->request->getPost('cia_id'),
-            'tipo_usuario'         => $this->request->getPost('tipo_usuario'),
-            'valor'                => (float) $this->request->getPost('valor'),
-            'moneda'               => $this->request->getPost('moneda') ?: 'CLP',
-            'descripcion'          => $this->request->getPost('descripcion'),
-            'fecha_vigencia_desde' => $this->request->getPost('fecha_vigencia_desde'),
-            'fecha_vigencia_hasta' => $this->request->getPost('fecha_vigencia_hasta') ?: null,
+            'comunas_id'                     => (string)$this->request->getPost('comunas_id'),
+            'cia_id'                         => (int)$this->request->getPost('cia_id'),
+            'tipo_vehiculo_id'               => (int)$this->request->getPost('tipo_vehiculo_id'),
+            'valores_tipo_usuario'           => (string)$this->request->getPost('tipo_usuario'),
+            'valores_unidad_medida'          => (string)$this->request->getPost('unidad_medida'),
+            'valores_valor'                  => (float)$this->request->getPost('valor'),
+            'valores_moneda'                 => (string)($this->request->getPost('moneda') ?: 'CLP'),
+            'valores_descripcion'            => (string)$this->request->getPost('descripcion'),
+            'valores_fecha_vigencia_desde'   => (string)$this->request->getPost('fecha_vigencia_desde'),
+            'valores_fecha_vigencia_hasta'   => $this->request->getPost('fecha_vigencia_hasta') ?: null,
         ];
 
         if ($this->valoresComunasModel->update($id, $data)) {
@@ -259,7 +239,29 @@ class ValoresComunas extends BaseController
         return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el estado']);
     }
 
-    /** Obtener comunas por región (AJAX) */
+    /** Obtener provincias por región (AJAX) */
+    public function getProvinciasByRegion($regionId)
+    {
+        if (! $this->request->isAJAX() && ! is_numeric($regionId)) {
+            return redirect()->to('/valores-comunas');
+        }
+
+        $rows = $this->getProvinciasByRegionHelper($regionId);
+        return $this->response->setJSON($rows);
+    }
+
+    /** Obtener comunas por provincia (AJAX) */
+    public function getComunasByProvincia($provinciaId)
+    {
+        if (! $this->request->isAJAX() && ! is_numeric($provinciaId)) {
+            return redirect()->to('/valores-comunas');
+        }
+
+        $rows = $this->getComunasByProvinciaHelper($provinciaId);
+        return $this->response->setJSON($rows);
+    }
+
+    /** Obtener comunas por región (método legacy para backward compatibility) */
     public function getComunasByRegion($regionId)
     {
         if (! $this->request->isAJAX()) {
@@ -268,11 +270,13 @@ class ValoresComunas extends BaseController
 
         $db = \Config\Database::connect();
         
-        // Consulta directa a la tabla comunas por region_id
-        $comunas = $db->table('comunas')
-                     ->select('comunas_id, comunas_nombre')
-                     ->where('region_id', $regionId)
-                     ->orderBy('comunas_nombre', 'ASC')
+        $comunas = $db->table('comunas c')
+                     ->select('c.comunas_id, c.comunas_nombre, p.provincias_nombre')
+                     ->join('provincias p', 'p.provincias_id = c.provincias_id', 'left')
+                     ->join('regiones r', 'r.region_id = p.region_id', 'left')
+                     ->where('r.region_id', $regionId)
+                     ->orderBy('p.provincias_nombre', 'ASC')
+                     ->orderBy('c.comunas_nombre', 'ASC')
                      ->get()
                      ->getResultArray();
         
@@ -286,10 +290,18 @@ class ValoresComunas extends BaseController
         $comunaCodigo = $this->request->getGet('comunas_id');
         $tipoUsuario = $this->request->getGet('tipo_usuario');
 
-        $valores = $this->valoresComunasModel->select('valores_comunas.*, comunas.comunas_nombre, regiones.region_nombre, cias.cia_nombre')
-                                            ->join('comunas', 'comunas.comunas_id = valores_comunas.comunas_id', 'left')
-                                            ->join('regiones', 'regiones.region_id = comunas.region_id', 'left')
-                                            ->join('cias', 'cias.cia_id = valores_comunas.cia_id', 'left');
+        $valores = $this->valoresComunasModel->select('
+                valores_comunas.*, 
+                comunas.comunas_nombre, 
+                regiones.region_nombre, 
+                cias.cia_nombre,
+                tv.tipo_vehiculo_nombre
+            ')
+            ->join('comunas', 'comunas.comunas_id = valores_comunas.comunas_id', 'left')
+            ->join('provincias', 'provincias.provincias_id = comunas.provincias_id', 'left')
+            ->join('regiones', 'regiones.region_id = provincias.regiones_id', 'left')
+            ->join('cias', 'cias.cia_id = valores_comunas.cia_id', 'left')
+            ->join('tipo_vehiculo tv', 'tv.tipo_vehiculo_id = valores_comunas.tipo_vehiculo_id', 'left');
 
         if ($ciaId) {
             $valores->where('valores_comunas.cia_id', $ciaId);
@@ -300,24 +312,25 @@ class ValoresComunas extends BaseController
         }
 
         if ($tipoUsuario) {
-            $valores->where('valores_comunas.tipo_usuario', $tipoUsuario);
+            $valores->where('valores_comunas.valores_tipo_usuario', $tipoUsuario);
         }
 
         $data = [
             'title'        => 'Valores Filtrados',
-            'valores'      => $valores->where('valores_comunas.activo', 1)->findAll(),
+            'valores'      => $valores->where('valores_comunas.valores_activo', 1)->findAll(),
             'estadisticas' => $this->valoresComunasModel->getEstadisticas(),
+            'cias'         => $this->getCiasForSelect(),
             'filtros'      => [
-                'cia_id'        => $ciaId,
-                'comunas_id' => $comunaCodigo,
-                'tipo_usuario'  => $tipoUsuario,
+                'cia_id'       => $ciaId,
+                'comunas_id'   => $comunaCodigo,
+                'tipo_usuario' => $tipoUsuario,
             ]
         ];
 
         return view('valores_comunas/index', $data);
     }
 
-    /* =================== Helpers privados =================== */
+    /* =================== HELPERS PRIVADOS =================== */
 
     private function getCiasForSelect(): array
     {
@@ -333,46 +346,13 @@ class ValoresComunas extends BaseController
 
         return $result;
     }
-    public function getProvinciasByRegion($regionId)
-    {
-        if (! $this->request->isAJAX()) {
-            return redirect()->to('/valores-comunas');
-        }
 
-        $db = \Config\Database::connect();
-        $rows = $db->table('provincias')
-            ->select('provincias_id, provincias_nombre')
-            ->where('regiones_id', (int)$regionId)
-            ->orderBy('provincias_nombre', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        return $this->response->setJSON($rows);
-    }
-
-    public function getComunasByProvincia($provinciaId)
-    {
-        if (! $this->request->isAJAX()) {
-            return redirect()->to('/valores-comunas');
-        }
-
-        $db = \Config\Database::connect();
-        $rows = $db->table('comunas')
-            ->select('comunas_id, comunas_nombre')
-            ->where('provincias_id', (int)$provinciaId)
-            ->orderBy('comunas_nombre', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        return $this->response->setJSON($rows);
-    }
     private function getRegionesForSelect(): array
     {
         $db = \Config\Database::connect();
         
-        // Consulta directa a la tabla regiones
         $regiones = $db->table('regiones')
-                      ->select('region_id, region_nombre, region_id')
+                      ->select('region_id, region_nombre')
                       ->orderBy('region_id', 'ASC')
                       ->get()
                       ->getResultArray();
@@ -385,12 +365,60 @@ class ValoresComunas extends BaseController
         return $result;
     }
 
+    /** Helper para provincias */
+    private function getProvinciasByRegionHelper($regionId): array
+    {
+        if (!$regionId) return [];
+
+        $db = \Config\Database::connect();
+        return $db->table('provincias')
+            ->select('provincias_id, provincias_nombre')
+            ->where('regiones_id', (int)$regionId)
+            ->orderBy('provincias_nombre', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
+    /** Helper para comunas */
+    private function getComunasByProvinciaHelper($provinciaId): array
+    {
+        if (!$provinciaId) return [];
+
+        $db = \Config\Database::connect();
+        return $db->table('comunas')
+            ->select('comunas_id, comunas_nombre')
+            ->where('provincias_id', (int)$provinciaId)
+            ->orderBy('comunas_nombre', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
+    /** Helper para tipos de vehículo */
+    private function getTiposVehiculoForSelect(): array
+    {
+        $db = \Config\Database::connect();
+        
+        $tipos = $db->table('tipo_vehiculo')
+                   ->select('tipo_vehiculo_id, tipo_vehiculo_nombre')
+                   ->where('tipo_vehiculo_activo', 1)
+                   ->orderBy('tipo_vehiculo_nombre', 'ASC')
+                   ->get()
+                   ->getResultArray();
+
+        $result = [];
+        foreach ($tipos as $tipo) {
+            $result[$tipo['tipo_vehiculo_id']] = $tipo['tipo_vehiculo_nombre'];
+        }
+
+        return $result;
+    }
+
     private function getTiposUsuarioForSelect(): array
     {
         $tipos = $this->valoresComunasModel->getTiposUsuario();
         
         // Agregar tipos predefinidos si no existen
-        $tiposDefault = ['general', 'inspector', 'supervisor', 'administrador'];
+        $tiposDefault = ['general', 'inspector', 'compania', 'supervisor', 'administrador'];
         $tipos = array_unique(array_merge($tipos, $tiposDefault));
         sort($tipos);
 

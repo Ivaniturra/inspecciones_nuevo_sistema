@@ -95,9 +95,13 @@
                 </label>
                 <select class="form-select <?= !empty($validation) && $validation->hasError('tipo_usuario') ? 'is-invalid' : '' ?>"
                         id="tipo_usuario" name="tipo_usuario" required>
-                  <option value="inspector"  <?= (old('tipo_usuario', $valor['tipo_usuario'] ?? '') == 'inspector') ? 'selected' : '' ?>>Inspector</option>
-                  <option value="compania"   <?= (old('tipo_usuario', $valor['tipo_usuario'] ?? '') == 'compania') ? 'selected' : '' ?>>Compañía</option>
-                  <option value="supervisor" <?= (old('tipo_usuario', $valor['tipo_usuario'] ?? '') == 'supervisor') ? 'selected' : '' ?>>Supervisor</option>
+                  <?php if (!empty($tipos_usuario)): ?>
+                    <?php foreach ($tipos_usuario as $key => $nombre): ?>
+                      <option value="<?= $key ?>" <?= (old('tipo_usuario', $valor['valores_tipo_usuario'] ?? '') == $key) ? 'selected' : '' ?>>
+                        <?= esc($nombre) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
                 </select>
                 <?php if (!empty($validation) && $validation->hasError('tipo_usuario')): ?>
                   <div class="invalid-feedback"><?= esc($validation->getError('tipo_usuario')) ?></div>
@@ -112,14 +116,14 @@
                 </label>
                 <select class="form-select <?= !empty($validation) && $validation->hasError('tipo_vehiculo_id') ? 'is-invalid' : '' ?>"
                         id="tipo_vehiculo_id" name="tipo_vehiculo_id" required>
-                  <?php
-                  $db = \Config\Database::connect();
-                  $tipos = $db->table('tipo_vehiculo')->select('id, nombre')->where('activo', 1)->orderBy('nombre', 'ASC')->get()->getResultArray();
-                  foreach ($tipos as $t): ?>
-                    <option value="<?= $t['id'] ?>" <?= (old('tipo_vehiculo_id', $valor['tipo_vehiculo_id'] ?? 0) == $t['id']) ? 'selected' : '' ?>>
-                      <?= esc($t['nombre']) ?>
-                    </option>
-                  <?php endforeach; ?>
+                  <option value="">Seleccionar tipo...</option>
+                  <?php if (!empty($tipos_vehiculo)): ?>
+                    <?php foreach ($tipos_vehiculo as $id => $nombre): ?>
+                      <option value="<?= $id ?>" <?= (old('tipo_vehiculo_id', $valor['tipo_vehiculo_id'] ?? 0) == $id) ? 'selected' : '' ?>>
+                        <?= esc($nombre) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
                 </select>
                 <?php if (!empty($validation) && $validation->hasError('tipo_vehiculo_id')): ?>
                   <div class="invalid-feedback"><?= esc($validation->getError('tipo_vehiculo_id')) ?></div>
@@ -128,26 +132,23 @@
 
               <!-- Región -->
               <div class="col-md-6 mb-4">
-                <label for="regiones_id" class="form-label fw-bold">
+                <label for="region_id" class="form-label fw-bold">
                   <i class="fas fa-globe-americas text-warning me-1"></i>
                   Región <span class="text-danger">*</span>
-                </label> 
-                <select class="form-select <?= !empty($validation) && $validation->hasError('regiones_id') ? 'is-invalid' : '' ?>"
-                        id="regiones_id" name="regiones_id" required>
-                <option value="">Seleccionar región...</option>
-                <?php if (!empty($regiones)): ?>
-                    <?php foreach ($regiones as $r): 
-                        $id     = $r['region_id'];
-                        $nombre = trim(($r['region_codigo'] ?? '') . ' - ' . ($r['region_nombre'] ?? ''));
-                    ?>
-                    <option value="<?= $id ?>" <?= (old('regiones_id', $valor['region_id'] ?? '') == $id) ? 'selected' : '' ?>>
+                </label>
+                <select class="form-select <?= !empty($validation) && $validation->hasError('region_id') ? 'is-invalid' : '' ?>"
+                        id="region_id" name="region_id" required>
+                  <option value="">Seleccionar región...</option>
+                  <?php if (!empty($regiones)): ?>
+                    <?php foreach ($regiones as $id => $nombre): ?>
+                      <option value="<?= $id ?>" <?= (old('region_id', $valor['region_id'] ?? '') == $id) ? 'selected' : '' ?>>
                         <?= esc($nombre) ?>
-                    </option>
+                      </option>
                     <?php endforeach; ?>
-                <?php endif; ?>
+                  <?php endif; ?>
                 </select>
-                <?php if (!empty($validation) && $validation->hasError('regiones_id')): ?>
-                <div class="invalid-feedback"><?= esc($validation->getError('regiones_id')) ?></div>
+                <?php if (!empty($validation) && $validation->hasError('region_id')): ?>
+                  <div class="invalid-feedback"><?= esc($validation->getError('region_id')) ?></div>
                 <?php endif; ?>
               </div>
 
@@ -159,7 +160,15 @@
                 </label>
                 <select class="form-select <?= !empty($validation) && $validation->hasError('provincias_id') ? 'is-invalid' : '' ?>"
                         id="provincias_id" name="provincias_id" required>
-                  <option value="">Primero selecciona una región...</option>
+                  <option value="">Seleccionar provincia...</option>
+                  <?php if (!empty($provincias)): ?>
+                    <?php foreach ($provincias as $provincia): ?>
+                      <option value="<?= $provincia['provincias_id'] ?>"
+                              <?= (old('provincias_id', $valor['provincias_id'] ?? '') == $provincia['provincias_id']) ? 'selected' : '' ?>>
+                        <?= esc($provincia['provincias_nombre']) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
                 </select>
                 <?php if (!empty($validation) && $validation->hasError('provincias_id')): ?>
                   <div class="invalid-feedback"><?= esc($validation->getError('provincias_id')) ?></div>
@@ -174,7 +183,15 @@
                 </label>
                 <select class="form-select <?= !empty($validation) && $validation->hasError('comunas_id') ? 'is-invalid' : '' ?>"
                         id="comunas_id" name="comunas_id" required>
-                  <option value="">Primero selecciona una provincia...</option>
+                  <option value="">Seleccionar comuna...</option>
+                  <?php if (!empty($comunas)): ?>
+                    <?php foreach ($comunas as $comuna): ?>
+                      <option value="<?= $comuna['comunas_id'] ?>"
+                              <?= (old('comunas_id', $valor['comunas_id'] ?? '') == $comuna['comunas_id']) ? 'selected' : '' ?>>
+                        <?= esc($comuna['comunas_nombre']) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
                 </select>
                 <?php if (!empty($validation) && $validation->hasError('comunas_id')): ?>
                   <div class="invalid-feedback"><?= esc($validation->getError('comunas_id')) ?></div>
@@ -187,13 +204,19 @@
                   <i class="fas fa-dollar-sign text-success me-1"></i>
                   Valor <span class="text-danger">*</span>
                 </label>
+                <?php 
+                  $unidadActual = old('unidad_medida', $valor['valores_unidad_medida'] ?? 'CLP');
+                  $simbolo      = ($unidadActual === 'UF') ? 'UF' : (($unidadActual === 'UTM') ? 'UTM' : '$');
+                ?>
                 <div class="input-group">
-                  <span class="input-group-text" id="valorSymbol">
-                    <?= (old('unidad_medida', $valor['unidad_medida'] ?? 'CLP') === 'UF') ? 'UF' : ((old('unidad_medida', $valor['unidad_medida'] ?? 'CLP') === 'UTM') ? 'UTM' : '$') ?>
-                  </span>
-                  <input type="number" class="form-control <?= !empty($validation) && $validation->hasError('valor') ? 'is-invalid' : '' ?>"
-                         id="valor" name="valor" step="0.01" min="0"
-                         value="<?= esc(old('valor', $valor['valor'] ?? '')) ?>" required>
+                  <span class="input-group-text" id="valorSymbol"><?= esc($simbolo) ?></span>
+                  <input
+                    type="number"
+                    class="form-control <?= !empty($validation) && $validation->hasError('valor') ? 'is-invalid' : '' ?>"
+                    id="valor" name="valor" step="0.01" min="0"
+                    value="<?= esc(old('valor', $valor['valores_valor'] ?? '')) ?>" required
+                    aria-describedby="valorSymbol"
+                  >
                   <?php if (!empty($validation) && $validation->hasError('valor')): ?>
                     <div class="invalid-feedback"><?= esc($validation->getError('valor')) ?></div>
                   <?php endif; ?>
@@ -207,9 +230,9 @@
                   Unidad de Medida <span class="text-danger">*</span>
                 </label>
                 <select class="form-select" id="unidad_medida" name="unidad_medida" required>
-                  <option value="UF"  <?= (old('unidad_medida', $valor['unidad_medida'] ?? 'CLP') === 'UF')  ? 'selected' : '' ?>>UF - Unidad de Fomento</option>
-                  <option value="CLP" <?= (old('unidad_medida', $valor['unidad_medida'] ?? 'CLP') === 'CLP') ? 'selected' : '' ?>>CLP - Peso Chileno</option>
-                  <option value="UTM" <?= (old('unidad_medida', $valor['unidad_medida'] ?? 'CLP') === 'UTM') ? 'selected' : '' ?>>UTM - Unidad Tributaria Mensual</option>
+                  <option value="UF"  <?= ($unidadActual === 'UF')  ? 'selected' : '' ?>>UF - Unidad de Fomento</option>
+                  <option value="CLP" <?= ($unidadActual === 'CLP') ? 'selected' : '' ?>>CLP - Peso Chileno</option>
+                  <option value="UTM" <?= ($unidadActual === 'UTM') ? 'selected' : '' ?>>UTM - Unidad Tributaria Mensual</option>
                 </select>
               </div>
 
@@ -219,36 +242,39 @@
                   <i class="fas fa-coins text-warning me-1"></i>
                   Moneda de Referencia
                 </label>
+                <?php $monedaActual = old('moneda', $valor['valores_moneda'] ?? 'CLP'); ?>
                 <select class="form-select" id="moneda" name="moneda">
-                  <option value="UF"  <?= (old('moneda', $valor['moneda'] ?? 'CLP') === 'UF')  ? 'selected' : '' ?>>UF</option>
-                  <option value="CLP" <?= (old('moneda', $valor['moneda'] ?? 'CLP') === 'CLP') ? 'selected' : '' ?>>CLP</option>
-                  <option value="UTM" <?= (old('moneda', $valor['moneda'] ?? 'CLP') === 'UTM') ? 'selected' : '' ?>>UTM</option>
+                  <option value="UF"  <?= ($monedaActual === 'UF')  ? 'selected' : '' ?>>UF</option>
+                  <option value="CLP" <?= ($monedaActual === 'CLP') ? 'selected' : '' ?>>CLP</option>
+                  <option value="UTM" <?= ($monedaActual === 'UTM') ? 'selected' : '' ?>>UTM</option>
                 </select>
               </div>
 
-              <!-- Fecha de vigencia desde -->
+              <!-- Vigente desde -->
               <div class="col-md-6 mb-4">
                 <label for="fecha_vigencia_desde" class="form-label fw-bold">
                   <i class="fas fa-calendar-plus text-success me-1"></i>
                   Vigente desde <span class="text-danger">*</span>
                 </label>
-                <input type="date" class="form-control <?= !empty($validation) && $validation->hasError('fecha_vigencia_desde') ? 'is-invalid' : '' ?>"
+                <input type="date"
+                       class="form-control <?= !empty($validation) && $validation->hasError('fecha_vigencia_desde') ? 'is-invalid' : '' ?>"
                        id="fecha_vigencia_desde" name="fecha_vigencia_desde"
-                       value="<?= esc(old('fecha_vigencia_desde', $valor['fecha_vigencia_desde'] ?? '')) ?>" required>
+                       value="<?= esc(old('fecha_vigencia_desde', $valor['valores_fecha_vigencia_desde'] ?? '')) ?>" required>
                 <?php if (!empty($validation) && $validation->hasError('fecha_vigencia_desde')): ?>
                   <div class="invalid-feedback"><?= esc($validation->getError('fecha_vigencia_desde')) ?></div>
                 <?php endif; ?>
               </div>
 
-              <!-- Fecha de vigencia hasta -->
+              <!-- Vigente hasta -->
               <div class="col-md-6 mb-4">
                 <label for="fecha_vigencia_hasta" class="form-label fw-bold">
                   <i class="fas fa-calendar-times text-danger me-1"></i>
                   Vigente hasta
                 </label>
-                <input type="date" class="form-control <?= !empty($validation) && $validation->hasError('fecha_vigencia_hasta') ? 'is-invalid' : '' ?>"
+                <input type="date"
+                       class="form-control <?= !empty($validation) && $validation->hasError('fecha_vigencia_hasta') ? 'is-invalid' : '' ?>"
                        id="fecha_vigencia_hasta" name="fecha_vigencia_hasta"
-                       value="<?= esc(old('fecha_vigencia_hasta', $valor['fecha_vigencia_hasta'] ?? '')) ?>">
+                       value="<?= esc(old('fecha_vigencia_hasta', $valor['valores_fecha_vigencia_hasta'] ?? '')) ?>">
                 <?php if (!empty($validation) && $validation->hasError('fecha_vigencia_hasta')): ?>
                   <div class="invalid-feedback"><?= esc($validation->getError('fecha_vigencia_hasta')) ?></div>
                 <?php endif; ?>
@@ -262,7 +288,7 @@
                   Descripción
                 </label>
                 <textarea class="form-control" id="descripcion" name="descripcion" rows="3"
-                          placeholder="Descripción del valor o concepto..."><?= esc(old('descripcion', $valor['descripcion'] ?? '')) ?></textarea>
+                          placeholder="Descripción del valor o concepto..."><?= esc(old('descripcion', $valor['valores_descripcion'] ?? '')) ?></textarea>
               </div>
             </div>
           </div>
@@ -286,6 +312,7 @@
             </div>
           </div>
         </form>
+
       </div>
     </div>
   </div>
@@ -305,14 +332,14 @@
 <?= $this->section('scripts') ?>
 <script>
 $(function () {
-  const $region    = $('#regiones_id');     // select región (asegúrate que exista)
+  // Cascada región -> provincia -> comuna
+  const $region    = $('#region_id');
   const $provincia = $('#provincias_id');
   const $comuna    = $('#comunas_id');
 
-  // Preseleccionados para EDIT (o repoblado tras validación)
-  const preRegion    = "<?= esc(old('regiones_id',   $valor['region_id']       ?? ''), 'js') ?>";
-  const preProvincia = "<?= esc(old('provincias_id', $valor['provincias_id']   ?? ''), 'js') ?>";
-  const preComuna    = "<?= esc(old('comunas_id',    $valor['comunas_id']      ?? ''), 'js') ?>";
+  const preRegion    = "<?= esc(old('region_id', $valor['region_id'] ?? ''), 'js') ?>";
+  const preProvincia = "<?= esc(old('provincias_id', $valor['provincias_id'] ?? ''), 'js') ?>";
+  const preComuna    = "<?= esc(old('comunas_id', $valor['comunas_id'] ?? ''), 'js') ?>";
 
   function loadProvincias(regionId, selectedId=null) {
     $provincia.html('<option value="">Cargando provincias...</option>').prop('disabled', true);
@@ -358,11 +385,9 @@ $(function () {
       });
   }
 
-  // Cascada
   $region.on('change', function(){
     const rid = $(this).val();
-    loadProvincias(rid).then(function(){ 
-      // al cambiar región, limpiamos comuna
+    loadProvincias(rid).then(function(){
       $comuna.html('<option value="">Primero selecciona una provincia...</option>').prop('disabled', false);
     });
   });
@@ -372,8 +397,8 @@ $(function () {
     loadComunas(pid);
   });
 
-  // Inicialización (EDIT y/o old input)
-  if (preRegion) {
+  // Inicialización (modo edición)
+  if (preRegion && (!$provincia.find('option').length || $provincia.find('option').length === 1)) {
     $region.val(String(preRegion));
     loadProvincias(preRegion, preProvincia).then(function(){
       if (preProvincia) {
@@ -381,6 +406,37 @@ $(function () {
       }
     });
   }
+
+  // Unidad => moneda + símbolo
+  const $unidad = $('#unidad_medida');
+  const $moneda = $('#moneda');
+  function applySymbolAndCurrency() {
+    const unidad = $unidad.val();
+    $moneda.val(unidad);
+    let symbol = '$';
+    if (unidad === 'UF') symbol = 'UF';
+    else if (unidad === 'UTM') symbol = 'UTM';
+    $('#valorSymbol').text(symbol);
+  }
+  $unidad.on('change', applySymbolAndCurrency);
+  applySymbolAndCurrency();
+
+  // Validación simple en submit
+  $('#valorForm').on('submit', function(e) {
+    const valor = parseFloat($('#valor').val());
+    if (!(valor > 0)) {
+      e.preventDefault();
+      if (window.Swal) {
+        Swal.fire({ icon: 'error', title: 'Valor incorrecto', text: 'El valor debe ser mayor que 0' });
+      } else {
+        alert('El valor debe ser mayor que 0');
+      }
+      $('#valor').focus();
+      return false;
+    }
+    $(this).find('button[type="submit"]').prop('disabled', true);
+    if (window.Swal) Swal.fire({ title: 'Actualizando valor...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  });
 });
 </script>
 <?= $this->endSection() ?>

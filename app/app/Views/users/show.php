@@ -274,7 +274,7 @@ Detalles del Usuario
                         <div class="mb-2">
                             <i class="fas fa-calendar-plus me-2"></i>
                             <strong>Registrado:</strong><br>
-                            <?= date('d/m/Y H:i:s', strtotime($usuario['created_at'])) ?>
+                            <?= date('d/m/Y H:i:s', strtotime($usuario['user_created_at'])) ?>
                         </div>
                         
                         <div class="mb-2">
@@ -287,11 +287,11 @@ Detalles del Usuario
                             <?php endif; ?>
                         </div>
                         
-                        <?php if (!empty($usuario['updated_at']) && $usuario['updated_at'] !== $usuario['created_at']): ?>
+                        <?php if (!empty($usuario['user_updated_at']) && $usuario['user_updated_at'] !== $usuario['user_created_at']): ?>
                         <div class="mb-2">
                             <i class="fas fa-calendar-edit me-2"></i>
                             <strong>Última modificación:</strong><br>
-                            <?= date('d/m/Y H:i:s', strtotime($usuario['updated_at'])) ?>
+                            <?= date('d/m/Y H:i:s', strtotime($usuario['user_updated_at'])) ?>
                         </div>
                         <?php endif; ?>
                     </div>

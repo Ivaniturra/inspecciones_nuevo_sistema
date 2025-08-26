@@ -234,6 +234,12 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
     <i class="icon fa-solid fa-dollar-sign"></i>
     <span class="label">Valores Comuna</span>
   </a>
+  <!-- Tipos de Vehículo -->
+<a class="nav-link <?= url_is('TipoVehiculos') || url_is('TipoVehiculos/*') ? 'active' : '' ?>" href="<?= base_url('TipoVehiculos') ?>" data-bs-toggle="tooltip" data-bs-title="Tipos de Vehículo">
+  <i class="icon fa-solid fa-car"></i>
+  <span class="label">Tipos Vehículo</span>
+</a>
+
 <!--
     <div class="rail-section">Operación</div>
     <a class="nav-link <?= url_is('inspecciones') || url_is('inspecciones/*') ? 'active' : '' ?>" href="<?= base_url('inspecciones') ?>" data-bs-toggle="tooltip" data-bs-title="Inspecciones">

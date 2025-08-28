@@ -194,12 +194,12 @@ class Database extends Config
     {
         parent::__construct();  
         
-        $this->default['hostname'] = getenv('database_default_hostname') ;
-        $this->default['username'] = getenv('database_default_username') ;
-        $this->default['password'] = getenv('database_default_password') ;
-        $this->default['database'] = getenv('database_default_database') ;
-        $this->default['DBDriver'] = getenv('database_default_DBDriver') ;
-        $this->default['port'] = (int)(getenv('database_default_port')); 
+        $this->default['hostname'] = getenv('database.default.hostname') ;
+        $this->default['username'] = getenv('database.default.username') ;
+        $this->default['password'] = getenv('database.default.password') ;
+        $this->default['database'] = getenv('database.default.database') ;
+        $this->default['DBDriver'] = getenv('database.default.DBDriver') ;
+        $this->default['port'] = (int)(getenv('database.default.port')); 
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
         }

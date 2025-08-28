@@ -200,7 +200,7 @@ class Database extends Config
             $this->default['database'] = env('database.default.database');
             $this->default['username'] = env('database.default.username');
             $this->default['password'] = env('database.default.password');
-            $this->default['DBDriver'] = env('database.default.DBDriver', 'MySQLi');
+            $this->default['DBDriver'] = env('database.default.DBDriver');
             $this->default['port'] = (int)env('database.default.port', 3306);
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';

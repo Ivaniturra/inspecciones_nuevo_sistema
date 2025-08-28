@@ -94,6 +94,10 @@
   </style>
 </head>
 <body>
+  <?php
+  $logo = env('app.imagen_nomb_logo', 'logo.jpg');
+  $logo_path = env('app.ubicacion_logo_pagina', 'assets/img/');
+  ?>
 <?php echo base_url(); ?>
 <div class="auth-wrap">
 
@@ -105,11 +109,11 @@
     <div class="overlay"></div>
     <div class="inner">
       <div> 
-          <img src="<?= env('app.ubicacion_logo_pagina').env('app.imagen_nomb_logo') ?>"  style="height:48px" class="mb-3"> 
+          <img src="<?= $logo; ?>"  style="height:48px" class="mb-3"> 
         <h1 class="brand-title"><?= env('app.title') ?></h1>
         <p class="mb-4 opacity-75">Bienvenido. Ingresa tus credenciales para continuar.</p>
         <!-- Imagen ilustrativa (cámbiala si quieres) -->
-        <img class="hero-img" src="<?= env('app.ubicacion_logo_pagina').env('app.imagen_nomb_logo2') ?>"
+        <img class="hero-img" src="<?= $$logo_path; ?>"
              alt="Ilustración de acceso">
       </div>
     </div>

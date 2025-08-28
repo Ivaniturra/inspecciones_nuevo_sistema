@@ -3,11 +3,8 @@
 ########## Stage 1: vendor (Composer) ##########
 FROM composer:2 AS vendor
 WORKDIR /app
-
-# Copiamos composer.json y lock desde el repo raíz
-COPY composer.json composer.lock ./
-
-# Instalamos dependencias (genera vendor/)
+# copiar manifiestos desde subcarpeta app/
+COPY app/composer.json app/composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
 ########## Stage 2: PHP + Apache ##########
@@ -25,15 +22,16 @@ RUN a2enmod rewrite \
 
 WORKDIR /var/www/html
 
-# Copiamos vendor desde el stage vendor
+# vendor ya construido
 COPY --from=vendor /app/vendor /var/www/html/vendor
 
-# Copiamos el resto del proyecto
-COPY . .
+# copiar TODO el proyecto desde subcarpeta app/ a /var/www/html
+COPY app/. .
 
-# Permisos
+# permisos
 RUN chown -R www-data:www-data /var/www/html/writable \
  && find /var/www/html/writable -type d -exec chmod 775 {} \; \
  && find /var/www/html/writable -type f -exec chmod 664 {} \;
 
-ENV CI_ENVIRONMENT=p_
+ENV CI_ENVIRONMENT=production
+EXPOSE 80

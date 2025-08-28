@@ -150,7 +150,8 @@
         <?php endif; ?>
 
         <form action="<?= base_url('login') ?>" method="post" novalidate autocomplete="on">
-              <?= csrf_field() ?>  <!-- Esta línea debe estar presente -->
+                  <input type="text" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+
 
 
           <div class="form-floating mb-3">

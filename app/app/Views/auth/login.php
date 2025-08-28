@@ -150,7 +150,8 @@
         <?php endif; ?>
 
         <form action="<?= base_url('login') ?>" method="post" novalidate autocomplete="on">
-          <?= csrf_field() ?>
+              <?= csrf_field() ?>  <!-- Esta línea debe estar presente -->
+
 
           <div class="form-floating mb-3">
             <input type="email" class="form-control" id="email" name="email"

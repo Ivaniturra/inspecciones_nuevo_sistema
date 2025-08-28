@@ -6,14 +6,6 @@ use App\Models\UserModel;
 
 class Auth extends BaseController
 {
-    public function index()
-    {
-        // Debug temporal
-        echo "Base URL: '" . base_url() . "'<br>";
-        echo "Config baseURL: '" . config('App')->baseURL . "'<br>";
-        echo "Env baseURL: '" . env('app.baseURL') . "'<br>";
-        die(); // Quitar después del debug
-    }
     public function login()
     {
         // Si ya está logueado, redirige

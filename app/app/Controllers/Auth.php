@@ -8,6 +8,10 @@ class Auth extends BaseController
 {
     public function login()
     {
+         echo "Token enviado: " . $this->request->getPost('csrf_test_name') . "<br>";
+    echo "Token esperado: " . csrf_hash() . "<br>";
+    echo "Método: " . $this->request->getMethod() . "<br>";
+    die();
         if ($this->request->getMethod() === 'POST') {
             // Validar CSRF
             if (!$this->validate(['csrf_token' => 'required'])) {

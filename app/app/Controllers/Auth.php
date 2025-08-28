@@ -8,15 +8,7 @@ class Auth extends BaseController
 {
     public function login()
     {
-        
-        if ($this->request->getMethod() === 'POST') {
-            // Validar CSRF
-            if (!$this->validate(['csrf_token' => 'required'])) {
-                return redirect()->back()->withInput()->with('error', 'Token de seguridad inválido.');
-            }
-            
-            // Tu lógica de autenticación aquí
-        }
+        // Si ya está logueado, redirige
         if (session('user_id')) {
             return redirect()->to(base_url('cias')); 
         }

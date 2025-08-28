@@ -16,7 +16,7 @@ class App extends BaseConfig
      *
      * E.g., http://example.com/
      */
-    public string $baseURL = 'http://localhost:8080/';
+    public string $baseURL = 'https://inspeccionesmys-inspeccionesserver-qabc80-2632d2-72-60-57-178.traefik.me/';
 
     /**
      * Allowed Hostnames in the Site URL other than the hostname in the baseURL.

@@ -26,12 +26,12 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-            'hostname'     => getenv('database.default.hostname', 'localhost'),
-        'username'     => getenv('database.default.username', ''),
-        'password'     => getenv('database.default.password', ''),
-        'database'     => getenv('database.default.database', ''),
-        'DBDriver'     => getenv('database.default.DBDriver', 'MySQLi'),
-        'DBPrefix'     => getenv('database.default.DBPrefix', ''),
+            'hostname'     => '',
+        'username'     => '',
+        'password'     => '',
+        'database'     => '',
+        'DBDriver'     => '',
+        'DBPrefix'     => '',
         'DBPrefix'     => '',
         'pConnect'     => false,
         'DBDebug'      => true,

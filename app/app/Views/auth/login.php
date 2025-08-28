@@ -94,7 +94,7 @@
   </style>
 </head>
 <body>
-
+<?php echo base_url(); ?>
 <div class="auth-wrap">
 
   <!-- Lado izquierdo: imagen / marca -->

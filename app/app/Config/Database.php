@@ -26,12 +26,12 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-            'hostname'     => '',
-        'username'     => '',
-        'password'     => '',
-        'database'     => '',
-        'DBDriver'     => '',
-        'DBPrefix'     => '',
+            'hostname'     => env('database.default.hostname', 'localhost'),
+        'username'     => env('database.default.username', ''),
+        'password'     => env('database.default.password', ''),
+        'database'     => env('database.default.database', ''),
+        'DBDriver'     => env('database.default.DBDriver', 'MySQLi'),
+        'DBPrefix'     => env('database.default.DBPrefix', ''),
         'DBPrefix'     => '',
         'pConnect'     => false,
         'DBDebug'      => true,
@@ -192,14 +192,11 @@ class Database extends Config
 
     public function __construct()
     {
-        parent::__construct();  
-        
-        $this->default['hostname'] = getenv('database.default.hostname') ;
-        $this->default['username'] = getenv('database.default.username') ;
-        $this->default['password'] = getenv('database.default.password') ;
-        $this->default['database'] = getenv('database.default.database') ;
-        $this->default['DBDriver'] = getenv('database.default.DBDriver') ;
-        $this->default['port'] = (int)(getenv('database.default.port')); 
+        parent::__construct();
+
+        // Ensure that we always set the database group to 'tests' if
+        // we are currently running an automated test suite, so that
+        // we don't overwrite live data on accident.
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
         }

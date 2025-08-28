@@ -30,9 +30,7 @@ writable/uploads/*
 
 writable/debugbar/*
 
-# Environment
-.env
-env
+ 
 
 # Testing
 phpunit*.xml

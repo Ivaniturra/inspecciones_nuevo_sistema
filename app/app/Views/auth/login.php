@@ -113,7 +113,7 @@
         <h1 class="brand-title"><?= env('app.title') ?></h1>
         <p class="mb-4 opacity-75">Bienvenido. Ingresa tus credenciales para continuar.</p>
         <!-- Imagen ilustrativa (cámbiala si quieres) -->
-        <img class="hero-img" src="<?= $$logo_path; ?>"
+        <img class="hero-img" src="<?= $logo_path; ?>"
              alt="Ilustración de acceso">
       </div>
     </div>

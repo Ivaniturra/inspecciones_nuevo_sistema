@@ -3,9 +3,14 @@
 ########## Stage 1: vendor (Composer) ##########
 FROM composer:2 AS vendor
 WORKDIR /app
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 # copiar manifiestos desde subcarpeta app/
 COPY app/composer.json app/composer.lock ./
-RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+
+# Ignoramos ext-intl SOLO en el stage vendor; en runtime sí se instala
+RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader \
+    --ignore-platform-req=ext-intl
 
 ########## Stage 2: PHP + Apache ##########
 FROM php:8.2-apache

@@ -24,14 +24,14 @@ class Database extends Config
      *
      * @var array<string, mixed>
      */
-     public array $default = [
+    public array $default = [
         'DSN'          => '',
         'hostname'     => env('database.default.hostname', 'localhost'),
         'username'     => env('database.default.username', ''),
         'password'     => env('database.default.password', ''),
         'database'     => env('database.default.database', ''),
-        'DBDriver'     => env('database.default.DBDriver', 'MySQLi'),
-        'DBPrefix'     => env('database.default.DBPrefix', ''),
+        'DBDriver'     => env('database.default.DBDriver', 'MySQLi'), 
+        'DBPrefix'     => '',
         'pConnect'     => false,
         'DBDebug'      => true,
         'charset'      => 'utf8mb4',
@@ -41,7 +41,7 @@ class Database extends Config
         'compress'     => false,
         'strictOn'     => false,
         'failover'     => [],
-        'port'         => env('database.default.port', 3306),
+        'port'         => 3306,
         'numberNative' => false,
         'foundRows'    => false,
         'dateFormat'   => [
@@ -50,6 +50,7 @@ class Database extends Config
             'time'     => 'H:i:s',
         ],
     ];
+
     //    /**
     //     * Sample database connection for SQLite3.
     //     *

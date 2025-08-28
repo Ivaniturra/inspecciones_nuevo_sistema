@@ -26,11 +26,11 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-        'hostname'     => 'localhost',
-        'username'     => '',
-        'password'     => '',
-        'database'     => '',
-        'DBDriver'     => '',
+        'hostname'     => env('database.default.hostname', 'localhost'),
+        'username'     => env('database.default.username', ''),
+        'password'     => env('database.default.password', ''),
+        'database'     => env('database.default.database', ''),
+        'DBDriver'     => env('database.default.DBDriver', 'MySQLi'), 
         'DBPrefix'     => '',
         'pConnect'     => false,
         'DBDebug'      => true,
@@ -49,7 +49,7 @@ class Database extends Config
             'datetime' => 'Y-m-d H:i:s',
             'time'     => 'H:i:s',
         ],
-    ]; 
+    ];
 
     //    /**
     //     * Sample database connection for SQLite3.
@@ -196,13 +196,6 @@ class Database extends Config
         // Ensure that we always set the database group to 'tests' if
         // we are currently running an automated test suite, so that
         // we don't overwrite live data on accident.
-            $this->default['hostname'] = env('database.default.hostname');
-            $this->default['database'] = env('database.default.database');
-            $this->default['username'] = env('database.default.username');
-            $this->default['password'] = env('database.default.password');
-            $this->default['DBDriver'] = env('database.default.DBDriver');
-            
-            $this->default['port'] = (int)env('database.default.port');
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
         }

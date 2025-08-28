@@ -16,7 +16,7 @@ class App extends BaseConfig
      *
      * E.g., http://example.com/
      */
-    public string $baseURL = env('app.baseURL', 'http://localhost/');
+        public string $baseURL = ''; // Déjalo vacío
 
 
     /**

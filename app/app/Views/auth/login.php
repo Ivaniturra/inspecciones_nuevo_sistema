@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Iniciar sesión - <?= env('app.title') ?></title>
+  <title>Iniciar sesiónsssss - <?= env('app.title') ?></title>
 
   <!-- Aplica tema guardado (o el del sistema) ANTES de cargar CSS para evitar FOUC -->
   <script>

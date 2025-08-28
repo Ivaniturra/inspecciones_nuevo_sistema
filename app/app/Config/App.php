@@ -16,7 +16,23 @@ class App extends BaseConfig
      *
      * E.g., http://example.com/
      */
-    public string $baseURL = '';
+    class App extends BaseConfig
+    {
+        public string $baseURL = 'https://inspeccionesmys-inspeccionesserver-qabc80-2632d2-72-60-57-178.traefik.me/';
+        
+        public function __construct()
+        {
+            parent::__construct();
+            
+            // Solo sobrescribir si existe en .env y no está vacío
+            $envBaseURL = env('app.baseURL');
+            if (!empty($envBaseURL)) {
+                $this->baseURL = $envBaseURL;
+            }
+        }
+        
+        // resto de tu configuración...
+    }
 
 
     /**

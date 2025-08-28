@@ -97,7 +97,7 @@
   <?php
   
   ?>
-<?php echo base_url(); ?>
+<?php echo env('app.imagen_nomb_logo2'); ?>
 <div class="auth-wrap">
 
   <!-- Lado izquierdo: imagen / marca -->

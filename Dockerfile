@@ -40,5 +40,9 @@ RUN mkdir -p /var/www/html/writable/{cache,logs,session,uploads} \
  && find /var/www/html/writable -type d -exec chmod 775 {} \; \
  && find /var/www/html/writable -type f -exec chmod 664 {} \;
 
+ RUN mkdir -p /var/www/html/writable/cache \
+    && chmod -R 755 /var/www/html/writable \
+    && chown -R www-data:www-data /var/www/html/writable
+
 ENV CI_ENVIRONMENT=production
 EXPOSE 80

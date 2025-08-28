@@ -30,7 +30,7 @@ class Database extends Config
         'username'     => '',
         'password'     => '',
         'database'     => '',
-        'DBDriver'     => 'MySQLi',
+        'DBDriver'     => '',
         'DBPrefix'     => '',
         'pConnect'     => false,
         'DBDebug'      => true,
@@ -201,6 +201,7 @@ class Database extends Config
             $this->default['username'] = env('database.default.username');
             $this->default['password'] = env('database.default.password');
             $this->default['DBDriver'] = env('database.default.DBDriver');
+            
             $this->default['port'] = (int)env('database.default.port', 3306);
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';

@@ -23,7 +23,13 @@ $sideEnd    = session('sidebar_end')   ?? env('app.sidebar_end');
 <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
 <!-- SweetAlert2 -->
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
+<!-- En <head> -->
+<meta name="csrf-name" content="<?= csrf_token() ?>">
+<meta name="csrf-hash" content="<?= csrf_hash() ?>">
 
+<!-- (opcional, como respaldo) -->
+<input type="hidden" id="__csrfHidden"
+       name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
 <style>
 /* Dropdown oscuro dentro de la navbar brandbar */
 .navbar.brandbar .dropdown-menu{

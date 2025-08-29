@@ -163,10 +163,10 @@ Gestión de Corredores
                                             <?php
                                             // $corredor['companias'] puede venir como string "A|B|C" o como null
                                             $lista = [];
-                                            if (!empty($corredor['companias'])) {
-                                                $lista = is_array($corredor['companias'])
-                                                        ? $corredor['companias']
-                                                        : array_filter(explode('|', $corredor['companias']));
+                                            if (!empty($corredor['cias'])) {
+                                                $lista = is_array($corredor['cias'])
+                                                        ? $corredor['cias']
+                                                        : array_filter(explode('|', $corredor['cias']));
                                             }
                                             ?>
                                             <?php if (!empty($lista)): ?>

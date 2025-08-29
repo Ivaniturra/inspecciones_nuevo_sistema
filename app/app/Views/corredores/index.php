@@ -237,19 +237,43 @@ $('.corredor-status-toggle').on('change', function () {
   const id = $toggle.data('id');
   const checked = $toggle.is(':checked');
 
-  $.post('<?= base_url('corredores/toggleStatus') ?>/' + id)
-    .done(function (resp) {
+  // lee token actual del hidden
+  const $csrf = $('#__csrf');
+  const csrfName = $csrf.data('name');
+  let csrfHash   = $csrf.val();
+
+  $.ajax({
+    url: '<?= base_url('corredores/toggleStatus') ?>/' + id,
+    type: 'POST',
+    data: { [csrfName]: csrfHash },        // <-- token enviado explícitamente
+    success: function (resp, _text, xhr) {
+      // refresca token: primero desde header, si no, desde body
+      const newHash = xhr.getResponseHeader('X-CSRF-TOKEN')
+                    || (resp && resp.token && resp.token.hash);
+      if (newHash) {
+        csrfHash = newHash;
+        $csrf.val(newHash);
+        $('meta[name="csrf-hash"]').attr('content', newHash);
+      }
+
       if (!resp || !resp.success) {
         $toggle.prop('checked', !checked);
-        Swal.fire({ icon:'error', title:'Error', text: resp?.message ?? 'No se pudo actualizar el estado' });
+        Swal.fire({
+          icon: 'error', title: 'Error',
+          text: (resp && resp.message) ? resp.message : 'No se pudo actualizar el estado'
+        });
       } else {
-        Swal.fire({ icon:'success', title:'Estado actualizado', text: resp.message, timer: 1600, showConfirmButton:false });
+        Swal.fire({
+          icon: 'success', title: 'Estado actualizado',
+          text: resp.message, timer: 1600, showConfirmButton: false
+        });
       }
-    })
-    .fail(function () {
+    },
+    error: function () {
       $toggle.prop('checked', !checked);
-      Swal.fire({ icon:'error', title:'Error de conexión', text:'No se pudo conectar con el servidor' });
-    });
+      Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar con el servidor' });
+    }
+  });
 });
 
     // Confirmación de eliminación

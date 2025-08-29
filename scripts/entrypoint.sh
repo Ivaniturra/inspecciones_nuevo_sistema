@@ -3,23 +3,14 @@ set -e
 
 APP_DIR=/var/www/html
 
-mkdir -p "$APP_DIR/writable/cache" \
-         "$APP_DIR/writable/logs" \
-         "$APP_DIR/writable/session" \
-         "$APP_DIR/public/uploads"
+# Crea las carpetas de uploads (el volumen puede venir vacío)
+mkdir -p "$APP_DIR/public/uploads/corredores" \
+         "$APP_DIR/writable/cache" "$APP_DIR/writable/logs" "$APP_DIR/writable/session"
 
-chown -R www-data:www-data "$APP_DIR/writable" "$APP_DIR/public/uploads" || true
-find "$APP_DIR/writable" "$APP_DIR/public/uploads" -type d -exec chmod 2775 {} \;
-find "$APP_DIR/writable" "$APP_DIR/public/uploads" -type f -exec chmod 0664 {} \;
+# Permisos
+chown -R www-data:www-data "$APP_DIR/public/uploads" "$APP_DIR/writable" || true
+find "$APP_DIR/public/uploads" "$APP_DIR/writable" -type d -exec chmod 2775 {} \; || true
+find "$APP_DIR/public/uploads" "$APP_DIR/writable" -type f -exec chmod 0664 {} \; || true
 
-
-APP_DIR=/var/www/html
-
-mkdir -p "$APP_DIR/public/uploads/corredores"
-chown -R www-data:www-data "$APP_DIR/public/uploads" || true
-find "$APP_DIR/public/uploads" -type d -exec chmod 2775 {} \; || true
-find "$APP_DIR/public/uploads" -type f -exec chmod 0664 {} \; || true
-
-
-echo "[Entrypoint] Permisos aplicados ✅"
+echo "[Entrypoint] uploads/corredores asegurado."
 exec apache2-foreground

@@ -324,46 +324,46 @@ class Corredores extends BaseController
         return redirect()->back()->withInput()->with('error', 'Error al actualizar el corredor');
     }
 
-
-    /** Eliminar */
-    public function delete($id)
-    {
-        $corredor = $this->corredorModel->find($id);
-        if (! $corredor) {
-            return redirect()->to('/corredores')->with('error', 'Corredor no encontrado');
-        }
-
-        if (! $this->corredorModel->cascadeSetEnabled($id,0)) {
-            return redirect()->to('/corredores')->with('error', 'No se puede eliminar el corredor porque tiene registros asociados');
-        }
-
-        // Borrar logo físico
-        if (! empty($corredor['corredor_logo'])) {
-            $path = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores' . DIRECTORY_SEPARATOR . $corredor['corredor_logo']; 
-            if (is_file($path)) {
-                @unlink($path);
-            }
-        }
-
-        /*if ($this->corredorModel->cascadeSetEnabled($id)) {
-            return redirect()->to('/corredores')->with('success', 'Corredor eliminado exitosamente');
-        }*/
-
-        return redirect()->to('/corredores')->with('error', 'Error al eliminar el corredor');
-    }
+ 
 
     /** Toggle estado (AJAX) */
     public function toggleStatus($id)
     {
-        if (! $this->request->isAJAX()) {
-            return redirect()->to('/corredores');
-        }
+        if (!$this->request->isAJAX()) return redirect()->to('/corredores');
 
-        if ($this->corredorModel->toggleStatus($id)) {
-            return $this->response->setJSON(['success' => true, 'message' => 'Estado actualizado correctamente']);
-        }
+        $res = $this->corredorModel->toggleStatusCascade((int)$id);
 
-        return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el estado']);
+        return $this->response->setJSON([
+            'success' => $res['ok'],
+            'enabled' => $res['enabled'],
+            'message' => $res['message'],
+        ]);
+    }
+
+    public function enable($id)
+    {
+        if (!$this->request->isAJAX()) return redirect()->to('/corredores');
+
+        $ok = $this->corredorModel->setEnabledCascade((int)$id, true);
+
+        return $this->response->setJSON([
+            'success' => $ok,
+            'enabled' => true,
+            'message' => $ok ? 'Corredor activado en cascada.' : 'No se pudo activar el corredor.',
+        ]);
+    }
+
+    public function disable($id)
+    {
+        if (!$this->request->isAJAX()) return redirect()->to('/corredores');
+
+        $ok = $this->corredorModel->setEnabledCascade((int)$id, false);
+
+        return $this->response->setJSON([
+            'success' => $ok,
+            'enabled' => false,
+            'message' => $ok ? 'Corredor desactivado en cascada.' : 'No se pudo desactivar el corredor.',
+        ]);
     }
 
     /** Select de corredores activos por compañía (AJAX) */

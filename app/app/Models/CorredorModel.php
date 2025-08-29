@@ -236,9 +236,9 @@ class CorredorModel extends Model
         return (bool) $this->update($id, ['corredor_habil' => $new]);
     }
 
-    public function cascadeSetEnabled(int $corredorId, bool $enabled): bool
+    public function cascadeSetEnabled(int $corredorId, bool $enabled, bool $touchUsers = true): bool
     {
-        $db = \Config\Database::connect();
+        $db  = \Config\Database::connect();
         $now = date('Y-m-d H:i:s');
 
         try {
@@ -246,27 +246,43 @@ class CorredorModel extends Model
 
             // 1) Corredor
             $db->table('corredores')
-                ->where('corredor_id', $corredorId)
-                ->update([
-                    'corredor_habil'   => $enabled ? 1 : 0,
-                    'corredor_updated_at' => $now,
-                ]);
+            ->where('corredor_id', $corredorId)
+            ->update([
+                    'corredor_habil'       => $enabled ? 1 : 0,
+                    'corredor_updated_at'  => $now,
+            ]);
 
             // 2) Relaciones con compañías
             $db->table('corredor_cias')
-                ->where('corredor_id', $corredorId)
-                ->update([
+            ->where('corredor_id', $corredorId)
+            ->update([
                     'corredor_cia_activo'   => $enabled ? 1 : 0,
                     'corredor_cia_updated_at' => $now,
-                ]);
+            ]);
 
-            // 3) Usuarios del corredor (ajusta nombres de columnas si difieren)
-           /* $db->table('users')
-                ->where('corredor_id', $corredorId)
-                ->update([
-                    'user_habil' => $enabled ? 1 : 0,
-                    'updated_at' => $now, // si tienes timestamp
-                ]);*/
+            // 3) Usuarios del corredor
+            if ($touchUsers) {
+                // Opción A: FK directo users.corredor_id
+                if ($db->fieldExists('corredor_id', 'users')) {
+                    $db->table('users')
+                    ->where('corredor_id', $corredorId)
+                    ->update([
+                        'user_habil' => $enabled ? 1 : 0,
+                        // quita si no tienes timestamps en users
+                        'updated_at' => $now,
+                    ]);
+                }
+                // Opción B: pivote user_corredor (user_id, corredor_id)
+                elseif ($db->tableExists('user_corredor')) {
+                    $value = $enabled ? 1 : 0;
+                    // Ajusta nombres de columnas si tu tabla users no usa "id"
+                    $sql = "UPDATE users u
+                            JOIN user_corredor uc ON uc.user_id = u.id
+                            SET u.user_habil = ?, u.updated_at = ?
+                            WHERE uc.corredor_id = ?";
+                    $db->query($sql, [$value, $now, $corredorId]);
+                }
+            }
 
             $db->transComplete();
             return $db->transStatus();
@@ -276,19 +292,19 @@ class CorredorModel extends Model
             return false;
         }
     }
+
+    // helpers finos
     public function setEnabledCascade(int $corredorId, bool $enabled): bool
     {
         return $this->cascadeSetEnabled($corredorId, $enabled, true);
     }
 
-    // Alterna estado en cascada
     public function toggleStatusCascade(int $corredorId): array
     {
         $row = $this->find($corredorId);
         if (!$row) {
             return ['ok' => false, 'enabled' => null, 'message' => 'Corredor no encontrado'];
         }
-
         $newEnabled = (int)$row['corredor_habil'] === 1 ? false : true;
         $ok = $this->setEnabledCascade($corredorId, $newEnabled);
 
@@ -300,6 +316,7 @@ class CorredorModel extends Model
                 : 'No se pudo actualizar el estado del corredor',
         ];
     }
+ 
     /* ===================== Relaciones corredor - cía ===================== */
 
     public function getCiasDelCorredor($corredorId): array

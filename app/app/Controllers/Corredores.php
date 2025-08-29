@@ -1,28 +1,4 @@
-'corredor_brand_nav_text'    => $navText,
-            'corredor_brand_side_start'  => $sideStart,
-            'corredor_brand_side_end'    => $sideEnd,
-        ];
-
-        if ($this->corredorModel->update($id, $data)) {
-            // Actualizar compañías del corredor
-            $ciaIds = $this->request->getPost('cias');
-            $this->corredorModel->updateCorredorCias($id, $ciaIds);
-            
-            return redirect()->to('/corredores')->with('            'corredor_brand_nav_text'    => $navText,
-            'corredor_brand_side_start'  => $sideStart,
-            'corredor_brand_side_end'    => $sideEnd,
-            'cia_id'                     => (int) $this->request->getPost('cia_id'),
-        ];
-
-        if ($this->corredorModel->update($id, $data)) {
-            return redirect()->to('/corredores')->with('success', 'Corredor actualizado exitosamente');            'corredor_brand_nav_text'    => $navText,
-            'corredor_brand_side_start'  => $sideStart,
-            'corredor_brand_side_end'    => $sideEnd,
-        ];
-
-        if ($this->corredorModel->update($id, $data)) {
-            // Actualizar compañías del corredor
-            $ciaIds =<?php
+<?php
 
 namespace App\Controllers;
 
@@ -276,10 +252,13 @@ class Corredores extends BaseController
             'corredor_brand_nav_text'    => $navText,
             'corredor_brand_side_start'  => $sideStart,
             'corredor_brand_side_end'    => $sideEnd,
-            'cia_id'                     => (int) $this->request->getPost('cia_id'),
         ];
 
         if ($this->corredorModel->update($id, $data)) {
+            // Actualizar compañías del corredor
+            $ciaIds = $this->request->getPost('cias');
+            $this->corredorModel->updateCorredorCias($id, $ciaIds);
+            
             return redirect()->to('/corredores')->with('success', 'Corredor actualizado exitosamente');
         }
 

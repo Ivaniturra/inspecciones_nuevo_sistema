@@ -234,56 +234,41 @@ Gestión de Corredores
 <script>
 $(function() {
     // Toggle estado corredor (AJAX)
-    $('.corredor-status-toggle').on('change', function () {
-        const $toggle = $(this);
-        const id = $toggle.data('id');
-        const checked = $toggle.is(':checked');
+    // guarda el nombre del token una sola vez
+  let csrfName = '<?= csrf_token() ?>';
 
-        $toggle.prop('disabled', true);
+  $('.corredor-status-toggle').on('change', function () {
+    const $toggle = $(this);
+    const id = $toggle.data('id');
+    const checked = $toggle.is(':checked');
 
-        $.ajax({
-            url: '<?= base_url('corredores/toggleStatus') ?>/' + id,
-            type: 'POST',
-            data: { [window.CSRF.name]: window.CSRF.value },
-            success: function (resp, status, xhr) {
-            // actualiza el token para la próxima petición
-            const newTok = xhr.getResponseHeader('X-CSRF-TOKEN');
-            if (newTok) window.CSRF.value = newTok;
+    $.ajax({
+      url: '<?= base_url('corredores/toggleStatus') ?>/' + id,
+      type: 'POST',
+      dataType: 'json',
+      data: {
+        [csrfName]: $('input[name="'+csrfName+'"]').val() // valor actual del token
+      }
+    })
+    .done(function (resp, status, xhr) {
+      // <-- token nuevo viene en el header
+      const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+      if (newToken) {
+        $('input[name="' + csrfName + '"]').val(newToken);
+      }
 
-            if (!resp || !resp.success) {
-                $toggle.prop('checked', !checked); // revertir
-                Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: (resp && resp.message) ? resp.message : 'No se pudo actualizar el estado'
-                });
-            } else {
-                Swal.fire({
-                icon: 'success',
-                title: 'Estado actualizado',
-                text: resp.message,
-                timer: 1600,
-                showConfirmButton: false
-                });
-            }
-            },
-            error: function (xhr) {
-            // intenta capturar token nuevo incluso en error
-            const newTok = xhr.getResponseHeader('X-CSRF-TOKEN');
-            if (newTok) window.CSRF.value = newTok;
-
-            $toggle.prop('checked', !checked); // revertir
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de conexión',
-                text: 'No se pudo conectar con el servidor'
-            });
-            },
-            complete: function () {
-            $toggle.prop('disabled', false);
-            }
-        });
-        });
+      if (!resp || !resp.success) {
+        $toggle.prop('checked', !checked);
+        Swal.fire({ icon: 'error', title: 'Error', text: resp?.message ?? 'No se pudo actualizar el estado' });
+      } else {
+        Swal.fire({ icon: 'success', title: 'Estado actualizado', text: resp.message, timer: 1600, showConfirmButton: false });
+      }
+    })
+    .fail(function () {
+      $toggle.prop('checked', !checked);
+      Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar con el servidor' });
+    });
+  });
 
     // Confirmación de eliminación
     $('.btn-delete').on('click', function(e) {

@@ -232,7 +232,25 @@ Gestión de Corredores
 
 <?= $this->section('scripts') ?>
 <script>
- 
+$('.corredor-status-toggle').on('change', function () {
+  const $toggle = $(this);
+  const id = $toggle.data('id');
+  const checked = $toggle.is(':checked');
+
+  $.post('<?= base_url('corredores/toggleStatus') ?>/' + id)
+    .done(function (resp) {
+      if (!resp || !resp.success) {
+        $toggle.prop('checked', !checked);
+        Swal.fire({ icon:'error', title:'Error', text: resp?.message ?? 'No se pudo actualizar el estado' });
+      } else {
+        Swal.fire({ icon:'success', title:'Estado actualizado', text: resp.message, timer: 1600, showConfirmButton:false });
+      }
+    })
+    .fail(function () {
+      $toggle.prop('checked', !checked);
+      Swal.fire({ icon:'error', title:'Error de conexión', text:'No se pudo conectar con el servidor' });
+    });
+});
 
     // Confirmación de eliminación
     $('.btn-delete').on('click', function(e) {
@@ -253,44 +271,5 @@ Gestión de Corredores
             if (r.isConfirmed) form.submit();
         });
     }); 
-    (function () {
-  let csrfName = document.querySelector('meta[name="csrf-name"]').content;
-  let csrfHash = document.querySelector('meta[name="csrf-hash"]').content;
-
-  function setCSRF(newHash) {
-    if (!newHash) return;
-    csrfHash = newHash;
-    // actualiza meta y hidden si existen
-    const meta = document.querySelector('meta[name="csrf-hash"]');
-    if (meta) meta.setAttribute('content', newHash);
-    const hid = document.getElementById('__csrfHidden');
-    if (hid) hid.value = newHash;
-  }
-
-  $.ajaxSetup({
-    beforeSend: function (xhr, settings) {
-      // añade token a TODOS los métodos que requieren CSRF
-      if (['POST','PUT','PATCH','DELETE'].includes((settings.type||'GET').toUpperCase())) {
-        // como header (CI4 lo soporta)
-        xhr.setRequestHeader('X-CSRF-TOKEN', csrfHash);
-
-        // y también en el body por si acaso
-        if (typeof settings.data === 'string') {
-          settings.data += (settings.data ? '&' : '') +
-            encodeURIComponent(csrfName) + '=' + encodeURIComponent(csrfHash);
-        } else if (settings.data && typeof settings.data === 'object') {
-          settings.data[csrfName] = csrfHash;
-        } else {
-          settings.data = { [csrfName]: csrfHash };
-        }
-      }
-    },
-    complete: function (xhr) {
-      // token nuevo en la respuesta
-      const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
-      if (newToken) setCSRF(newToken);
-    }
-  });
-})();
 </script>
 <?= $this->endSection() ?>

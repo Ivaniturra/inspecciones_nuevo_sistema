@@ -290,6 +290,45 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
 
 <!-- === Lógica de Sidebar con tooltips estables === -->
 <script>
+    (function () {
+  let csrfName = document.querySelector('meta[name="csrf-name"]').content;
+  let csrfHash = document.querySelector('meta[name="csrf-hash"]').content;
+
+  function setCSRF(newHash) {
+    if (!newHash) return;
+    csrfHash = newHash;
+    // actualiza meta y hidden si existen
+    const meta = document.querySelector('meta[name="csrf-hash"]');
+    if (meta) meta.setAttribute('content', newHash);
+    const hid = document.getElementById('__csrfHidden');
+    if (hid) hid.value = newHash;
+  }
+
+  $.ajaxSetup({
+    beforeSend: function (xhr, settings) {
+      // añade token a TODOS los métodos que requieren CSRF
+      if (['POST','PUT','PATCH','DELETE'].includes((settings.type||'GET').toUpperCase())) {
+        // como header (CI4 lo soporta)
+        xhr.setRequestHeader('X-CSRF-TOKEN', csrfHash);
+
+        // y también en el body por si acaso
+        if (typeof settings.data === 'string') {
+          settings.data += (settings.data ? '&' : '') +
+            encodeURIComponent(csrfName) + '=' + encodeURIComponent(csrfHash);
+        } else if (settings.data && typeof settings.data === 'object') {
+          settings.data[csrfName] = csrfHash;
+        } else {
+          settings.data = { [csrfName]: csrfHash };
+        }
+      }
+    },
+    complete: function (xhr) {
+      // token nuevo en la respuesta
+      const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+      if (newToken) setCSRF(newToken);
+    }
+  });
+})();
  const themeToggle = document.getElementById("themeToggle");
 const html = document.documentElement;
 

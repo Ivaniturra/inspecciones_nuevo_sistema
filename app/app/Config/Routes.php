@@ -110,4 +110,17 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->post('toggleStatus/(:num)', 'TipoVehiculos::toggleStatus/$1');
         $routes->get('getSelect', 'TipoVehiculos::getSelect');
     });
+    $routes->group('corredores',['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) { 
+        $routes->get('/', 'Corredores::index');
+        $routes->get('create', 'Corredores::create');
+        $routes->post('store', 'Corredores::store');
+        $routes->get('show/(:num)', 'Corredores::show/$1');
+        $routes->get('edit/(:num)', 'Corredores::edit/$1');
+        $routes->post('update/(:num)', 'Corredores::update/$1');
+        $routes->put('update/(:num)', 'Corredores::update/$1');
+        $routes->delete('delete/(:num)', 'Corredores::delete/$1');
+        $routes->post('delete/(:num)', 'Corredores::delete/$1');
+        $routes->post('toggleStatus/(:num)', 'Corredores::toggleStatus/$1');
+        $routes->get('getByCia/(:num)', 'Corredores::getByCia/$1');
+    });
 });

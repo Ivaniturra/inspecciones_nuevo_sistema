@@ -239,6 +239,13 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
   <i class="icon fa-solid fa-car"></i>
   <span class="label">Tipos Vehículo</span>
 </a>
+<a class="nav-link <?= url_is('corredores') || url_is('corredores/*') ? 'active' : '' ?>" 
+   href="<?= base_url('corredores') ?>" 
+   data-bs-toggle="tooltip" 
+   data-bs-title="Corredores de Seguros">
+  <i class="icon fa-solid fa-user-tie"></i>
+  <span class="label">Corredores</span>
+</a>
 
 <!--
     <div class="rail-section">Operación</div>

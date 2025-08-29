@@ -78,32 +78,48 @@ class Corredores extends BaseController
         $logoFile = $this->request->getFile('corredor_logo');
 
         if ($logoFile && $logoFile->isValid() && ! $logoFile->hasMoved()) {
+            // Validación manual del archivo
             $allowed = ['image/jpeg','image/jpg','image/png','image/svg+xml'];
             if (! in_array($logoFile->getMimeType(), $allowed, true)) {
                 return redirect()->back()->withInput()->with('error', 'El logo debe ser JPG, PNG o SVG.');
             }
-            if ($logoFile->getSize() > 2 * 1024 * 1024) {
+            if ($logoFile->getSize() > 2 * 1024 * 1024) { // 2MB
                 return redirect()->back()->withInput()->with('error', 'El logo no puede superar los 2MB.');
             }
 
+            // MEJORA: Crear directorio con mejor manejo de errores
             $targetDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
-
-            // Crear directorio si no existe
+            
+            // Verificar/crear directorio padre primero
+            $uploadsDir = FCPATH . 'uploads';
+            if (!is_dir($uploadsDir)) {
+                if (!@mkdir($uploadsDir, 0755, true)) {
+                    return redirect()->back()->withInput()
+                        ->with('error', 'No se pudo crear el directorio base de uploads. Verifica permisos del servidor.');
+                }
+            }
+            
+            // Crear directorio específico para corredores
             if (!is_dir($targetDir)) {
                 if (!@mkdir($targetDir, 0755, true)) {
                     return redirect()->back()->withInput()
-                        ->with('error', 'Error: No se pudo crear el directorio de uploads. Contacta al administrador.');
+                        ->with('error', 'No se pudo crear el directorio de corredores. Verifica permisos: ' . $targetDir);
                 }
             }
 
-            // Verificar que es escribible
+            // Verificar permisos de escritura
             if (!is_writable($targetDir)) {
                 return redirect()->back()->withInput()
-                    ->with('error', 'Error: El directorio de uploads no tiene permisos de escritura.');
+                    ->with('error', 'El directorio no tiene permisos de escritura: ' . $targetDir);
             }
 
-            $logoName = $logoFile->getRandomName();
-            $logoFile->move($targetDir, $logoName);
+            try {
+                $logoName = $logoFile->getRandomName();
+                $logoFile->move($targetDir, $logoName);
+            } catch (\Exception $e) {
+                return redirect()->back()->withInput()
+                    ->with('error', 'Error al mover el archivo: ' . $e->getMessage());
+            }
         }
 
         // Colores con fallback

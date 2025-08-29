@@ -230,10 +230,14 @@
                                                 <?php endif; ?>
                                             </div>
                                             <div class="flex-grow-1">
-                                                <h6 class="card-title mb-1"><?= esc($cia['cia_nombre']) ?></h6>
-                                                <?php if (!empty($cia['cia_display_name'])): ?>
-                                                    <small class="text-muted"><?= esc($cia['cia_display_name']) ?></small>
-                                                <?php endif; ?>
+                                               <?php
+                                                $ciaName = $cia['cia_display_name']
+                                                        ?? $cia['cia_nombre']
+                                                        ?? ('Compañía #'.($cia['cia_id'] ?? ''));
+                                                ?>
+                                                <a class="dropdown-item" href="<?= base_url('cias/show/' . ($cia['cia_id'] ?? 0)) ?>">
+                                                <i class="fas fa-eye me-2"></i><?= esc($ciaName) ?>
+                                                </a>
                                             </div>
                                             <div>
                                                 <a href="<?= base_url('cias/show/' . $cia['cia_id']) ?>" 

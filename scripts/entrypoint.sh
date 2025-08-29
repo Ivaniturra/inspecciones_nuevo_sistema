@@ -12,5 +12,14 @@ chown -R www-data:www-data "$APP_DIR/writable" "$APP_DIR/public/uploads" || true
 find "$APP_DIR/writable" "$APP_DIR/public/uploads" -type d -exec chmod 2775 {} \;
 find "$APP_DIR/writable" "$APP_DIR/public/uploads" -type f -exec chmod 0664 {} \;
 
+
+APP_DIR=/var/www/html
+
+mkdir -p "$APP_DIR/public/uploads/corredores"
+chown -R www-data:www-data "$APP_DIR/public/uploads" || true
+find "$APP_DIR/public/uploads" -type d -exec chmod 2775 {} \; || true
+find "$APP_DIR/public/uploads" -type f -exec chmod 0664 {} \; || true
+
+
 echo "[Entrypoint] Permisos aplicados ✅"
 exec apache2-foreground

@@ -4,7 +4,7 @@
         ];
 
         if ($this->corredorModel->update($id, $data)) {
-            // Actualizar compañías del corredor
+            // Actualizar compaÃ±Ã­as del corredor
             $ciaIds = $this->request->getPost('cias');
             $this->corredorModel->updateCorredorCias($id, $ciaIds);
             
@@ -21,7 +21,7 @@
         ];
 
         if ($this->corredorModel->update($id, $data)) {
-            // Actualizar compañías del corredor
+            // Actualizar compaÃ±Ã­as del corredor
             $ciaIds =<?php
 
 namespace App\Controllers;
@@ -54,7 +54,7 @@ class Corredores extends BaseController
         }
 
         $data = [
-            'title'      => 'Gestión de Corredores',
+            'title'      => 'GestiÃ³n de Corredores',
             'corredores' => $corredores,
             'cias'       => $this->ciaModel->getActiveCias(),
             'search'     => $search,
@@ -64,7 +64,7 @@ class Corredores extends BaseController
         return view('corredores/index', $data);
     }
 
-    /** Formulario de creación */
+    /** Formulario de creaciÃ³n */
     public function create()
     {
         $data = [
@@ -146,7 +146,7 @@ class Corredores extends BaseController
 
         $corredorId = $this->corredorModel->insert($data);
         if ($corredorId) {
-            // Asignar compañías al corredor
+            // Asignar compaÃ±Ã­as al corredor
             $ciaIds = $this->request->getPost('cias');
             if (!empty($ciaIds)) {
                 $this->corredorModel->updateCorredorCias($corredorId, $ciaIds);
@@ -166,7 +166,7 @@ class Corredores extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Corredor no encontrado');
         }
 
-        // Obtener compañías del corredor
+        // Obtener compaÃ±Ã­as del corredor
         $cias = $this->corredorModel->getCiasDelCorredor($id);
 
         return view('corredores/show', [
@@ -176,7 +176,7 @@ class Corredores extends BaseController
         ]);
     }
 
-    /** Formulario de edición */
+    /** Formulario de ediciÃ³n */
     public function edit($id)
     {
         $corredor = $this->corredorModel->find($id);
@@ -184,7 +184,7 @@ class Corredores extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Corredor no encontrado');
         }
 
-        // Obtener compañías del corredor
+        // Obtener compaÃ±Ã­as del corredor
         $ciasDelCorredor = $this->corredorModel->getCiasDelCorredor($id);
         $ciaIds = array_column($ciasDelCorredor, 'cia_id');
 
@@ -298,7 +298,7 @@ class Corredores extends BaseController
             return redirect()->to('/corredores')->with('error', 'No se puede eliminar el corredor porque tiene registros asociados');
         }
 
-        // Borrar logo físico
+        // Borrar logo fÃ­sico
         if (! empty($corredor['corredor_logo'])) {
             $path = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'corredores' . DIRECTORY_SEPARATOR . $corredor['corredor_logo'];
             if (is_file($path)) {
@@ -327,7 +327,7 @@ class Corredores extends BaseController
         return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el estado']);
     }
 
-    /** Select de corredores activos por compañía (AJAX) */
+    /** Select de corredores activos por compaÃ±Ã­a (AJAX) */
     public function getByCia($ciaId)
     {
         if (! $this->request->isAJAX()) {

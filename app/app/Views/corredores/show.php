@@ -73,11 +73,11 @@
     <div class="row">
         <!-- Columna principal -->
         <div class="col-lg-8">
-            <!-- Información del corredor -->
+            <!-- InformaciÃ³n del corredor -->
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-info text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-user-tie me-2"></i> Información del Corredor
+                        <i class="fas fa-user-tie me-2"></i> InformaciÃ³n del Corredor
                     </h5>
                 </div>
                 <div class="card-body">
@@ -121,10 +121,10 @@
                             <?php endif; ?>
                         </div>
 
-                        <!-- Teléfono -->
+                        <!-- TelÃ©fono -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">
-                                <i class="fas fa-phone text-success me-1"></i> Teléfono
+                                <i class="fas fa-phone text-success me-1"></i> TelÃ©fono
                             </label>
                             <?php if (!empty($corredor['corredor_telefono'])): ?>
                                 <p class="form-control-plaintext">
@@ -134,7 +134,7 @@
                                 </p>
                             <?php else: ?>
                                 <p class="form-control-plaintext text-muted">
-                                    <em><i class="fas fa-minus me-1"></i> Sin teléfono registrado</em>
+                                    <em><i class="fas fa-minus me-1"></i> Sin telÃ©fono registrado</em>
                                 </p>
                             <?php endif; ?>
                         </div>
@@ -153,16 +153,16 @@
                             <?php endif; ?>
                         </div>
 
-                        <!-- Dirección -->
+                        <!-- DirecciÃ³n -->
                         <div class="col-12 mb-3">
                             <label class="form-label fw-bold">
-                                <i class="fas fa-map-marker-alt text-info me-1"></i> Dirección
+                                <i class="fas fa-map-marker-alt text-info me-1"></i> DirecciÃ³n
                             </label>
                             <?php if (!empty($corredor['corredor_direccion'])): ?>
                                 <p class="form-control-plaintext"><?= nl2br(esc($corredor['corredor_direccion'])) ?></p>
                             <?php else: ?>
                                 <p class="form-control-plaintext text-muted">
-                                    <em><i class="fas fa-minus me-1"></i> Sin dirección registrada</em>
+                                    <em><i class="fas fa-minus me-1"></i> Sin direcciÃ³n registrada</em>
                                 </p>
                             <?php endif; ?>
                         </div>
@@ -192,11 +192,11 @@
                 </div>
             </div>
 
-            <!-- Compañías asociadas -->
+            <!-- CompaÃ±Ã­as asociadas -->
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-building me-2"></i> Compañías Asociadas
+                        <i class="fas fa-building me-2"></i> CompaÃ±Ã­as Asociadas
                         <span class="badge bg-light text-dark ms-2"><?= count($cias) ?></span>
                     </h5>
                 </div>
@@ -204,10 +204,10 @@
                     <?php if (empty($cias)): ?>
                         <div class="text-center py-4">
                             <i class="fas fa-building fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">Sin compañías asociadas</h5>
-                            <p class="text-muted">Este corredor no tiene compañías de seguros asociadas</p>
+                            <h5 class="text-muted">Sin compaÃ±Ã­as asociadas</h5>
+                            <p class="text-muted">Este corredor no tiene compaÃ±Ã­as de seguros asociadas</p>
                             <a href="<?= base_url('corredores/edit/' . (int)$corredor['corredor_id']) ?>" class="btn btn-outline-primary">
-                                <i class="fas fa-plus"></i> Asignar Compañías
+                                <i class="fas fa-plus"></i> Asignar CompaÃ±Ã­as
                             </a>
                         </div>
                     <?php else: ?>
@@ -238,7 +238,7 @@
                                             <div>
                                                 <a href="<?= base_url('cias/show/' . $cia['cia_id']) ?>" 
                                                    class="btn btn-sm btn-outline-primary"
-                                                   title="Ver compañía">
+                                                   title="Ver compaÃ±Ã­a">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                             </div>
@@ -272,9 +272,9 @@
                         </div>
                         <div class="p-3 text-white"
                              style="background: linear-gradient(135deg, <?= esc($sideStart) ?>, <?= esc($sideEnd) ?>); min-height:90px;">
-                            <div class="mb-2"><i class="fas fa-circle me-2"></i> Menú 1</div>
-                            <div class="mb-2"><i class="fas fa-circle me-2"></i> Menú 2</div>
-                            <div><i class="fas fa-circle me-2"></i> Menú 3</div>
+                            <div class="mb-2"><i class="fas fa-circle me-2"></i> MenÃº 1</div>
+                            <div class="mb-2"><i class="fas fa-circle me-2"></i> MenÃº 2</div>
+                            <div><i class="fas fa-circle me-2"></i> MenÃº 3</div>
                         </div>
                     </div>
 
@@ -331,11 +331,11 @@
                 </div>
             </div>
 
-            <!-- Información del sistema -->
+            <!-- InformaciÃ³n del sistema -->
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-secondary text-white">
                     <h6 class="card-title mb-0">
-                        <i class="fas fa-cog me-2"></i> Información del Sistema
+                        <i class="fas fa-cog me-2"></i> InformaciÃ³n del Sistema
                     </h6>
                 </div>
                 <div class="card-body">
@@ -343,12 +343,12 @@
                         <div class="col-6">
                             <div class="border-end">
                                 <h4 class="text-primary"><?= (int)$corredor['corredor_id'] ?></h4>
-                                <small class="text-muted">ID Único</small>
+                                <small class="text-muted">ID Ãšnico</small>
                             </div>
                         </div>
                         <div class="col-6">
                             <h4 class="text-success"><?= count($cias) ?></h4>
-                            <small class="text-muted">Compañía<?= count($cias) !== 1 ? 's' : '' ?></small>
+                            <small class="text-muted">CompaÃ±Ã­a<?= count($cias) !== 1 ? 's' : '' ?></small>
                         </div>
                     </div>
                     <hr>
@@ -361,7 +361,7 @@
                         <?php if (!empty($corredor['corredor_updated_at']) && $corredor['corredor_updated_at'] !== $corredor['corredor_created_at']): ?>
                             <div class="mb-2">
                                 <i class="fas fa-calendar-edit me-2"></i>
-                                <strong>Última modificación:</strong><br>
+                                <strong>Ãšltima modificaciÃ³n:</strong><br>
                                 <?= date('d/m/Y H:i:s', strtotime($corredor['corredor_updated_at'])) ?>
                             </div>
                         <?php endif; ?>
@@ -369,11 +369,11 @@
                 </div>
             </div>
 
-            <!-- Acciones rápidas -->
+            <!-- Acciones rÃ¡pidas -->
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
                     <h6 class="card-title mb-0">
-                        <i class="fas fa-bolt me-2"></i> Acciones Rápidas
+                        <i class="fas fa-bolt me-2"></i> Acciones RÃ¡pidas
                     </h6>
                 </div>
                 <div class="card-body">
@@ -390,7 +390,7 @@
                         <?php if (count($cias) > 0): ?>
                         <div class="dropdown">
                             <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-building me-2"></i> Ver Compañías
+                                <i class="fas fa-building me-2"></i> Ver CompaÃ±Ã­as
                             </button>
                             <ul class="dropdown-menu w-100">
                                 <?php foreach ($cias as $cia): ?>
@@ -415,24 +415,24 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Confirmar Eliminación</h5>
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Confirmar EliminaciÃ³n</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="text-center">
                     <i class="fas fa-user-tie fa-3x text-danger mb-3"></i>
-                    <h5>¿Eliminar corredor?</h5>
+                    <h5>Â¿Eliminar corredor?</h5>
                     <p class="mb-3">
-                        Estás a punto de eliminar <strong>"<?= esc($corredor['corredor_nombre']) ?>"</strong>
+                        EstÃ¡s a punto de eliminar <strong>"<?= esc($corredor['corredor_nombre']) ?>"</strong>
                     </p>
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+                        <strong>Advertencia:</strong> Esta acciÃ³n no se puede deshacer.
                         <?php if (!empty($corredor['corredor_logo'])): ?>
-                            <br>También se eliminará el logo asociado.
+                            <br>TambiÃ©n se eliminarÃ¡ el logo asociado.
                         <?php endif; ?>
                         <?php if (count($cias) > 0): ?>
-                            <br>Se eliminarán las relaciones con <?= count($cias) ?> compañía<?= count($cias) > 1 ? 's' : '' ?>.
+                            <br>Se eliminarÃ¡n las relaciones con <?= count($cias) ?> compaÃ±Ã­a<?= count($cias) > 1 ? 's' : '' ?>.
                         <?php endif; ?>
                     </div>
                 </div>
@@ -445,7 +445,7 @@
                     <?= csrf_field() ?>
                     <input type="hidden" name="_method" value="DELETE">
                     <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
-                        <i class="fas fa-trash"></i> Sí, Eliminar
+                        <i class="fas fa-trash"></i> SÃ­, Eliminar
                     </button>
                 </form>
             </div>
@@ -470,7 +470,7 @@
             </div>
             <div class="modal-footer">
                 <a href="<?= base_url('uploads/corredores/' . $corredor['corredor_logo']) ?>" target="_blank" class="btn btn-primary">
-                    <i class="fas fa-external-link-alt"></i> Ver tamaño completo
+                    <i class="fas fa-external-link-alt"></i> Ver tamaÃ±o completo
                 </a>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
@@ -499,18 +499,18 @@
 <?= $this->section('scripts') ?>
 <script>
 $(function () {
-    // Confirmación de eliminación
+    // ConfirmaciÃ³n de eliminaciÃ³n
     $('#confirmDeleteBtn').on('click', function (e) {
         e.preventDefault();
         const form = $(this).closest('form');
         Swal.fire({
-            title: 'Última confirmación',
-            text: 'Esta acción eliminará permanentemente el corredor',
+            title: 'Ãšltima confirmaciÃ³n',
+            text: 'Esta acciÃ³n eliminarÃ¡ permanentemente el corredor',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar definitivamente',
+            confirmButtonText: 'SÃ­, eliminar definitivamente',
             cancelButtonText: 'Cancelar',
             reverseButtons: true
         }).then((result) => {
@@ -529,13 +529,13 @@ function toggleStatus(id) {
     const newStatus = isActive ? 'inactivo' : 'activo';
 
     Swal.fire({
-        title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} corredor?`,
-        text: `El corredor quedará ${newStatus}`,
+        title: `Â¿${action.charAt(0).toUpperCase() + action.slice(1)} corredor?`,
+        text: `El corredor quedarÃ¡ ${newStatus}`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: isActive ? '#dc3545' : '#198754',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: `Sí, ${action}`,
+        confirmButtonText: `SÃ­, ${action}`,
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
@@ -552,7 +552,7 @@ function toggleStatus(id) {
                 }
             })
             .fail(function () {
-                Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar con el servidor' });
+                Swal.fire({ icon: 'error', title: 'Error de conexiÃ³n', text: 'No se pudo conectar con el servidor' });
             });
         }
     });

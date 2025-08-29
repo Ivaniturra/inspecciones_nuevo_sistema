@@ -1,7 +1,7 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
-Gestión de Corredores
+GestiÃ³n de Corredores
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -11,7 +11,7 @@ Gestión de Corredores
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h3 mb-0">Gestión de Corredores</h1>
+                    <h1 class="h3 mb-0">GestiÃ³n de Corredores</h1>
                     <p class="text-muted">Administra los corredores del sistema</p>
                 </div>
 
@@ -38,9 +38,9 @@ Gestión de Corredores
                            placeholder="Nombre, email o RUT...">
                 </div>
                 <div class="col-md-3">
-                    <label for="cia_id" class="form-label">Compañía</label>
+                    <label for="cia_id" class="form-label">CompaÃ±Ã­a</label>
                     <select class="form-select" id="cia_id" name="cia_id">
-                        <option value="">Todas las compañías</option>
+                        <option value="">Todas las compaÃ±Ã­as</option>
                         <?php foreach ($cias as $cia): ?>
                             <option value="<?= $cia['cia_id'] ?>" <?= $ciaId == $cia['cia_id'] ? 'selected' : '' ?>>
                                 <?= esc($cia['cia_display_name'] ?: $cia['cia_nombre']) ?>
@@ -107,8 +107,8 @@ Gestión de Corredores
                                 <th>Logo</th>
                                 <th>Nombre/Email</th>
                                 <th>RUT</th>
-                                <th>Teléfono</th>
-                                <th>Compañías</th>
+                                <th>TelÃ©fono</th>
+                                <th>CompaÃ±Ã­as</th>
                                 <th class="text-center">Estado</th>
                                 <th class="text-end">Acciones</th>
                             </tr>
@@ -155,7 +155,7 @@ Gestión de Corredores
                                         <?php if (!empty($corredor['corredor_telefono'])): ?>
                                             <span class="font-monospace"><?= esc($corredor['corredor_telefono']) ?></span>
                                         <?php else: ?>
-                                            <span class="text-muted">Sin teléfono</span>
+                                            <span class="text-muted">Sin telÃ©fono</span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
@@ -165,7 +165,7 @@ Gestión de Corredores
                                                     <?= esc($corredor['cia_display_name'] ?: $corredor['cia_nombre']) ?>
                                                 </span>
                                             <?php else: ?>
-                                                <span class="badge bg-secondary">Sin compañía</span>
+                                                <span class="badge bg-secondary">Sin compaÃ±Ã­a</span>
                                             <?php endif; ?>
                                         </div>
                                     </td>
@@ -201,7 +201,7 @@ Gestión de Corredores
                                                 <input type="hidden" name="_method" value="DELETE">
                                                 <button type="submit"
                                                         class="btn btn-sm btn-outline-danger btn-delete"
-                                                        data-confirm="¿Estás seguro de eliminar este corredor?"
+                                                        data-confirm="Â¿EstÃ¡s seguro de eliminar este corredor?"
                                                         title="Eliminar">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -255,26 +255,26 @@ $(function() {
             $toggle.prop('checked', !checked); // revertir
             Swal.fire({
                 icon: 'error',
-                title: 'Error de conexión',
+                title: 'Error de conexiÃ³n',
                 text: 'No se pudo conectar con el servidor'
             });
         });
     });
 
-    // Confirmación de eliminación
+    // ConfirmaciÃ³n de eliminaciÃ³n
     $('.btn-delete').on('click', function(e) {
         e.preventDefault();
         const form = $(this).closest('form');
-        const msg  = $(this).data('confirm') || '¿Eliminar registro?';
+        const msg  = $(this).data('confirm') || 'Â¿Eliminar registro?';
 
         Swal.fire({
-            title: 'Confirmar eliminación',
+            title: 'Confirmar eliminaciÃ³n',
             text: msg,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar',
+            confirmButtonText: 'SÃ­, eliminar',
             cancelButtonText: 'Cancelar'
         }).then((r) => {
             if (r.isConfirmed) form.submit();

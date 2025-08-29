@@ -53,7 +53,7 @@ Editar Corredor
         <input type="hidden" name="_method" value="PUT">
 
         <div class="row">
-            <!-- Columna datos básicos -->
+            <!-- Columna datos bÃ¡sicos -->
             <div class="col-lg-7">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-warning text-dark">
@@ -108,9 +108,9 @@ Editar Corredor
                                 <div class="invalid-feedback"><?= session('errors.corredor_email') ?></div>
                             </div>
 
-                            <!-- Teléfono -->
+                            <!-- TelÃ©fono -->
                             <div class="col-md-6 mb-3">
-                                <label for="corredor_telefono" class="form-label">Teléfono</label>
+                                <label for="corredor_telefono" class="form-label">TelÃ©fono</label>
                                 <input
                                     type="text"
                                     class="form-control <?= session('errors.corredor_telefono') ? 'is-invalid' : '' ?>"
@@ -148,9 +148,9 @@ Editar Corredor
                             </div>
                         </div>
 
-                        <!-- Compañías -->
+                        <!-- CompaÃ±Ã­as -->
                         <div class="mb-3">
-                            <label for="cias" class="form-label">Compañías *</label>
+                            <label for="cias" class="form-label">CompaÃ±Ã­as *</label>
                             <select class="form-select <?= session('errors.cias') ? 'is-invalid' : '' ?>" 
                                     id="cias" name="cias[]" multiple required size="6">
                                 <?php foreach ($cias as $cia): ?>
@@ -161,18 +161,18 @@ Editar Corredor
                                 <?php endforeach; ?>
                             </select>
                             <div class="invalid-feedback"><?= session('errors.cias') ?></div>
-                            <div class="form-text">Mantén presionado Ctrl/Cmd para seleccionar múltiples compañías.</div>
+                            <div class="form-text">MantÃ©n presionado Ctrl/Cmd para seleccionar mÃºltiples compaÃ±Ã­as.</div>
                         </div>
 
-                        <!-- Dirección -->
+                        <!-- DirecciÃ³n -->
                         <div class="mb-3">
-                            <label for="corredor_direccion" class="form-label">Dirección</label>
+                            <label for="corredor_direccion" class="form-label">DirecciÃ³n</label>
                             <textarea
                                 class="form-control <?= session('errors.corredor_direccion') ? 'is-invalid' : '' ?>"
                                 id="corredor_direccion"
                                 name="corredor_direccion"
                                 rows="3"
-                                placeholder="Dirección completa del corredor"
+                                placeholder="DirecciÃ³n completa del corredor"
                             ><?= esc(old('corredor_direccion', $corredor['corredor_direccion'])) ?></textarea>
                             <div class="invalid-feedback"><?= session('errors.corredor_direccion') ?></div>
                         </div>
@@ -204,7 +204,7 @@ Editar Corredor
                                 accept="image/png,image/jpeg,image/jpg,image/svg+xml"
                             >
                             <div class="invalid-feedback"><?= session('errors.corredor_logo') ?></div>
-                            <div class="form-text">PNG/JPG/SVG. Máx 2MB. Deja vacío para mantener el actual.</div>
+                            <div class="form-text">PNG/JPG/SVG. MÃ¡x 2MB. Deja vacÃ­o para mantener el actual.</div>
                         </div>
                     </div>
                 </div>
@@ -311,7 +311,7 @@ Editar Corredor
                                         <div class="card border-0 shadow-sm">
                                             <div class="card-body">
                                                 <div class="fw-semibold mb-1">Contenido de ejemplo</div>
-                                                <div class="text-muted small">Así se verán tus colores aplicados.</div>
+                                                <div class="text-muted small">AsÃ­ se verÃ¡n tus colores aplicados.</div>
                                             </div>
                                         </div>
                                     </div>
@@ -319,7 +319,7 @@ Editar Corredor
                             </div>
 
                             <small class="text-muted d-block mt-2">
-                                La vista previa es referencial. Los colores se aplicarán al layout real.
+                                La vista previa es referencial. Los colores se aplicarÃ¡n al layout real.
                             </small>
                         </div>
                     </div>
@@ -330,7 +330,7 @@ Editar Corredor
                     <div class="card-header bg-light">
                         <h6 class="mb-0">
                             <i class="fas fa-info-circle text-info me-1"></i>
-                            Información del registro
+                            InformaciÃ³n del registro
                         </h6>
                     </div>
                     <div class="card-body">
@@ -338,7 +338,7 @@ Editar Corredor
                             <strong>ID:</strong> <?= $corredor['corredor_id'] ?><br>
                             <strong>Creado:</strong> <?= date('d/m/Y H:i', strtotime($corredor['corredor_created_at'])) ?><br>
                             <?php if (!empty($corredor['corredor_updated_at'])): ?>
-                                <strong>Última modificación:</strong> <?= date('d/m/Y H:i', strtotime($corredor['corredor_updated_at'])) ?>
+                                <strong>Ãšltima modificaciÃ³n:</strong> <?= date('d/m/Y H:i', strtotime($corredor['corredor_updated_at'])) ?>
                             <?php endif; ?>
                         </small>
                     </div>

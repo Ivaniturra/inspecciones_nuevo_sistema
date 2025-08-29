@@ -37,7 +37,7 @@ class CorredorModel extends Model
     protected $createdField  = 'corredor_created_at';
     protected $updatedField  = 'corredor_updated_at';
 
-    // Validación
+    // ValidaciÃ³n
     protected $validationRules = [
         'corredor_nombre'         => 'required|min_length[3]|max_length[255]',
         'corredor_email'          => 'permit_empty|valid_email|max_length[255]',
@@ -62,7 +62,7 @@ class CorredorModel extends Model
             'max_length' => 'El nombre no puede exceder 255 caracteres',
         ],
         'corredor_email' => [
-            'valid_email' => 'Debe ingresar un email válido',
+            'valid_email' => 'Debe ingresar un email vÃ¡lido',
             'max_length'  => 'El email no puede exceder 255 caracteres',
         ],
         'corredor_habil' => [
@@ -70,12 +70,12 @@ class CorredorModel extends Model
             'in_list'  => 'El estado debe ser Activo o Inactivo',
         ],
         'corredor_slug' => [
-            'regex_match' => 'El slug solo puede contener minúsculas, números y guiones (-).',
+            'regex_match' => 'El slug solo puede contener minÃºsculas, nÃºmeros y guiones (-).',
         ],
-        'corredor_brand_nav_bg'      => ['regex_match' => 'Color de navegación inválido. Usa formato HEX (#RRGGBB).'],
-        'corredor_brand_nav_text'    => ['regex_match' => 'Color de texto de navegación inválido. Usa formato HEX (#RRGGBB).'],
-        'corredor_brand_side_start'  => ['regex_match' => 'Color inicial del sidebar inválido. Usa formato HEX (#RRGGBB).'],
-        'corredor_brand_side_end'    => ['regex_match' => 'Color final del sidebar inválido. Usa formato HEX (#RRGGBB).'],
+        'corredor_brand_nav_bg'      => ['regex_match' => 'Color de navegaciÃ³n invÃ¡lido. Usa formato HEX (#RRGGBB).'],
+        'corredor_brand_nav_text'    => ['regex_match' => 'Color de texto de navegaciÃ³n invÃ¡lido. Usa formato HEX (#RRGGBB).'],
+        'corredor_brand_side_start'  => ['regex_match' => 'Color inicial del sidebar invÃ¡lido. Usa formato HEX (#RRGGBB).'],
+        'corredor_brand_side_end'    => ['regex_match' => 'Color final del sidebar invÃ¡lido. Usa formato HEX (#RRGGBB).'],
     ];
 
     protected $skipValidation       = false;
@@ -187,7 +187,7 @@ class CorredorModel extends Model
     {
         $db = \Config\Database::connect();
         // Verificar si tiene usuarios u otras relaciones asociadas
-        // Ajusta según tu estructura de datos
+        // Ajusta segÃºn tu estructura de datos
         $count = $db->table('users')->where('corredor_id', $id)->countAllResults();
         return (int) $count === 0;
     }
@@ -216,7 +216,7 @@ class CorredorModel extends Model
                        ->findAll();
     }
 
-    /* ===================== Métodos para gestionar relaciones ===================== */
+    /* ===================== MÃ©todos para gestionar relaciones ===================== */
 
     public function getCiasDelCorredor($corredorId): array
     {
@@ -235,14 +235,14 @@ class CorredorModel extends Model
     {
         $db = \Config\Database::connect();
         
-        // Verificar si ya existe la relación
+        // Verificar si ya existe la relaciÃ³n
         $exists = $db->table('corredor_cias')
                     ->where('corredor_id', $corredorId)
                     ->where('cia_id', $ciaId)
                     ->countAllResults();
 
         if ($exists > 0) {
-            // Activar si existe pero está inactiva
+            // Activar si existe pero estÃ¡ inactiva
             return $db->table('corredor_cias')
                      ->where('corredor_id', $corredorId)
                      ->where('cia_id', $ciaId)
@@ -251,7 +251,7 @@ class CorredorModel extends Model
                          'corredor_cia_updated_at' => date('Y-m-d H:i:s')
                      ]);
         } else {
-            // Crear nueva relación
+            // Crear nueva relaciÃ³n
             return $db->table('corredor_cias')
                      ->insert([
                          'corredor_id' => $corredorId,

@@ -45,7 +45,7 @@ Nuevo Corredor
         <?= csrf_field() ?>
 
         <div class="row">
-            <!-- Columna datos b·sicos -->
+            <!-- Columna datos b√°sicos -->
             <div class="col-lg-7">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-primary text-white">
@@ -67,7 +67,7 @@ Nuevo Corredor
                                 required
                             >
                             <div class="invalid-feedback"><?= session('errors.corredor_nombre') ?></div>
-                            <div class="form-text">MÌnimo 3 caracteres, m·ximo 255.</div>
+                            <div class="form-text">M√≠nimo 3 caracteres, m√°ximo 255.</div>
                         </div>
 
                         <!-- Nombre para mostrar -->
@@ -84,7 +84,7 @@ Nuevo Corredor
                                 placeholder="Ej. ABC Seguros"
                             >
                             <div class="invalid-feedback"><?= session('errors.corredor_display_name') ?></div>
-                            <div class="form-text">Se usa en el header y tÌtulos (opcional).</div>
+                            <div class="form-text">Se usa en el header y t√≠tulos (opcional).</div>
                         </div>
 
                         <div class="row">
@@ -102,9 +102,9 @@ Nuevo Corredor
                                 <div class="invalid-feedback"><?= session('errors.corredor_email') ?></div>
                             </div>
 
-                            <!-- TelÈfono -->
+                            <!-- Tel√©fono -->
                             <div class="col-md-6 mb-3">
-                                <label for="corredor_telefono" class="form-label">TelÈfono</label>
+                                <label for="corredor_telefono" class="form-label">Tel√©fono</label>
                                 <input
                                     type="text"
                                     class="form-control <?= session('errors.corredor_telefono') ? 'is-invalid' : '' ?>"
@@ -142,9 +142,9 @@ Nuevo Corredor
                             </div>
                         </div>
 
-                        <!-- CompaÒÌas (m˙ltiple selecciÛn) -->
+                        <!-- Compa√±√≠as (m√∫ltiple selecci√≥n) -->
                         <div class="mb-3">
-                            <label for="cias" class="form-label">CompaÒÌas *</label>
+                            <label for="cias" class="form-label">Compa√±√≠as *</label>
                             <select class="form-select <?= session('errors.cias') ? 'is-invalid' : '' ?>" 
                                     id="cias" name="cias[]" multiple required size="5">
                                 <?php foreach ($cias as $cia): ?>
@@ -155,18 +155,18 @@ Nuevo Corredor
                                 <?php endforeach; ?>
                             </select>
                             <div class="invalid-feedback"><?= session('errors.cias') ?></div>
-                            <div class="form-text">MantÈn presionado Ctrl/Cmd para seleccionar m˙ltiples compaÒÌas.</div>
+                            <div class="form-text">Mant√©n presionado Ctrl/Cmd para seleccionar m√∫ltiples compa√±√≠as.</div>
                         </div>
 
-                        <!-- DirecciÛn -->
+                        <!-- Direcci√≥n -->
                         <div class="mb-3">
-                            <label for="corredor_direccion" class="form-label">DirecciÛn</label>
+                            <label for="corredor_direccion" class="form-label">Direcci√≥n</label>
                             <textarea
                                 class="form-control <?= session('errors.corredor_direccion') ? 'is-invalid' : '' ?>"
                                 id="corredor_direccion"
                                 name="corredor_direccion"
                                 rows="3"
-                                placeholder="DirecciÛn completa del corredor"
+                                placeholder="Direcci√≥n completa del corredor"
                             ><?= esc(old('corredor_direccion')) ?></textarea>
                             <div class="invalid-feedback"><?= session('errors.corredor_direccion') ?></div>
                         </div>
@@ -184,7 +184,7 @@ Nuevo Corredor
                                 accept="image/png,image/jpeg,image/jpg,image/svg+xml"
                             >
                             <div class="invalid-feedback"><?= session('errors.corredor_logo') ?></div>
-                            <div class="form-text">PNG/JPG/SVG. M·x 2MB. Se mostrar· arriba a la derecha en la vista previa.</div>
+                            <div class="form-text">PNG/JPG/SVG. M√°x 2MB. Se mostrar√° arriba a la derecha en la vista previa.</div>
                         </div>
                     </div>
                 </div>
@@ -292,7 +292,7 @@ Nuevo Corredor
                                         <div class="card border-0 shadow-sm">
                                             <div class="card-body">
                                                 <div class="fw-semibold mb-1">Contenido de ejemplo</div>
-                                                <div class="text-muted small">AsÌ se ver·n tus colores aplicados.</div>
+                                                <div class="text-muted small">As√≠ se ver√°n tus colores aplicados.</div>
                                             </div>
                                         </div>
                                     </div>
@@ -300,7 +300,7 @@ Nuevo Corredor
                             </div>
 
                             <small class="text-muted d-block mt-2">
-                                La vista previa es referencial. Los colores se aplicar·n al layout real.
+                                La vista previa es referencial. Los colores se aplicar√°n al layout real.
                             </small>
                         </div>
                     </div>

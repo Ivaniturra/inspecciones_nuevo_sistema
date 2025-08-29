@@ -336,12 +336,12 @@ class Corredores extends BaseController
         $res = $this->corredorModel->toggleStatusCascade((int)$id);
 
         return $this->response
-        ->setHeader('X-CSRF-TOKEN', csrf_hash())
-        ->setJSON([
-            'success' => $ok,
-            'message' => $msg,
-            // 'token' => ['name' => csrf_token(), 'hash' => csrf_hash()], // opcional
-        ]);
+            ->setHeader('X-CSRF-TOKEN', csrf_hash()) // <-- nuevo token
+            ->setJSON([
+                'success' => $res['ok'],
+                'enabled' => $res['enabled'],
+                'message' => $res['message'],
+            ]);
     }
 
     public function enable($id)

@@ -51,7 +51,7 @@ class CorredorModel extends Model
         'corredor_brand_nav_bg'   => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
         'corredor_brand_nav_text' => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
         'corredor_brand_side_start' => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-        'corredor_brand_side_end' => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
+        'corredor_brand_side_end'   => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
         'corredor_logo_path'      => 'permit_empty|max_length[255]',
     ];
 
@@ -136,7 +136,6 @@ class CorredorModel extends Model
         if (! isset($data['data'])) return $data;
         $d =& $data['data'];
 
-        // Generar slug si no viene
         if (empty($d['corredor_slug'])) {
             helper(['text', 'url']);
             $base = $d['corredor_nombre'] ?? '';
@@ -150,26 +149,80 @@ class CorredorModel extends Model
 
     public function getActiveCorredores(): array
     {
-        return $this->where('corredor_habil', 1)->orderBy('corredor_nombre','ASC')->findAll();
+        return $this->where('corredor_habil', 1)
+                    ->orderBy('corredor_nombre','ASC')
+                    ->findAll();
     }
 
+    /**
+     * Listado con compañías por corredor (cias concatenadas con "|")
+     */
     public function getCorredoresWithCias(): array
     {
-        return $this->select('corredores.*, GROUP_CONCAT(CONCAT(cias.cia_nombre, " (", COALESCE(cias.cia_display_name, ""), ")") SEPARATOR ", ") as cias_nombres, COUNT(DISTINCT corredor_cias.cia_id) as total_cias')
-                    ->join('corredor_cias', 'corredor_cias.corredor_id = corredores.corredor_id', 'left')
-                    ->join('cias', 'cias.cia_id = corredor_cias.cia_id', 'left')
-                    ->where('corredor_cias.corredor_cia_activo', 1)
-                    ->groupBy('corredores.corredor_id')
-                    ->orderBy('corredor_nombre', 'ASC')
-                    ->findAll();
+        return $this->select([
+                'corredores.*',
+                'GROUP_CONCAT(DISTINCT ci.cia_nombre ORDER BY ci.cia_nombre SEPARATOR "|") AS cias',
+                'COUNT(DISTINCT cc.cia_id) AS total_cias',
+            ])
+            ->join(
+                'corredor_cias cc',
+                'cc.corredor_id = corredores.corredor_id AND cc.corredor_cia_activo = 1',
+                'left'
+            )
+            ->join(
+                'cias ci',
+                'ci.cia_id = cc.cia_id AND ci.cia_habil = 1',
+                'left'
+            )
+            ->groupBy('corredores.corredor_id')
+            ->orderBy('corredor_nombre', 'ASC')
+            ->findAll();
+    }
+
+    /**
+     * Búsqueda con mismas columnas que el listado
+     */
+    public function searchCorredores($term = '', $ciaId = null): array
+    {
+        $builder = $this->select([
+                    'corredores.*',
+                    'GROUP_CONCAT(DISTINCT ci.cia_nombre ORDER BY ci.cia_nombre SEPARATOR "|") AS cias',
+                    'COUNT(DISTINCT cc.cia_id) AS total_cias',
+                ])
+                ->join(
+                    'corredor_cias cc',
+                    'cc.corredor_id = corredores.corredor_id AND cc.corredor_cia_activo = 1',
+                    'left'
+                )
+                ->join(
+                    'cias ci',
+                    'ci.cia_id = cc.cia_id AND ci.cia_habil = 1',
+                    'left'
+                );
+
+        if (!empty($term)) {
+            $builder->groupStart()
+                    ->like('corredor_nombre', $term)
+                    ->orLike('corredor_email', $term)
+                    ->orLike('corredor_rut', $term)
+                    ->groupEnd();
+        }
+
+        if (!empty($ciaId)) {
+            $builder->where('ci.cia_id', $ciaId);
+        }
+
+        return $builder->groupBy('corredores.corredor_id')
+                       ->orderBy('corredor_nombre', 'ASC')
+                       ->findAll();
     }
 
     public function getCorredoresByCia($ciaId): array
     {
         return $this->select('corredores.*')
-                    ->join('corredor_cias', 'corredor_cias.corredor_id = corredores.corredor_id')
-                    ->where('corredor_cias.cia_id', $ciaId)
-                    ->where('corredor_cias.corredor_cia_activo', 1)
+                    ->join('corredor_cias cc', 'cc.corredor_id = corredores.corredor_id', 'inner')
+                    ->where('cc.cia_id', $ciaId)
+                    ->where('cc.corredor_cia_activo', 1)
                     ->where('corredores.corredor_habil', 1)
                     ->orderBy('corredor_nombre', 'ASC')
                     ->findAll();
@@ -186,142 +239,111 @@ class CorredorModel extends Model
     public function canDelete($id): bool
     {
         $db = \Config\Database::connect();
-        // Verificar si tiene usuarios u otras relaciones asociadas
-        // Ajusta según tu estructura de datos
         $count = $db->table('users')->where('corredor_id', $id)->countAllResults();
         return (int) $count === 0;
     }
 
-    public function searchCorredores($term = '', $ciaId = null): array
-    {
-        $builder = $this->select('corredores.*, GROUP_CONCAT(CONCAT(cias.cia_nombre, " (", COALESCE(cias.cia_display_name, ""), ")") SEPARATOR ", ") as cias_nombres, COUNT(DISTINCT corredor_cias.cia_id) as total_cias')
-                        ->join('corredor_cias', 'corredor_cias.corredor_id = corredores.corredor_id', 'left')
-                        ->join('cias', 'cias.cia_id = corredor_cias.cia_id', 'left')
-                        ->where('corredor_cias.corredor_cia_activo', 1);
-
-        if (!empty($term)) {
-            $builder->groupStart()
-                   ->like('corredor_nombre', $term)
-                   ->orLike('corredor_email', $term)
-                   ->orLike('corredor_rut', $term)
-                   ->groupEnd();
-        }
-
-        if ($ciaId) {
-            $builder->where('corredor_cias.cia_id', $ciaId);
-        }
-
-        return $builder->groupBy('corredores.corredor_id')
-                       ->orderBy('corredor_nombre', 'ASC')
-                       ->findAll();
-    }
-
-    /* ===================== Métodos para gestionar relaciones ===================== */
+    /* ===================== Relaciones corredor - cía ===================== */
 
     public function getCiasDelCorredor($corredorId): array
     {
         $db = \Config\Database::connect();
         return $db->table('corredor_cias cc')
-                 ->select('cc.*, c.cia_nombre, c.cia_display_name, c.cia_logo')
-                 ->join('cias c', 'c.cia_id = cc.cia_id')
-                 ->where('cc.corredor_id', $corredorId)
-                 ->where('cc.corredor_cia_activo', 1)
-                 ->orderBy('c.cia_nombre', 'ASC')
-                 ->get()
-                 ->getResultArray();
+                  ->select('cc.*, c.cia_id, c.cia_nombre, c.cia_logo, c.cia_habil')
+                  ->join('cias c', 'c.cia_id = cc.cia_id', 'inner')
+                  ->where('cc.corredor_id', $corredorId)
+                  ->where('cc.corredor_cia_activo', 1)
+                  ->orderBy('c.cia_nombre', 'ASC')
+                  ->get()
+                  ->getResultArray();
     }
 
-    public function assignCiaToCorrector($corredorId, $ciaId): bool
+    public function assignCiaToCorredor($corredorId, $ciaId): bool
     {
         $db = \Config\Database::connect();
-        
-        // Verificar si ya existe la relación
-        $exists = $db->table('corredor_cias')
-                    ->where('corredor_id', $corredorId)
-                    ->where('cia_id', $ciaId)
-                    ->countAllResults();
 
-        if ($exists > 0) {
-            // Activar si existe pero está inactiva
-            return $db->table('corredor_cias')
+        $exists = $db->table('corredor_cias')
                      ->where('corredor_id', $corredorId)
                      ->where('cia_id', $ciaId)
-                     ->update([
-                         'corredor_cia_activo' => 1,
-                         'corredor_cia_updated_at' => date('Y-m-d H:i:s')
-                     ]);
-        } else {
-            // Crear nueva relación
+                     ->countAllResults();
+
+        if ($exists > 0) {
             return $db->table('corredor_cias')
-                     ->insert([
-                         'corredor_id' => $corredorId,
-                         'cia_id' => $ciaId,
-                         'corredor_cia_activo' => 1,
-                         'corredor_cia_created_at' => date('Y-m-d H:i:s'),
-                         'corredor_cia_updated_at' => date('Y-m-d H:i:s')
-                     ]);
+                      ->where('corredor_id', $corredorId)
+                      ->where('cia_id', $ciaId)
+                      ->update([
+                          'corredor_cia_activo'    => 1,
+                          'corredor_cia_updated_at'=> date('Y-m-d H:i:s')
+                      ]);
         }
+
+        return $db->table('corredor_cias')->insert([
+            'corredor_id'               => $corredorId,
+            'cia_id'                    => $ciaId,
+            'corredor_cia_activo'       => 1,
+            'corredor_cia_created_at'   => date('Y-m-d H:i:s'),
+            'corredor_cia_updated_at'   => date('Y-m-d H:i:s'),
+        ]);
     }
 
-    public function removeCiaFromCorrector($corredorId, $ciaId): bool
+    public function removeCiaFromCorredor($corredorId, $ciaId): bool
     {
         $db = \Config\Database::connect();
         return $db->table('corredor_cias')
-                 ->where('corredor_id', $corredorId)
-                 ->where('cia_id', $ciaId)
-                 ->update([
-                     'corredor_cia_activo' => 0,
-                     'corredor_cia_updated_at' => date('Y-m-d H:i:s')
-                 ]);
+                  ->where('corredor_id', $corredorId)
+                  ->where('cia_id', $ciaId)
+                  ->update([
+                      'corredor_cia_activo'    => 0,
+                      'corredor_cia_updated_at'=> date('Y-m-d H:i:s')
+                  ]);
     }
 
     public function updateCorredorCias($corredorId, $ciaIds): bool
     {
         $db = \Config\Database::connect();
-        
+
         try {
             $db->transStart();
 
-            // Desactivar todas las relaciones actuales
+            // Desactivar todas
             $db->table('corredor_cias')
-              ->where('corredor_id', $corredorId)
-              ->update([
-                  'corredor_cia_activo' => 0,
-                  'corredor_cia_updated_at' => date('Y-m-d H:i:s')
-              ]);
+               ->where('corredor_id', $corredorId)
+               ->update([
+                   'corredor_cia_activo'    => 0,
+                   'corredor_cia_updated_at'=> date('Y-m-d H:i:s')
+               ]);
 
-            // Activar o crear las relaciones seleccionadas
+            // Activar/crear seleccionadas
             if (!empty($ciaIds)) {
                 foreach ($ciaIds as $ciaId) {
                     $exists = $db->table('corredor_cias')
-                                ->where('corredor_id', $corredorId)
-                                ->where('cia_id', $ciaId)
-                                ->countAllResults();
+                                 ->where('corredor_id', $corredorId)
+                                 ->where('cia_id', $ciaId)
+                                 ->countAllResults();
 
                     if ($exists > 0) {
                         $db->table('corredor_cias')
-                          ->where('corredor_id', $corredorId)
-                          ->where('cia_id', $ciaId)
-                          ->update([
-                              'corredor_cia_activo' => 1,
-                              'corredor_cia_updated_at' => date('Y-m-d H:i:s')
-                          ]);
+                           ->where('corredor_id', $corredorId)
+                           ->where('cia_id', $ciaId)
+                           ->update([
+                               'corredor_cia_activo'    => 1,
+                               'corredor_cia_updated_at'=> date('Y-m-d H:i:s')
+                           ]);
                     } else {
-                        $db->table('corredor_cias')
-                          ->insert([
-                              'corredor_id' => $corredorId,
-                              'cia_id' => $ciaId,
-                              'corredor_cia_activo' => 1,
-                              'corredor_cia_created_at' => date('Y-m-d H:i:s'),
-                              'corredor_cia_updated_at' => date('Y-m-d H:i:s')
-                          ]);
+                        $db->table('corredor_cias')->insert([
+                            'corredor_id'               => $corredorId,
+                            'cia_id'                    => $ciaId,
+                            'corredor_cia_activo'       => 1,
+                            'corredor_cia_created_at'   => date('Y-m-d H:i:s'),
+                            'corredor_cia_updated_at'   => date('Y-m-d H:i:s'),
+                        ]);
                     }
                 }
             }
 
             $db->transComplete();
             return $db->transStatus();
-            
+
         } catch (\Exception $e) {
             $db->transRollback();
             return false;

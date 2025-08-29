@@ -148,20 +148,40 @@ Editar Corredor
                             </div>
                         </div>
 
-                        <!-- Compañías -->
+                        <!-- Compañías (Transfer List) -->
                         <div class="mb-3">
-                            <label for="cias" class="form-label">Compañías *</label>
-                            <select class="form-select <?= session('errors.cias') ? 'is-invalid' : '' ?>" 
-                                    id="cias" name="cias[]" multiple required size="6">
-                                <?php foreach ($cias as $cia): ?>
-                                    <option value="<?= $cia['cia_id'] ?>" 
-                                            <?= in_array($cia['cia_id'], old('cias', $ciasDelCorredor)) ? 'selected' : '' ?>>
-                                        <?= esc($cia['cia_display_name'] ?: $cia['cia_nombre']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <div class="invalid-feedback"><?= session('errors.cias') ?></div>
-                            <div class="form-text">Mantén presionado Ctrl/Cmd para seleccionar múltiples compañías.</div>
+                            <label class="form-label">Compañías *</label>
+
+                            <div class="row g-2">
+                                <!-- Columna disponibles -->
+                                <div class="col-md-5">
+                                <input type="text" id="filtroDisp" class="form-control mb-2" placeholder="Buscar disponibles…">
+                                <ul id="listaDisp" class="list-group" style="max-height:260px;overflow:auto;"></ul>
+                                <small class="text-muted d-block mt-1">Doble clic o botón → para mover</small>
+                                </div>
+
+                                <!-- Botones -->
+                                <div class="col-md-2 d-grid gap-2 align-content-center">
+                                <button type="button" class="btn btn-outline-secondary" id="btnAdd"    title="Mover seleccionados a la derecha">→</button>
+                                <button type="button" class="btn btn-outline-secondary" id="btnAddAll" title="Mover todos a la derecha">≫</button>
+                                <button type="button" class="btn btn-outline-secondary" id="btnRem"    title="Mover seleccionados a la izquierda">←</button>
+                                <button type="button" class="btn btn-outline-secondary" id="btnRemAll" title="Mover todos a la izquierda">≪</button>
+                                </div>
+
+                                <!-- Columna seleccionadas -->
+                                <div class="col-md-5">
+                                <input type="text" id="filtroSel" class="form-control mb-2" placeholder="Buscar seleccionadas…">
+                                <ul id="listaSel" class="list-group" style="max-height:260px;overflow:auto;"></ul>
+                                <small class="text-muted d-block mt-1">Doble clic o botón ← para devolver</small>
+                                </div>
+                            </div>
+
+                            <!-- Aquí se inyectan los inputs hidden name="cias[]" para el submit -->
+                            <div id="hiddenCias"></div>
+
+                            <?php if (session('errors.cias')): ?>
+                                <div class="invalid-feedback d-block"><?= session('errors.cias') ?></div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Dirección -->
@@ -361,6 +381,130 @@ Editar Corredor
 
 <?= $this->section('scripts') ?>
 <script>
+    (function () {
+  // Datos PHP → JS
+  const data = <?php
+    // Prepara arreglo de compañías (id, name)
+    $out = array_map(function($c){
+      return [
+        'id'   => (int) $c['cia_id'],
+        'name' => $c['cia_display_name'] ?: $c['cia_nombre'],
+      ];
+    }, $cias);
+    echo json_encode($out, JSON_UNESCAPED_UNICODE);
+  ?>;
+
+  const preSeleccionadas = new Set(<?= json_encode(array_map('intval', old('cias', $ciasDelCorredor ?? []))) ?>);
+
+  // Elementos UI
+  const ulDisp     = document.getElementById('listaDisp');
+  const ulSel      = document.getElementById('listaSel');
+  const filtroDisp = document.getElementById('filtroDisp');
+  const filtroSel  = document.getElementById('filtroSel');
+  const hidden     = document.getElementById('hiddenCias');
+
+  // Helpers
+  function crearItem(item) {
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    li.dataset.id = item.id;
+    li.dataset.name = (item.name || '').toLowerCase();
+    li.tabIndex = 0;
+
+    const txt = document.createElement('span');
+    txt.textContent = item.name;
+
+    const badge = document.createElement('span');
+    badge.className = 'badge bg-light text-muted';
+    badge.textContent = '#' + item.id;
+
+    li.appendChild(txt);
+    li.appendChild(badge);
+
+    // Toggle selección visual con click
+    li.addEventListener('click', () => li.classList.toggle('active'));
+    // Doble clic mueve entre listas
+    li.addEventListener('dblclick', () => {
+      const id = +li.dataset.id;
+      if (preSeleccionadas.has(id)) {
+        preSeleccionadas.delete(id);
+      } else {
+        preSeleccionadas.add(id);
+      }
+      render();
+      aplicarFiltros();
+    });
+
+    return li;
+  }
+
+  function render() {
+    ulDisp.innerHTML = '';
+    ulSel.innerHTML  = '';
+    hidden.innerHTML = '';
+
+    data.forEach(item => {
+      const el = crearItem(item);
+      if (preSeleccionadas.has(item.id)) {
+        ulSel.appendChild(el);
+
+        // Hidden para enviar al backend
+        const h = document.createElement('input');
+        h.type  = 'hidden';
+        h.name  = 'cias[]';
+        h.value = item.id;
+        hidden.appendChild(h);
+      } else {
+        ulDisp.appendChild(el);
+      }
+    });
+  }
+
+  function aplicarFiltros() {
+    const qDisp = (filtroDisp.value || '').trim().toLowerCase();
+    const qSel  = (filtroSel.value  || '').trim().toLowerCase();
+
+    Array.from(ulDisp.children).forEach(li => {
+      li.style.display = li.dataset.name.includes(qDisp) ? '' : 'none';
+    });
+    Array.from(ulSel.children).forEach(li => {
+      li.style.display = li.dataset.name.includes(qSel) ? '' : 'none';
+    });
+  }
+
+  function seleccionadosDe(ul) {
+    return Array.from(ul.querySelectorAll('.active')).map(li => +li.dataset.id);
+  }
+
+  // Botones
+  document.getElementById('btnAdd').addEventListener('click', () => {
+    seleccionadosDe(ulDisp).forEach(id => preSeleccionadas.add(id));
+    render(); aplicarFiltros();
+  });
+
+  document.getElementById('btnAddAll').addEventListener('click', () => {
+    data.forEach(item => preSeleccionadas.add(item.id));
+    render(); aplicarFiltros();
+  });
+
+  document.getElementById('btnRem').addEventListener('click', () => {
+    seleccionadosDe(ulSel).forEach(id => preSeleccionadas.delete(id));
+    render(); aplicarFiltros();
+  });
+
+  document.getElementById('btnRemAll').addEventListener('click', () => {
+    preSeleccionadas.clear();
+    render(); aplicarFiltros();
+  });
+
+  // Filtros
+  filtroDisp.addEventListener('input', aplicarFiltros);
+  filtroSel .addEventListener('input', aplicarFiltros);
+
+  // Render inicial
+  render();
+  aplicarFiltros();
+})();
 (function () {
     const $nav      = document.getElementById('preview-navbar');
     const $sidebar  = document.getElementById('preview-sidebar');

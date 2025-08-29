@@ -270,7 +270,6 @@ Gestión de Corredores
       if (newToken) setCSRF(newToken);
     }
   });
-})();
 
     // Confirmación de eliminación
     $('.btn-delete').on('click', function(e) {
@@ -291,6 +290,7 @@ Gestión de Corredores
             if (r.isConfirmed) form.submit();
         });
     });
-});
+})();
+
 </script>
 <?= $this->endSection() ?>

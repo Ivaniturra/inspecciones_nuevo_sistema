@@ -270,7 +270,6 @@ $('.corredor-status-toggle').on('change', function () {
         }).then((r) => {
             if (r.isConfirmed) form.submit();
         });
-    });
-});
+    }); 
 </script>
 <?= $this->endSection() ?>

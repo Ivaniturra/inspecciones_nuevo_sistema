@@ -87,8 +87,19 @@ class Corredores extends BaseController
             }
 
             $targetDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
-            if (! is_dir($targetDir)) {
-                @mkdir($targetDir, 0755, true);
+
+            // Crear directorio si no existe
+            if (!is_dir($targetDir)) {
+                if (!@mkdir($targetDir, 0755, true)) {
+                    return redirect()->back()->withInput()
+                        ->with('error', 'Error: No se pudo crear el directorio de uploads. Contacta al administrador.');
+                }
+            }
+
+            // Verificar que es escribible
+            if (!is_writable($targetDir)) {
+                return redirect()->back()->withInput()
+                    ->with('error', 'Error: El directorio de uploads no tiene permisos de escritura.');
             }
 
             $logoName = $logoFile->getRandomName();

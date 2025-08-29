@@ -5,44 +5,51 @@ FROM composer:2 AS vendor
 WORKDIR /app
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Copiar composer.json y lock desde subcarpeta app/
+# Copia composer.json/lock desde tu subcarpeta app/
 COPY app/composer.json app/composer.lock ./
-
-# Instalar dependencias (ignora ext-intl en build, en runtime sí estará)
 RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader \
     --ignore-platform-req=ext-intl
 
 ########## Stage 2: PHP + Apache ##########
 FROM php:8.2-apache
 
-# Instalar extensiones necesarias
-RUN apt-get update && apt-get install -y \
-    unzip git curl libzip-dev libicu-dev \
+# Paquetes y extensiones PHP necesarias
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      unzip git curl libzip-dev libicu-dev \
  && docker-php-ext-install zip mysqli pdo_mysql intl \
  && rm -rf /var/lib/apt/lists/*
 
-# Apache -> public y mod_rewrite
+# Apache -> servir /public y activar rewrite
 RUN a2enmod rewrite \
  && sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf \
- && printf "\n<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\n" >> /etc/apache2/apache2.conf
+ && { \
+      echo '<Directory /var/www/html/public>'; \
+      echo '    AllowOverride All'; \
+      echo '    Require all granted'; \
+      echo '</Directory>'; \
+    } >> /etc/apache2/apache2.conf
 
 WORKDIR /var/www/html
 
-# Copiar vendor generado en el stage vendor
+# Copia vendor del stage de Composer
 COPY --from=vendor /app/vendor /var/www/html/vendor
 
-# Copiar el resto del proyecto desde /app
+# Copia el proyecto (tu código está en la subcarpeta app/)
 COPY app/. .
 
-# Crear carpeta writable y dar permisos correctos
-RUN mkdir -p /var/www/html/writable/{cache,logs,session,uploads} \
- && chown -R www-data:www-data /var/www/html/writable \
- && find /var/www/html/writable -type d -exec chmod 775 {} \; \
- && find /var/www/html/writable -type f -exec chmod 664 {} \;
+# Crear y fijar permisos de rutas escribibles (idempotente)
+# - setgid 2775 en directorios para heredar grupo
+# - archivos 664, dirs 2775
+RUN mkdir -p /var/www/html/writable/{cache,logs,session,uploads} /var/www/html/public/uploads \
+ && chown -R www-data:www-data /var/www/html/writable /var/www/html/public/uploads \
+ && find /var/www/html/writable            -type d -exec chmod 2775 {} \; \
+ && find /var/www/html/public/uploads      -type d -exec chmod 2775 {} \; \
+ && find /var/www/html/writable            -type f -exec chmod 0664 {} \; \
+ && find /var/www/html/public/uploads      -type f -exec chmod 0664 {} \;
 
- RUN mkdir -p /var/www/html/writable/cache \
-    && chmod -R 755 /var/www/html/writable \
-    && chown -R www-data:www-data /var/www/html/writable
-
+# Entorno y puerto
 ENV CI_ENVIRONMENT=production
 EXPOSE 80
+
+# Proceso principal de Apache
+CMD ["apache2-foreground"]

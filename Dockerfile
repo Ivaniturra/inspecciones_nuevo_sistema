@@ -38,4 +38,10 @@ RUN chmod +x /entrypoint.sh
 ENV CI_ENVIRONMENT=production
 EXPOSE 80
 
+# Copiar entrypoint dentro de la imagen
+COPY scripts/entrypoint.sh /entrypoint.sh
+# (si construyes en Windows, evita CRLF)
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
+
 CMD ["/entrypoint.sh"]
+ 

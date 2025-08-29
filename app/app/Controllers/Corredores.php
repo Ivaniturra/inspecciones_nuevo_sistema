@@ -201,10 +201,10 @@ class Corredores extends BaseController
     }
 
     /** Actualizar */
-    public function update($id)
+   public function update($id)
     {
         $corredor = $this->corredorModel->find($id);
-        if (! $corredor) {
+        if (!$corredor) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Corredor no encontrado');
         }
 
@@ -222,45 +222,62 @@ class Corredores extends BaseController
             'cias'                       => 'required',
         ];
 
-        if (! $this->validate($rules)) {
+        if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // Logo nuevo (opcional)
-        $logoName = $corredor['corredor_logo'];
+        // ===== Manejo de LOGO =====
+        $logoName = $corredor['corredor_logo'];           // nombre actual en BD
         $logoFile = $this->request->getFile('corredor_logo');
 
-        if ($logoFile && $logoFile->isValid() && ! $logoFile->hasMoved()) {
-            $allowed = ['image/jpeg','image/jpg','image/png','image/svg+xml'];
-            if (! in_array($logoFile->getMimeType(), $allowed, true)) {
+        // Rutas destino (público) y posible origen histórico (writable)
+        $publicDir   = rtrim(FCPATH, '/\\')   . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
+        $writableDir = rtrim(WRITEPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
+
+        if (!is_dir($publicDir)) {
+            @mkdir($publicDir, 0755, true);
+        }
+
+        if ($logoFile && $logoFile->isValid() && !$logoFile->hasMoved()) {
+            // Validación tolerante (evita falsos negativos con proxies)
+            $allowed   = ['image/jpeg','image/jpg','image/png','image/svg+xml','image/svg'];
+            $clientMime = strtolower((string) $logoFile->getClientMimeType());
+
+            if (!in_array($clientMime, $allowed, true)) {
                 return redirect()->back()->withInput()->with('error', 'El logo debe ser JPG, PNG o SVG.');
             }
             if ($logoFile->getSize() > 2 * 1024 * 1024) {
                 return redirect()->back()->withInput()->with('error', 'El logo no puede superar los 2MB.');
             }
 
-            $targetDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
-            if (! is_dir($targetDir)) {
-                @mkdir($targetDir, 0755, true);
-            }
-
-            // Borrar anterior
-            if (! empty($corredor['corredor_logo'])) {
-                $oldPath = $targetDir . DIRECTORY_SEPARATOR . $corredor['corredor_logo'];
+            // Borrar anterior en /public si existe
+            if (!empty($logoName)) {
+                $oldPath = $publicDir . DIRECTORY_SEPARATOR . $logoName;
                 if (is_file($oldPath)) {
                     @unlink($oldPath);
                 }
             }
 
+            // Guardar nuevo
             $logoName = $logoFile->getRandomName();
-            $logoFile->move($targetDir, $logoName);
+            $logoFile->move($publicDir, $logoName);
+        } else {
+            // Si no subiste archivo, pero el anterior está en writable, migrarlo a public
+            if (!empty($logoName)) {
+                $oldWritable = $writableDir . DIRECTORY_SEPARATOR . $logoName;
+                $newPublic   = $publicDir   . DIRECTORY_SEPARATOR . $logoName;
+                if (is_file($oldWritable) && !is_file($newPublic)) {
+                    @rename($oldWritable, $newPublic);
+                }
+            }
         }
+        // ===== Fin manejo LOGO =====
 
         // Colores
-        $navBg     = $this->hexOrDefault($this->request->getPost('corredor_brand_nav_bg'), $corredor['corredor_brand_nav_bg'] ?? '#0d6efd');
-        $navText   = $this->hexOrDefault($this->request->getPost('corredor_brand_nav_text'), $corredor['corredor_brand_nav_text'] ?? '#ffffff');
-        $sideStart = $this->hexOrDefault($this->request->getPost('corredor_brand_side_start'), $corredor['corredor_brand_side_start'] ?? '#667eea');
-        $sideEnd   = $this->hexOrDefault($this->request->getPost('corredor_brand_side_end'), $corredor['corredor_brand_side_end'] ?? '#764ba2');
+        $navBg     = $this->hexOrDefault($this->request->getPost('corredor_brand_nav_bg'),     $corredor['corredor_brand_nav_bg']    ?? '#0d6efd');
+        $navText   = $this->hexOrDefault($this->request->getPost('corredor_brand_nav_text'),   $corredor['corredor_brand_nav_text']  ?? '#ffffff');
+        $sideStart = $this->hexOrDefault($this->request->getPost('corredor_brand_side_start'), $corredor['corredor_brand_side_start']?? '#667eea');
+        $sideEnd   = $this->hexOrDefault($this->request->getPost('corredor_brand_side_end'),   $corredor['corredor_brand_side_end']  ?? '#764ba2');
 
         $nombre = trim((string) $this->request->getPost('corredor_nombre'));
         $slug   = $corredor['corredor_slug'] ?: $this->makeSlug($nombre);
@@ -273,7 +290,7 @@ class Corredores extends BaseController
             'corredor_rut'               => trim((string) $this->request->getPost('corredor_rut')),
             'corredor_display_name'      => trim((string) $this->request->getPost('corredor_display_name')) ?: null,
             'corredor_slug'              => $slug,
-            'corredor_logo'              => $logoName,
+            'corredor_logo'              => $logoName, // <- nombre final guardado en /public/uploads/corredores
             'corredor_habil'             => (int) $this->request->getPost('corredor_habil'),
             'corredor_brand_nav_bg'      => $navBg,
             'corredor_brand_nav_text'    => $navText,
@@ -282,15 +299,17 @@ class Corredores extends BaseController
         ];
 
         if ($this->corredorModel->update($id, $data)) {
-            // Actualizar compañías del corredor
-            $ciaIds = $this->request->getPost('cias');
+            // Sincronizar compañías
+            $ciaIds = (array) $this->request->getPost('cias');
+            $ciaIds = array_values(array_unique(array_map('intval', $ciaIds)));
             $this->corredorModel->updateCorredorCias($id, $ciaIds);
-            
+
             return redirect()->to('/corredores')->with('success', 'Corredor actualizado exitosamente');
         }
 
         return redirect()->back()->withInput()->with('error', 'Error al actualizar el corredor');
     }
+
 
     /** Eliminar */
     public function delete($id)

@@ -31,16 +31,12 @@ WORKDIR /var/www/html
 COPY --from=vendor /app/vendor /var/www/html/vendor
 COPY app/. .
 
-# Copiamos el entrypoint
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# ⬇️ SOLO ESTE COPY (ruta correcta)
+COPY scripts/entrypoint.sh /entrypoint.sh
+# Normaliza CRLF (Windows) y marca ejecutable
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENV CI_ENVIRONMENT=production
 EXPOSE 80
-
-# Copiar entrypoint desde la carpeta correcta
-COPY scripts/entrypoint.sh /entrypoint.sh
-# Normaliza CRLF (si editas en Windows) y marca ejecutable
-RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 CMD ["/entrypoint.sh"]

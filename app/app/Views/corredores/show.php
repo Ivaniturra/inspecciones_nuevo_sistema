@@ -398,11 +398,15 @@
                             </button>
                             <ul class="dropdown-menu w-100">
                                 <?php foreach ($cias as $cia): ?>
-                                <li>
-                                    <a class="dropdown-item" href="<?= base_url('cias/show/' . $cia['cia_id']) ?>">
-                                        <i class="fas fa-eye me-2"></i><?= esc($cia['cia_display_name'] ?: $cia['cia_nombre']) ?>
+                                <?php
+                                    $id   = (int)($cia['cia_id'] ?? 0);
+                                    $name = $cia['cia_display_name'] ?? $cia['cia_nombre'] ?? 'Sin nombre';
+                                    ?>
+                                    <li>
+                                    <a class="dropdown-item" href="<?= base_url('cias/show/'.$id) ?>">
+                                        <i class="fas fa-eye me-2"></i><?= esc($name) ?>
                                     </a>
-                                </li>
+                                    </li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>

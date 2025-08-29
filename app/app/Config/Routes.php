@@ -118,9 +118,12 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->get('edit/(:num)', 'Corredores::edit/$1');
         $routes->post('update/(:num)', 'Corredores::update/$1');
         $routes->put('update/(:num)', 'Corredores::update/$1');
-        $routes->delete('delete/(:num)', 'Corredores::delete/$1');
+        //$routes->delete('delete/(:num)', 'Corredores::delete/$1');
         $routes->post('delete/(:num)', 'Corredores::delete/$1');
         $routes->post('toggleStatus/(:num)', 'Corredores::toggleStatus/$1');
         $routes->get('getByCia/(:num)', 'Corredores::getByCia/$1');
+        $routes->post('toggleStatus/(:num)', 'Corredores::toggleStatus/$1');
+        $routes->post('enable/(:num)',       'Corredores::enable/$1');
+        $routes->post('disable/(:num)',      'Corredores::disable/$1');
     });
 });

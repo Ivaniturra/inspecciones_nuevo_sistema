@@ -276,6 +276,30 @@ class CorredorModel extends Model
             return false;
         }
     }
+    public function setEnabledCascade(int $corredorId, bool $enabled): bool
+    {
+        return $this->cascadeSetEnabled($corredorId, $enabled, true);
+    }
+
+    // Alterna estado en cascada
+    public function toggleStatusCascade(int $corredorId): array
+    {
+        $row = $this->find($corredorId);
+        if (!$row) {
+            return ['ok' => false, 'enabled' => null, 'message' => 'Corredor no encontrado'];
+        }
+
+        $newEnabled = (int)$row['corredor_habil'] === 1 ? false : true;
+        $ok = $this->setEnabledCascade($corredorId, $newEnabled);
+
+        return [
+            'ok'      => $ok,
+            'enabled' => $newEnabled,
+            'message' => $ok
+                ? ('Corredor '.($newEnabled ? 'activado' : 'desactivado').' en cascada.')
+                : 'No se pudo actualizar el estado del corredor',
+        ];
+    }
     /* ===================== Relaciones corredor - cía ===================== */
 
     public function getCiasDelCorredor($corredorId): array

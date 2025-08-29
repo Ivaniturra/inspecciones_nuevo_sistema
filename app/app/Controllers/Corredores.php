@@ -327,17 +327,21 @@ class Corredores extends BaseController
  
 
     /** Toggle estado (AJAX) */
-    public function toggleStatus($id)
+   public function toggleStatus($id)
     {
-        if (!$this->request->isAJAX()) return redirect()->to('/corredores');
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/corredores');
+        }
 
         $res = $this->corredorModel->toggleStatusCascade((int)$id);
 
-        return $this->response->setJSON([
-            'success' => $res['ok'],
-            'enabled' => $res['enabled'],
-            'message' => $res['message'],
-        ]);
+        return $this->response
+            ->setHeader('X-CSRF-TOKEN', csrf_hash()) // <-- nuevo token
+            ->setJSON([
+                'success' => $res['ok'],
+                'enabled' => $res['enabled'],
+                'message' => $res['message'],
+            ]);
     }
 
     public function enable($id)

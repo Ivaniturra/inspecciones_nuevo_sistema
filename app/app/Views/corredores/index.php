@@ -234,41 +234,56 @@ Gestión de Corredores
 <script>
 $(function() {
     // Toggle estado corredor (AJAX)
-    $('.corredor-status-toggle').on('change', function() {
+    $('.corredor-status-toggle').on('change', function () {
         const $toggle = $(this);
         const id = $toggle.data('id');
         const checked = $toggle.is(':checked');
 
-        $.post('<?= base_url('corredores/toggleStatus') ?>/' + id, {
-            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-        })
-        .done(function(resp) {
+        $toggle.prop('disabled', true);
+
+        $.ajax({
+            url: '<?= base_url('corredores/toggleStatus') ?>/' + id,
+            type: 'POST',
+            data: { [window.CSRF.name]: window.CSRF.value },
+            success: function (resp, status, xhr) {
+            // actualiza el token para la próxima petición
+            const newTok = xhr.getResponseHeader('X-CSRF-TOKEN');
+            if (newTok) window.CSRF.value = newTok;
+
             if (!resp || !resp.success) {
                 $toggle.prop('checked', !checked); // revertir
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: (resp && resp.message) ? resp.message : 'No se pudo actualizar el estado'
+                icon: 'error',
+                title: 'Error',
+                text: (resp && resp.message) ? resp.message : 'No se pudo actualizar el estado'
                 });
             } else {
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Estado actualizado',
-                    text: resp.message,
-                    timer: 1600,
-                    showConfirmButton: false
+                icon: 'success',
+                title: 'Estado actualizado',
+                text: resp.message,
+                timer: 1600,
+                showConfirmButton: false
                 });
             }
-        })
-        .fail(function() {
+            },
+            error: function (xhr) {
+            // intenta capturar token nuevo incluso en error
+            const newTok = xhr.getResponseHeader('X-CSRF-TOKEN');
+            if (newTok) window.CSRF.value = newTok;
+
             $toggle.prop('checked', !checked); // revertir
             Swal.fire({
                 icon: 'error',
                 title: 'Error de conexión',
                 text: 'No se pudo conectar con el servidor'
             });
+            },
+            complete: function () {
+            $toggle.prop('disabled', false);
+            }
         });
-    });
+        });
 
     // Confirmación de eliminación
     $('.btn-delete').on('click', function(e) {

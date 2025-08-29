@@ -93,9 +93,8 @@ class Corredores extends BaseController
             if ($logoFile->getSize() > 2 * 1024 * 1024) { // 2MB
                 return redirect()->back()->withInput()->with('error', 'El logo no puede superar los 2MB.');
             }
-
-            // MEJORA: Crear directorio con mejor manejo de errores
-            $targetDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
+            $targetDir = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
+ 
             
             // Verificar/crear directorio padre primero
             $uploadsDir = FCPATH . 'uploads';
@@ -245,9 +244,10 @@ class Corredores extends BaseController
         $logoFile = $this->request->getFile('corredor_logo');
 
         // Rutas destino (público) y posible origen histórico (writable)
-        $publicDir   = rtrim(FCPATH, '/\\')   . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
-        $writableDir = rtrim(WRITEPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
-
+        $publicDir   = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
+        $oldPubCorr  = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
+        $oldPubLogos = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'logos';
+        $oldWritable = rtrim(WRITEPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
         if (!is_dir($publicDir)) {
             @mkdir($publicDir, 0755, true);
         }
@@ -339,7 +339,7 @@ class Corredores extends BaseController
 
         // Borrar logo físico
         if (! empty($corredor['corredor_logo'])) {
-            $path = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'corredores' . DIRECTORY_SEPARATOR . $corredor['corredor_logo'];
+            $path = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores' . DIRECTORY_SEPARATOR . $corredor['corredor_logo']; 
             if (is_file($path)) {
                 @unlink($path);
             }

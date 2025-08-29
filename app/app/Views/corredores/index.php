@@ -234,41 +234,67 @@ Gestión de Corredores
 <script>
 $(function() {
     // Toggle estado corredor (AJAX)
-    $('.corredor-status-toggle').on('change', function() {
-        const $toggle = $(this);
-        const id = $toggle.data('id');
-        const checked = $toggle.is(':checked');
+    // Token global
+let CSRF = { name: '<?= csrf_token() ?>', hash: '<?= csrf_hash() ?>' };
 
-        $.post('<?= base_url('corredores/toggleStatus') ?>/' + id, {
-            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-        })
-        .done(function(resp) {
-            if (!resp || !resp.success) {
-                $toggle.prop('checked', !checked); // revertir
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: (resp && resp.message) ? resp.message : 'No se pudo actualizar el estado'
-                });
-            } else {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Estado actualizado',
-                    text: resp.message,
-                    timer: 1600,
-                    showConfirmButton: false
-                });
-            }
-        })
-        .fail(function() {
-            $toggle.prop('checked', !checked); // revertir
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de conexión',
-                text: 'No se pudo conectar con el servidor'
-            });
-        });
-    });
+// Para evitar reentradas por ID
+const inFlight = new Set();
+
+function handleCorredorToggle(e) {
+  const $t = $(this);
+
+  // Si estamos revirtiendo programáticamente, ignora este change
+  if ($t.data('reverting')) return;
+
+  const id = $t.data('id');
+  const checked = $t.is(':checked');
+
+  // Si ya hay una petición para este ID, ignora
+  if (inFlight.has(id)) {
+    // revertir visualmente el cambio extra
+    $t.data('reverting', true).prop('checked', !checked).data('reverting', false);
+    return;
+  }
+
+  inFlight.add(id);
+  $t.prop('disabled', true);
+
+  $.ajax({
+    url: '<?= base_url('corredores/toggleStatus') ?>/' + id,
+    type: 'POST',
+    // manda token por body y header (doble seguro)
+    data: { [CSRF.name]: CSRF.hash },
+    headers: { 'X-CSRF-TOKEN': CSRF.hash }
+  })
+  .done(function(resp, _text, xhr) {
+    // refresca token para la siguiente llamada
+    const newTok = xhr.getResponseHeader('X-CSRF-TOKEN');
+    if (newTok) CSRF.hash = newTok;
+
+    if (!resp || !resp.success) {
+      // revertir sin disparar otro change
+      $t.data('reverting', true).prop('checked', !checked).data('reverting', false);
+      Swal.fire({ icon:'error', title:'Error', text: resp?.message ?? 'No se pudo actualizar el estado' });
+    } else {
+      Swal.fire({ icon:'success', title:'Estado actualizado', text: resp.message, timer: 1600, showConfirmButton:false });
+    }
+  })
+  .fail(function(xhr) {
+    // aunque falle, intenta capturar token nuevo (algunos middlewares lo mandan igual)
+    const newTok = xhr.getResponseHeader('X-CSRF-TOKEN');
+    if (newTok) CSRF.hash = newTok;
+
+    // revertir sin rebote
+    $t.data('reverting', true).prop('checked', !checked).data('reverting', false);
+    Swal.fire({ icon:'error', title:'Error de conexión', text:'No se pudo conectar con el servidor' });
+  })
+  .always(function() {
+    inFlight.delete(id);
+    $t.prop('disabled', false);
+  });
+}
+
+$('.corredor-status-toggle').on('change', handleCorredorToggle);
 
     // Confirmación de eliminación
     $('.btn-delete').on('click', function(e) {

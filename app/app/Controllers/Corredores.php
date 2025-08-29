@@ -333,7 +333,7 @@ class Corredores extends BaseController
             return redirect()->to('/corredores')->with('error', 'Corredor no encontrado');
         }
 
-        if (! $this->corredorModel->canDelete($id)) {
+        if (! $this->corredorModel->cascadeSetEnabled($id)) {
             return redirect()->to('/corredores')->with('error', 'No se puede eliminar el corredor porque tiene registros asociados');
         }
 

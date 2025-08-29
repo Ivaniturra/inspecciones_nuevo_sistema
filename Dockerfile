@@ -38,10 +38,8 @@ RUN chmod +x /entrypoint.sh
 ENV CI_ENVIRONMENT=production
 EXPOSE 80
 
-# Copiamos el entrypoint
-COPY scripts/entrypoint.sh /entrypoint.sh
-# normaliza CRLF si editas en Windows y marca como ejecutable
-RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
-CMD ["/entrypoint.sh"]
- 
+# Copiamos el entrypoint (ruta correcta)
+COPY scripts/entrypoint.sh /entrypoint.sh
+# Normalizar CRLF si editas en Windows y marcar ejecutable
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh

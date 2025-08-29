@@ -160,12 +160,21 @@ Gestión de Corredores
                                     </td>
                                     <td>
                                         <div class="d-flex flex-wrap gap-1">
-                                            <?php if (!empty($corredor['cia_nombre'])): ?>
-                                                <span class="badge bg-primary" title="<?= esc($corredor['cia_display_name'] ?: $corredor['cia_nombre']) ?>">
-                                                    <?= esc($corredor['cia_display_name'] ?: $corredor['cia_nombre']) ?>
-                                                </span>
+                                            <?php
+                                            // $corredor['companias'] puede venir como string "A|B|C" o como null
+                                            $lista = [];
+                                            if (!empty($corredor['companias'])) {
+                                                $lista = is_array($corredor['companias'])
+                                                        ? $corredor['companias']
+                                                        : array_filter(explode('|', $corredor['companias']));
+                                            }
+                                            ?>
+                                            <?php if (!empty($lista)): ?>
+                                            <?php foreach ($lista as $nom): ?>
+                                                <span class="badge bg-primary"><?= esc($nom) ?></span>
+                                            <?php endforeach; ?>
                                             <?php else: ?>
-                                                <span class="badge bg-secondary">Sin compañía</span>
+                                            <span class="badge bg-secondary">Sin compañías</span>
                                             <?php endif; ?>
                                         </div>
                                     </td>

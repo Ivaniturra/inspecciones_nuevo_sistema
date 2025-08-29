@@ -345,7 +345,7 @@ class Corredores extends BaseController
             }
         }
 
-        if ($this->corredorModel->delete($id)) {
+        if ($this->corredorModel->cascadeSetEnabled($id)) {
             return redirect()->to('/corredores')->with('success', 'Corredor eliminado exitosamente');
         }
 

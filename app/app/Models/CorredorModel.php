@@ -236,13 +236,46 @@ class CorredorModel extends Model
         return (bool) $this->update($id, ['corredor_habil' => $new]);
     }
 
-    public function canDelete($id): bool
+    public function cascadeSetEnabled(int $corredorId, bool $enabled): bool
     {
         $db = \Config\Database::connect();
-        $count = $db->table('users')->where('corredor_id', $id)->countAllResults();
-        return (int) $count === 0;
-    }
+        $now = date('Y-m-d H:i:s');
 
+        try {
+            $db->transStart();
+
+            // 1) Corredor
+            $db->table('corredores')
+                ->where('corredor_id', $corredorId)
+                ->update([
+                    'corredor_habil'   => $enabled ? 1 : 0,
+                    'corredor_updated_at' => $now,
+                ]);
+
+            // 2) Relaciones con compañías
+            $db->table('corredor_cias')
+                ->where('corredor_id', $corredorId)
+                ->update([
+                    'corredor_cia_activo'   => $enabled ? 1 : 0,
+                    'corredor_cia_updated_at' => $now,
+                ]);
+
+            // 3) Usuarios del corredor (ajusta nombres de columnas si difieren)
+           /* $db->table('users')
+                ->where('corredor_id', $corredorId)
+                ->update([
+                    'user_habil' => $enabled ? 1 : 0,
+                    'updated_at' => $now, // si tienes timestamp
+                ]);*/
+
+            $db->transComplete();
+            return $db->transStatus();
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'cascadeSetEnabled fallo: '.$e->getMessage());
+            return false;
+        }
+    }
     /* ===================== Relaciones corredor - cía ===================== */
 
     public function getCiasDelCorredor($corredorId): array

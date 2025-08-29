@@ -68,7 +68,14 @@ class Corredores extends BaseController
             'corredor_brand_side_end'    => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
             'cias'                       => 'required',
         ];
+        $ciasSeleccionadas = (array) $this->request->getPost('cias');
+        $ciasSeleccionadas = array_values(array_filter($ciasSeleccionadas, fn($v) => ctype_digit((string)$v))); // sanitiza
 
+        if (count($ciasSeleccionadas) < 1) {
+            return redirect()->back()->withInput()->with('errors', [
+                'cias' => 'Selecciona al menos una compañía.'
+            ]);
+        }
         if (! $this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
@@ -207,7 +214,14 @@ class Corredores extends BaseController
         if (!$corredor) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Corredor no encontrado');
         }
+        $ciasSeleccionadas = (array) $this->request->getPost('cias');
+        $ciasSeleccionadas = array_values(array_filter($ciasSeleccionadas, fn($v) => ctype_digit((string)$v))); // sanitiza
 
+        if (count($ciasSeleccionadas) < 1) {
+            return redirect()->back()->withInput()->with('errors', [
+                'cias' => 'Selecciona al menos una compañía.'
+            ]);
+        }
         $rules = [
             'corredor_nombre'            => 'required|min_length[3]|max_length[255]',
             'corredor_email'             => 'permit_empty|valid_email|max_length[255]',

@@ -161,6 +161,11 @@
               <!-- inputs hidden que se envían -->
               <div id="hiddenCias"></div>
               <?php if (session('errors.cias')): ?>
+                <div class="invalid-feedback d-block" id="errCias"><?= session('errors.cias') ?></div>
+                <?php else: ?>
+                <div class="invalid-feedback d-none" id="errCias">Selecciona al menos una compañía.</div>
+                <?php endif; ?>
+              <?php if (session('errors.cias')): ?>
                 <div class="invalid-feedback d-block"><?= session('errors.cias') ?></div>
               <?php endif; ?>
             </div>
@@ -365,7 +370,33 @@
       }
     });
   }
+   const form = document.getElementById('formCorredor');
+  const errCias = document.getElementById('errCias');
 
+  function markCiasInvalid(on) {
+    if (!errCias) return;
+    errCias.classList.toggle('d-none', !on);
+    errCias.classList.toggle('d-block', on);
+    [ulDisp, ulSel].forEach(ul=>{
+      ul.classList.toggle('border', on);
+      ul.classList.toggle('border-danger', on);
+    });
+  }
+
+  form.addEventListener('submit', function(e){
+    if (preSeleccionadas.size < 1) {
+      e.preventDefault();
+      markCiasInvalid(true);
+      ulSel.scrollIntoView({behavior:'smooth', block:'center'});
+    } else {
+      markCiasInvalid(false);
+    }
+  });
+
+  ['click','dblclick','input'].forEach(ev=>{
+    ulDisp.addEventListener(ev, ()=>{ if (preSeleccionadas.size >= 1) markCiasInvalid(false); });
+    ulSel .addEventListener(ev, ()=>{ if (preSeleccionadas.size >= 1) markCiasInvalid(false); });
+  });
   function aplicarFiltros(){
     const q1=(filtroDisp.value||'').toLowerCase();
     const q2=(filtroSel.value||'').toLowerCase();

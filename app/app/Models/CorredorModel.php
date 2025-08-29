@@ -155,18 +155,13 @@ class CorredorModel extends Model
 
     public function getCorredoresWithCias(): array
     {
-        return $this->select([
-                'corredores.*',
-                // lo que la vista espera: "A|B|C"
-                'GROUP_CONCAT(DISTINCT ci.cia_nombre ORDER BY ci.cia_nombre SEPARATOR "|") AS cias',
-                'COUNT(DISTINCT cc.cia_id) AS total_cias',
-            ])
-            // ¡Ojo! condición de activo en el JOIN para no romper el LEFT
-            ->join('corredor_cias cc', 'cc.corredor_id = corredores.corredor_id AND cc.corredor_cia_activo = 1', 'left')
-            ->join('cias ci', 'ci.cia_id = cc.cia_id /* AND ci.cia_habil = 1 */', 'left')
-            ->groupBy('corredores.corredor_id')
-            ->orderBy('corredor_nombre', 'ASC')
-            ->findAll();
+        return $this->select('corredores.*, GROUP_CONCAT(CONCAT(cias.cia_nombre, " (", COALESCE(cias.cia_display_name, ""), ")") SEPARATOR ", ") as cias_nombres, COUNT(DISTINCT corredor_cias.cia_id) as total_cias')
+                    ->join('corredor_cias', 'corredor_cias.corredor_id = corredores.corredor_id', 'left')
+                    ->join('cias', 'cias.cia_id = corredor_cias.cia_id', 'left')
+                    ->where('corredor_cias.corredor_cia_activo', 1)
+                    ->groupBy('corredores.corredor_id')
+                    ->orderBy('corredor_nombre', 'ASC')
+                    ->findAll();
     }
 
     public function getCorredoresByCia($ciaId): array
@@ -199,43 +194,41 @@ class CorredorModel extends Model
 
     public function searchCorredores($term = '', $ciaId = null): array
     {
-        $builder = $this->select([
-                'corredores.*',
-                'GROUP_CONCAT(DISTINCT ci.cia_nombre ORDER BY ci.cia_nombre SEPARATOR "|") AS cias',
-                'COUNT(DISTINCT cc.cia_id) AS total_cias',
-            ])
-            ->join('corredor_cias cc', 'cc.corredor_id = corredores.corredor_id AND cc.corredor_cia_activo = 1', 'left')
-            ->join('cias ci', 'ci.cia_id = cc.cia_id /* AND ci.cia_habil = 1 */', 'left');
+        $builder = $this->select('corredores.*, GROUP_CONCAT(CONCAT(cias.cia_nombre, " (", COALESCE(cias.cia_display_name, ""), ")") SEPARATOR ", ") as cias_nombres, COUNT(DISTINCT corredor_cias.cia_id) as total_cias')
+                        ->join('corredor_cias', 'corredor_cias.corredor_id = corredores.corredor_id', 'left')
+                        ->join('cias', 'cias.cia_id = corredor_cias.cia_id', 'left')
+                        ->where('corredor_cias.corredor_cia_activo', 1);
 
         if (!empty($term)) {
             $builder->groupStart()
-                    ->like('corredor_nombre', $term)
-                    ->orLike('corredor_email', $term)
-                    ->orLike('corredor_rut', $term)
-                    ->groupEnd();
+                   ->like('corredor_nombre', $term)
+                   ->orLike('corredor_email', $term)
+                   ->orLike('corredor_rut', $term)
+                   ->groupEnd();
         }
 
-        if (!empty($ciaId)) {
-            $builder->where('ci.cia_id', $ciaId);
+        if ($ciaId) {
+            $builder->where('corredor_cias.cia_id', $ciaId);
         }
 
         return $builder->groupBy('corredores.corredor_id')
-                    ->orderBy('corredor_nombre', 'ASC')
-                    ->findAll();
+                       ->orderBy('corredor_nombre', 'ASC')
+                       ->findAll();
     }
 
     /* ===================== Métodos para gestionar relaciones ===================== */
 
     public function getCiasDelCorredor($corredorId): array
     {
+        $db = \Config\Database::connect();
         return $db->table('corredor_cias cc')
-                ->select('cc.*, c.cia_nombre, /* c.cia_display_name, */ c.cia_logo')
-                ->join('cias c', 'c.cia_id = cc.cia_id')
-                ->where('cc.corredor_id', $corredorId)
-                ->where('cc.corredor_cia_activo', 1)
-                ->orderBy('c.cia_nombre', 'ASC')
-                ->get()
-                ->getResultArray();
+                 ->select('cc.*, c.cia_nombre, c.cia_display_name, c.cia_logo')
+                 ->join('cias c', 'c.cia_id = cc.cia_id')
+                 ->where('cc.corredor_id', $corredorId)
+                 ->where('cc.corredor_cia_activo', 1)
+                 ->orderBy('c.cia_nombre', 'ASC')
+                 ->get()
+                 ->getResultArray();
     }
 
     public function assignCiaToCorrector($corredorId, $ciaId): bool

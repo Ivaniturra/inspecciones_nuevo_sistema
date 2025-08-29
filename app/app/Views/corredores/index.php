@@ -205,7 +205,7 @@ Gestión de Corredores
                                                 <i class="fas fa-edit"></i>
                                             </a>
 
-                                            <form method="post" action="<?= base_url('corredores/delete/' . $corredor['corredor_id']) ?>" class="d-inline-block">
+                                            <!--<form method="post" action="<?= base_url('corredores/delete/' . $corredor['corredor_id']) ?>" class="d-inline-block">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="_method" value="DELETE">
                                                 <button type="submit"
@@ -214,7 +214,7 @@ Gestión de Corredores
                                                         title="Eliminar">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                            </form>
+                                            </form>-->
                                             <?php endif; ?>
                                         </div>
                                     </td>

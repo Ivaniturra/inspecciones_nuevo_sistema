@@ -160,21 +160,14 @@ Gestión de Corredores
                                     </td>
                                     <td>
                                         <div class="d-flex flex-wrap gap-1">
-                                            <?php
-                                            // $corredor['companias'] puede venir como string "A|B|C" o como null
-                                            $lista = [];
-                                            if (!empty($corredor['cias'])) {
-                                                $lista = is_array($corredor['cias'])
-                                                        ? $corredor['cias']
-                                                        : array_filter(explode('|', $corredor['cias']));
-                                            }
-                                            ?>
-                                            <?php if (!empty($lista)): ?>
-                                            <?php foreach ($lista as $nom): ?>
+                                            <?php 
+                                            $max = 3; // mostrar hasta 3
+                                            $total = count($lista);
+                                            foreach (array_slice($lista, 0, $max) as $nom): ?>
                                                 <span class="badge bg-primary"><?= esc($nom) ?></span>
                                             <?php endforeach; ?>
-                                            <?php else: ?>
-                                            <span class="badge bg-secondary">Sin compañías</span>
+                                            <?php if ($total > $max): ?>
+                                            <span class="badge bg-secondary">+<?= $total - $max ?></span>
                                             <?php endif; ?>
                                         </div>
                                     </td>

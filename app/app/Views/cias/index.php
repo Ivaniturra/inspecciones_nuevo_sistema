@@ -202,9 +202,14 @@ Gestión de Compañías
 
 <?= $this->section('scripts') ?>
 <script>
+// Script corregido para app/Views/cias/index.php
 $(function() {
     // Initialize tooltips
     $('[data-bs-toggle="tooltip"]').tooltip();
+
+    // Variable para mantener el token CSRF actualizado
+    let csrfToken = '<?= csrf_hash() ?>';
+    const csrfName = '<?= csrf_token() ?>';
 
     // Toggle estado compañía (AJAX)
     $('.cia-status-toggle').on('change', function() {
@@ -258,11 +263,21 @@ $(function() {
             didOpen: () => Swal.showLoading()
         });
 
-        $.post('<?= base_url('cias/toggleStatus') ?>/' + id, {
-            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-        })
-        .done(function(resp) {
+        // Preparar data con token CSRF actualizado
+        const postData = {};
+        postData[csrfName] = csrfToken;
+
+        $.post('<?= base_url('cias/toggleStatus') ?>/' + id, postData)
+        .done(function(resp, textStatus, xhr) {
             $row.removeClass('table-warning');
+            
+            // CRÍTICO: Actualizar el token CSRF para la siguiente petición
+            const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+            if (newToken) {
+                csrfToken = newToken;
+                // También actualizar el token en cualquier input hidden del DOM si existe
+                $('input[name="' + csrfName + '"]').val(newToken);
+            }
             
             if (!resp || !resp.success) {
                 $toggle.prop('checked', !checked); // revertir
@@ -301,13 +316,19 @@ $(function() {
                 });
             }
         })
-        .fail(function() {
+        .fail(function(xhr) {
             $row.removeClass('table-warning');
             $toggle.prop('checked', !checked); // revertir
+            
+            let errorMsg = 'No se pudo conectar con el servidor';
+            if (xhr.status === 403) {
+                errorMsg = 'Token de seguridad expirado. Recarga la página.';
+            }
+            
             Swal.fire({
                 icon: 'error',
                 title: 'Error de conexión',
-                text: 'No se pudo conectar con el servidor'
+                text: errorMsg
             });
         });
     }

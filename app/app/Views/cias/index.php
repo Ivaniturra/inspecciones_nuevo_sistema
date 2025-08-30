@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main') ?>
+ <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 Gestión de Compañías
@@ -97,6 +97,12 @@ Gestión de Compañías
                                             <a class="fw-medium text-decoration-none" href="<?= base_url('cias/show/' . $cia['cia_id']) ?>">
                                                 <?= esc($cia['cia_nombre']) ?>
                                             </a>
+                                            <?php if (!empty($cia['cia_display_name']) && $cia['cia_display_name'] !== $cia['cia_nombre']): ?>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-signature me-1"></i><?= esc($cia['cia_display_name']) ?>
+                                                </small>
+                                            <?php endif; ?>
                                             <br>
                                             <small class="text-muted">ID: <?= $cia['cia_id'] ?></small>
                                         </div>
@@ -111,6 +117,7 @@ Gestión de Compañías
                                         <?php endif; ?>
                                     </td>
 
+                                    <!-- Total usuarios -->
                                     <td class="text-center">
                                         <?php 
                                             $totalUsers = isset($cia['total_usuarios']) ? (int)$cia['total_usuarios'] : 0;
@@ -121,6 +128,7 @@ Gestión de Compañías
                                         </span>
                                     </td>
 
+                                    <!-- Estado con switch AJAX -->
                                     <td class="text-center">
                                         <div class="d-flex align-items-center justify-content-center">
                                             <div class="form-check form-switch me-2">
@@ -161,7 +169,6 @@ Gestión de Compañías
                                             </a>
                                         </div>
                                     </td>
-
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

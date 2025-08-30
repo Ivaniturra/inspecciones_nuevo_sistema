@@ -14,7 +14,7 @@ class CiaModel extends Model
     protected $useSoftDeletes = false;
     protected $protectFields  = true;
 
-    // 👇 Todos los campos ahora siguen la convención cia_XXXX
+    // Todos los campos siguen la convención cia_XXXX
     protected $allowedFields = [
         'cia_nombre',
         'cia_display_name',
@@ -32,8 +32,8 @@ class CiaModel extends Model
     // Fechas - ACTUALIZADO con nomenclatura cia_XXXX
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
-    protected $createdField  = 'cia_created_at';  // ← CAMBIO AQUÍ
-    protected $updatedField  = 'cia_updated_at';  // ← CAMBIO AQUÍ
+    protected $createdField  = 'cia_created_at';
+    protected $updatedField  = 'cia_updated_at';
 
     // Validación
     protected $validationRules = [
@@ -139,11 +139,17 @@ class CiaModel extends Model
 
     /* ===================== Consultas personalizadas ===================== */
 
+    /**
+     * Obtiene compañías activas
+     */
     public function getActiveCias(): array
     {
         return $this->where('cia_habil', 1)->orderBy('cia_nombre','ASC')->findAll();
     }
 
+    /**
+     * Obtiene compañías con conteo de usuarios asociados
+     */
     public function getCiasWithUserCount(): array
     {
         return $this->select('cias.*, COUNT(users.user_id) AS total_usuarios')
@@ -153,18 +159,132 @@ class CiaModel extends Model
                     ->findAll();
     }
 
+    /**
+     * Cambia el estado de una compañía (activa/inactiva)
+     * Actualizado para trabajar en conjunto con la desactivación de usuarios
+     */
     public function toggleStatus($id): bool
     {
         $cia = $this->find($id);
         if (! $cia) return false;
-        $new = (int) ($cia['cia_habil'] == 1 ? 0 : 1);
-        return (bool) $this->update($id, ['cia_habil' => $new]);
+        
+        $newStatus = (int) ($cia['cia_habil'] == 1 ? 0 : 1);
+        return (bool) $this->update($id, ['cia_habil' => $newStatus]);
     }
 
-    public function canDelete($id): bool
+    /**
+     * Obtiene estadísticas básicas de una compañía
+     */
+    public function getCompanyStats($id): array
+    {
+        $cia = $this->find($id);
+        if (!$cia) {
+            return [
+                'exists' => false,
+                'active' => false,
+                'users_count' => 0
+            ];
+        }
+
+        // Contar usuarios asociados si existe la tabla users
+        $db = \Config\Database::connect();
+        $usersCount = 0;
+        
+        if ($db->tableExists('users')) {
+            $usersCount = $db->table('users')
+                            ->where('cia_id', $id)
+                            ->countAllResults();
+        }
+
+        return [
+            'exists' => true,
+            'active' => (bool) $cia['cia_habil'],
+            'users_count' => $usersCount,
+            'name' => $cia['cia_nombre'],
+            'display_name' => $cia['cia_display_name'],
+            'created_at' => $cia['cia_created_at']
+        ];
+    }
+
+    /**
+     * Verifica si una compañía tiene usuarios activos asociados
+     */
+    public function hasActiveUsers($id): bool
     {
         $db = \Config\Database::connect();
-        $count = $db->table('users')->where('cia_id', $id)->countAllResults();
-        return (int) $count === 0;
+        
+        if (!$db->tableExists('users')) {
+            return false;
+        }
+
+        $count = $db->table('users')
+                   ->where('cia_id', $id)
+                   ->where('user_habil', 1)
+                   ->countAllResults();
+
+        return $count > 0;
+    }
+
+    /**
+     * Obtiene el conteo de usuarios por estado para una compañía
+     */
+    public function getUsersCountByStatus($id): array
+    {
+        $db = \Config\Database::connect();
+        
+        if (!$db->tableExists('users')) {
+            return ['total' => 0, 'active' => 0, 'inactive' => 0];
+        }
+
+        $total = $db->table('users')->where('cia_id', $id)->countAllResults();
+        $active = $db->table('users')->where('cia_id', $id)->where('user_habil', 1)->countAllResults();
+        
+        return [
+            'total' => $total,
+            'active' => $active,
+            'inactive' => $total - $active
+        ];
+    }
+
+    /**
+     * Busca compañías por nombre o display_name
+     */
+    public function searchByName(string $term, bool $activeOnly = false): array
+    {
+        $builder = $this->groupStart()
+                       ->like('cia_nombre', $term)
+                       ->orLike('cia_display_name', $term)
+                       ->groupEnd();
+
+        if ($activeOnly) {
+            $builder->where('cia_habil', 1);
+        }
+
+        return $builder->orderBy('cia_nombre', 'ASC')->findAll();
+    }
+
+    /**
+     * Obtiene compañías para dropdown con formato personalizado
+     */
+    public function getForDropdown(bool $activeOnly = true): array
+    {
+        $builder = $this->select('cia_id, cia_nombre, cia_display_name');
+        
+        if ($activeOnly) {
+            $builder->where('cia_habil', 1);
+        }
+        
+        $results = $builder->orderBy('cia_nombre', 'ASC')->findAll();
+        
+        $options = [];
+        foreach ($results as $cia) {
+            $label = $cia['cia_nombre'];
+            if (!empty($cia['cia_display_name']) && $cia['cia_display_name'] !== $cia['cia_nombre']) {
+                $label .= ' (' . $cia['cia_display_name'] . ')';
+            }
+            $options[$cia['cia_id']] = $label;
+        }
+        
+        return $options;
     }
 }

@@ -1,4 +1,4 @@
- <?= $this->extend('layouts/main') ?>
+<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 Gestión de Compañías
@@ -47,6 +47,7 @@ Gestión de Compañías
             <h5 class="card-title mb-0">
                 <i class="fas fa-building text-primary me-2"></i>
                 Listado de Compañías
+                <small class="text-muted">(<?= count($cias) ?> total)</small>
             </h5>
         </div>
 
@@ -67,12 +68,12 @@ Gestión de Compañías
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Logo</th>
+                                <th style="width: 80px;">Logo</th>
                                 <th>Nombre</th>
                                 <th>Dirección</th>
-                                <th class="text-center">Usuarios</th>
-                                <th class="text-center">Estado</th>
-                                <th class="text-end">Acciones</th>
+                                <th class="text-center" style="width: 120px;">Usuarios</th>
+                                <th class="text-center" style="width: 140px;">Estado</th>
+                                <th class="text-end" style="width: 160px;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -96,13 +97,21 @@ Gestión de Compañías
                                             <a class="fw-medium text-decoration-none" href="<?= base_url('cias/show/' . $cia['cia_id']) ?>">
                                                 <?= esc($cia['cia_nombre']) ?>
                                             </a>
+                                            <?php if (!empty($cia['cia_display_name']) && $cia['cia_display_name'] !== $cia['cia_nombre']): ?>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-signature me-1"></i><?= esc($cia['cia_display_name']) ?>
+                                                </small>
+                                            <?php endif; ?>
                                             <br>
                                             <small class="text-muted">ID: <?= $cia['cia_id'] ?></small>
                                         </div>
                                     </td>
                                     <td>
                                         <?php if (!empty($cia['cia_direccion'])): ?>
-                                            <span><?= esc($cia['cia_direccion']) ?></span>
+                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" title="<?= esc($cia['cia_direccion']) ?>">
+                                                <?= esc($cia['cia_direccion']) ?>
+                                            </span>
                                         <?php else: ?>
                                             <span class="text-muted">Sin dirección</span>
                                         <?php endif; ?>
@@ -110,47 +119,61 @@ Gestión de Compañías
 
                                     <!-- Total usuarios (si viene desde getCiasWithUserCount) -->
                                     <td class="text-center">
-                                        <span class="badge bg-light text-dark">
-                                            <?= isset($cia['total_usuarios']) ? (int)$cia['total_usuarios'] : 0 ?>
+                                        <?php 
+                                            $totalUsers = isset($cia['total_usuarios']) ? (int)$cia['total_usuarios'] : 0;
+                                            $badgeClass = $totalUsers > 0 ? 'bg-primary' : 'bg-light text-dark';
+                                        ?>
+                                        <span class="badge <?= $badgeClass ?>" title="Total de usuarios asociados">
+                                            <i class="fas fa-users me-1"></i><?= $totalUsers ?>
                                         </span>
                                     </td>
 
                                     <!-- Estado con switch AJAX -->
                                     <td class="text-center">
-                                        <div class="form-check form-switch d-inline-block">
-                                            <input class="form-check-input cia-status-toggle"
-                                                   type="checkbox"
-                                                   <?= $cia['cia_habil'] ? 'checked' : '' ?>
-                                                   data-id="<?= $cia['cia_id'] ?>"
-                                                   title="Cambiar estado">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="form-check form-switch me-2">
+                                                <input class="form-check-input cia-status-toggle"
+                                                       type="checkbox"
+                                                       <?= $cia['cia_habil'] ? 'checked' : '' ?>
+                                                       data-id="<?= $cia['cia_id'] ?>"
+                                                       data-users="<?= $totalUsers ?>"
+                                                       title="<?= $cia['cia_habil'] ? 'Clic para desactivar' : 'Clic para activar' ?>">
+                                            </div>
+                                            <span class="badge <?= $cia['cia_habil'] ? 'bg-success' : 'bg-secondary' ?>">
+                                                <?= $cia['cia_habil'] ? 'Activa' : 'Inactiva' ?>
+                                            </span>
                                         </div>
+                                        <?php if (!$cia['cia_habil'] && $totalUsers > 0): ?>
+                                            <small class="text-warning d-block mt-1">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                Usuarios desactivados
+                                            </small>
+                                        <?php endif; ?>
                                     </td>
 
                                     <td class="text-end">
                                         <div class="btn-group" role="group">
                                             <a href="<?= base_url('cias/show/' . $cia['cia_id']) ?>"
                                                class="btn btn-sm btn-outline-primary"
-                                               title="Ver detalles">
+                                               title="Ver detalles"
+                                               data-bs-toggle="tooltip">
                                                 <i class="fas fa-eye"></i>
                                             </a>
 
                                             <?php if (function_exists('can') ? can('gestionar_companias') : true): ?>
                                             <a href="<?= base_url('cias/edit/' . $cia['cia_id']) ?>"
                                                class="btn btn-sm btn-outline-warning"
-                                               title="Editar">
+                                               title="Editar compañía"
+                                               data-bs-toggle="tooltip">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-
-                                            <form method="post" action="<?= base_url('cias/delete/' . $cia['cia_id']) ?>" class="d-inline-block">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="_method" value="DELETE">
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-outline-danger btn-delete"
-                                                        data-confirm="¿Estás seguro de eliminar esta compañía?"
-                                                        title="Eliminar">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            
+                                            <a href="<?= base_url('users?cia_id=' . $cia['cia_id']) ?>"
+                                               class="btn btn-sm btn-outline-info"
+                                               title="Ver usuarios (<?= $totalUsers ?>)"
+                                               data-bs-toggle="tooltip">
+                                                <i class="fas fa-users"></i>
+                                            </a>
                                             <?php endif; ?>
                                         </div>
                                     </td>
@@ -163,22 +186,84 @@ Gestión de Compañías
             <?php endif; ?>
         </div>
     </div>
+
+    <!-- Info adicional -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Importante:</strong> Al desactivar una compañía, todos los usuarios asociados se desactivarán automáticamente. 
+                Los registros no se eliminan del sistema, solo cambian su estado a inactivo.
+            </div>
+        </div>
+    </div>
 </div>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
 $(function() {
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+
     // Toggle estado compañía (AJAX)
     $('.cia-status-toggle').on('change', function() {
         const $toggle = $(this);
         const id = $toggle.data('id');
+        const users = $toggle.data('users');
         const checked = $toggle.is(':checked');
+        const action = checked ? 'activar' : 'desactivar';
+
+        // Mostrar confirmación especial si va a desactivar y tiene usuarios
+        if (!checked && users > 0) {
+            Swal.fire({
+                title: '¿Desactivar compañía?',
+                html: `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <p>Esta acción desactivará la compañía y <strong>automáticamente desactivará ${users} usuario${users > 1 ? 's' : ''} asociado${users > 1 ? 's' : ''}.</strong></p>
+                        <div class="alert alert-warning">
+                            Los usuarios no podrán acceder al sistema hasta que sean reactivados individualmente.
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, desactivar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    executeToggle(id, $toggle, checked);
+                } else {
+                    $toggle.prop('checked', !checked); // revertir
+                }
+            });
+        } else {
+            executeToggle(id, $toggle, checked);
+        }
+    });
+
+    function executeToggle(id, $toggle, checked) {
+        // Mostrar loading
+        const $row = $toggle.closest('tr');
+        $row.addClass('table-warning');
+        
+        Swal.fire({
+            title: 'Procesando...',
+            text: 'Actualizando estado de la compañía',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
 
         $.post('<?= base_url('cias/toggleStatus') ?>/' + id, {
             '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
         })
         .done(function(resp) {
+            $row.removeClass('table-warning');
+            
             if (!resp || !resp.success) {
                 $toggle.prop('checked', !checked); // revertir
                 Swal.fire({
@@ -187,16 +272,37 @@ $(function() {
                     text: (resp && resp.message) ? resp.message : 'No se pudo actualizar el estado'
                 });
             } else {
+                // Actualizar badge y tooltip
+                const $badge = $row.find('.badge:last');
+                const $statusInfo = $row.find('small.text-warning');
+                
+                if (resp.newStatus === 1) {
+                    $badge.removeClass('bg-secondary').addClass('bg-success').text('Activa');
+                    $toggle.attr('title', 'Clic para desactivar');
+                    $statusInfo.hide();
+                } else {
+                    $badge.removeClass('bg-success').addClass('bg-secondary').text('Inactiva');
+                    $toggle.attr('title', 'Clic para activar');
+                    if ($toggle.data('users') > 0) {
+                        if ($statusInfo.length === 0) {
+                            $badge.after('<small class="text-warning d-block mt-1"><i class="fas fa-exclamation-triangle me-1"></i>Usuarios desactivados</small>');
+                        } else {
+                            $statusInfo.show();
+                        }
+                    }
+                }
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'Estado actualizado',
                     text: resp.message,
-                    timer: 1600,
+                    timer: 3000,
                     showConfirmButton: false
                 });
             }
         })
         .fail(function() {
+            $row.removeClass('table-warning');
             $toggle.prop('checked', !checked); // revertir
             Swal.fire({
                 icon: 'error',
@@ -204,27 +310,10 @@ $(function() {
                 text: 'No se pudo conectar con el servidor'
             });
         });
-    });
+    }
 
-    // Confirmación de eliminación (aprovecha script global si ya lo tienes)
-    $('.btn-delete').on('click', function(e) {
-        e.preventDefault();
-        const form = $(this).closest('form');
-        const msg  = $(this).data('confirm') || '¿Eliminar registro?';
-
-        Swal.fire({
-            title: 'Confirmar eliminación',
-            text: msg,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then((r) => {
-            if (r.isConfirmed) form.submit();
-        });
-    });
+    // Auto-hide alerts
+    $('.alert').delay(8000).fadeOut();
 });
 </script>
 <?= $this->endSection() ?>

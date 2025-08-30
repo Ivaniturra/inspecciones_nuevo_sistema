@@ -4,14 +4,17 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\CiaModel;
+use App\Models\UserModel;
 
 class Cias extends BaseController
 {
     protected $ciaModel;
+    protected $userModel;
 
     public function __construct()
     {
         $this->ciaModel = new CiaModel();
+        $this->userModel = new UserModel();
         helper(['url', 'text']); // url_title(), etc.
     }
 
@@ -127,9 +130,13 @@ class Cias extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Compañía no encontrada');
         }
 
+        // Obtener estadísticas de usuarios
+        $userStats = $this->getUserStats($id);
+
         return view('cias/show', [
-            'title' => 'Detalles de Compañía',
-            'cia'   => $cia
+            'title'     => 'Detalles de Compañía',
+            'cia'       => $cia,
+            'userStats' => $userStats
         ]);
     }
 
@@ -240,45 +247,66 @@ class Cias extends BaseController
         return redirect()->back()->withInput()->with('error', 'Error al actualizar la compañía');
     }
 
-    /** Eliminar */
-    public function delete($id)
-    {
-        $cia = $this->ciaModel->find($id);
-        if (! $cia) {
-            return redirect()->to('/cias')->with('error', 'Compañía no encontrada');
-        }
-
-        if (! $this->ciaModel->canDelete($id)) {
-            return redirect()->to('/cias')->with('error', 'No se puede eliminar la compañía porque tiene usuarios asociados');
-        }
-
-        // Borrar logo físico
-        if (! empty($cia['cia_logo'])) {
-            $path = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'logos' . DIRECTORY_SEPARATOR . $cia['cia_logo'];
-            if (is_file($path)) {
-                @unlink($path);
-            }
-        }
-
-        if ($this->ciaModel->delete($id)) {
-            return redirect()->to('/cias')->with('success', 'Compañía eliminada exitosamente');
-        }
-
-        return redirect()->to('/cias')->with('error', 'Error al eliminar la compañía');
-    }
-
-    /** Toggle estado (AJAX) */
+    /** Toggle estado (AJAX) - Desactiva usuarios asociados automáticamente */
     public function toggleStatus($id)
     {
         if (! $this->request->isAJAX()) {
             return redirect()->to('/cias');
         }
 
-        if ($this->ciaModel->toggleStatus($id)) {
-            return $this->response->setJSON(['success' => true, 'message' => 'Estado actualizado correctamente']);
-        }
+        $db = \Config\Database::connect();
+        $db->transStart();
 
-        return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el estado']);
+        try {
+            $cia = $this->ciaModel->find($id);
+            if (!$cia) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Compañía no encontrada']);
+            }
+
+            $newStatus = (int)($cia['cia_habil'] == 1 ? 0 : 1);
+            
+            // Actualizar estado de la compañía
+            if (!$this->ciaModel->update($id, ['cia_habil' => $newStatus])) {
+                throw new \Exception('No se pudo actualizar el estado de la compañía');
+            }
+
+            // Si se está desactivando la compañía, desactivar todos sus usuarios
+            if ($newStatus === 0) {
+                $affectedUsers = $this->userModel->where('cia_id', $id)
+                                                 ->where('user_habil', 1)
+                                                 ->countAllResults();
+                
+                if ($affectedUsers > 0) {
+                    $this->userModel->where('cia_id', $id)
+                                    ->set('user_habil', 0)
+                                    ->set('user_updated_at', date('Y-m-d H:i:s'))
+                                    ->update();
+                }
+
+                $message = $affectedUsers > 0 
+                    ? "Compañía desactivada. Se desactivaron {$affectedUsers} usuarios asociados."
+                    : "Compañía desactivada correctamente.";
+            } else {
+                $message = "Compañía activada correctamente. Los usuarios permanecen en su estado actual.";
+            }
+
+            $db->transComplete();
+
+            if ($db->transStatus() === FALSE) {
+                throw new \Exception('Error en la transacción de base de datos');
+            }
+
+            return $this->response->setJSON([
+                'success' => true, 
+                'message' => $message,
+                'newStatus' => $newStatus
+            ]);
+
+        } catch (\Exception $e) {
+            $db->transRollback();
+            log_message('error', 'Error en toggleStatus: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Error interno del servidor']);
+        }
     }
 
     /** Select de compañías activas (AJAX) */
@@ -290,6 +318,24 @@ class Cias extends BaseController
 
         $cias = $this->ciaModel->getActiveCias();
         return $this->response->setJSON($cias);
+    }
+
+    /** Obtener estadísticas de usuarios por compañía */
+    private function getUserStats($ciaId): array
+    {
+        if (!class_exists('App\Models\UserModel')) {
+            return ['total' => 0, 'activos' => 0, 'inactivos' => 0];
+        }
+
+        $total = $this->userModel->where('cia_id', $ciaId)->countAllResults();
+        $activos = $this->userModel->where('cia_id', $ciaId)->where('user_habil', 1)->countAllResults();
+        $inactivos = $total - $activos;
+
+        return [
+            'total' => $total,
+            'activos' => $activos,
+            'inactivos' => $inactivos
+        ];
     }
 
     /* =================== Helpers privados =================== */

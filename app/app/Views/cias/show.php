@@ -1,4 +1,4 @@
- <?= $this->extend('layouts/main') ?>
+<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 <?= esc($title ?? 'Detalles de Compañía') ?>
@@ -25,6 +25,9 @@
     $logoUrl       = !empty($cia['cia_logo'])
                         ? base_url('uploads/logos/' . $cia['cia_logo'])
                         : 'https://via.placeholder.com/200x120?text=Sin+logo';
+    
+    // Estadísticas de usuarios
+    $userStats = $userStats ?? ['total' => 0, 'activos' => 0, 'inactivos' => 0];
 ?>
 <div class="container-fluid">
     <!-- Header -->
@@ -59,8 +62,11 @@
                     <a href="<?= base_url('cias/edit/' . $cia['cia_id']) ?>" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Editar
                     </a>
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        <i class="fas fa-trash"></i> Eliminar
+                    <button type="button" 
+                            class="btn <?= $cia['cia_habil'] ? 'btn-outline-danger' : 'btn-outline-success' ?>"
+                            onclick="toggleStatus(<?= (int)$cia['cia_id'] ?>)">
+                        <i class="fas <?= $cia['cia_habil'] ? 'fa-pause' : 'fa-play' ?> me-1"></i>
+                        <?= $cia['cia_habil'] ? 'Desactivar' : 'Activar' ?>
                     </button>
                     <a href="<?= base_url('cias') ?>" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Volver
@@ -69,6 +75,15 @@
             </div>
         </div>
     </div>
+
+    <!-- Alerts -->
+    <?php if (session()->getFlashdata('success')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <?= session()->getFlashdata('success') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
 
     <div class="row">
         <!-- Columna principal -->
@@ -100,6 +115,12 @@
                                     <i class="fas <?= $cia['cia_habil'] ? 'fa-check' : 'fa-times' ?> me-1"></i>
                                     <?= $cia['cia_habil'] ? 'Activa' : 'Inactiva' ?>
                                 </span>
+                                <?php if (!$cia['cia_habil'] && $userStats['total'] > 0): ?>
+                                    <br><small class="text-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        Los usuarios asociados están desactivados
+                                    </small>
+                                <?php endif; ?>
                             </p>
                         </div>
 
@@ -142,7 +163,7 @@
                 </div>
             </div>
 
-            <!-- Usuarios asociados (placeholder) -->
+            <!-- Usuarios asociados -->
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
@@ -150,14 +171,46 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="text-center py-4">
-                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">Funcionalidad en desarrollo</h5>
-                        <p class="text-muted">Aquí se mostrarán los usuarios asociados a esta compañía</p>
-                        <a href="<?= base_url('users?cia_id=' . (int)$cia['cia_id']) ?>" class="btn btn-outline-primary">
-                            <i class="fas fa-user-plus"></i> Gestionar Usuarios
-                        </a>
-                    </div>
+                    <?php if ($userStats['total'] > 0): ?>
+                        <div class="row text-center mb-4">
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light rounded">
+                                    <h3 class="text-primary mb-1"><?= $userStats['total'] ?></h3>
+                                    <small class="text-muted">Total usuarios</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light rounded">
+                                    <h3 class="text-success mb-1"><?= $userStats['activos'] ?></h3>
+                                    <small class="text-muted">Activos</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light rounded">
+                                    <h3 class="text-warning mb-1"><?= $userStats['inactivos'] ?></h3>
+                                    <small class="text-muted">Inactivos</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <a href="<?= base_url('users?cia_id=' . (int)$cia['cia_id']) ?>" class="btn btn-primary">
+                                <i class="fas fa-users me-2"></i> Ver todos los usuarios
+                            </a>
+                            <a href="<?= base_url('users/create?cia_id=' . (int)$cia['cia_id']) ?>" class="btn btn-outline-primary">
+                                <i class="fas fa-user-plus me-2"></i> Agregar usuario
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Sin usuarios asociados</h5>
+                            <p class="text-muted">Esta compañía aún no tiene usuarios registrados</p>
+                            <a href="<?= base_url('users/create?cia_id=' . (int)$cia['cia_id']) ?>" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i> Crear primer usuario
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -257,7 +310,7 @@
                             </div>
                         </div>
                         <div class="col-6">
-                            <h4 class="text-success">0</h4>
+                            <h4 class="text-success"><?= $userStats['total'] ?></h4>
                             <small class="text-muted">Usuarios</small>
                         </div>
                     </div>
@@ -295,53 +348,40 @@
                                 class="btn <?= $cia['cia_habil'] ? 'btn-outline-danger' : 'btn-outline-success' ?>"
                                 onclick="toggleStatus(<?= (int)$cia['cia_id'] ?>)">
                             <i class="fas <?= $cia['cia_habil'] ? 'fa-pause' : 'fa-play' ?> me-2"></i>
-                            <?= $cia['cia_habil'] ? 'Desactivar' : 'Activar' ?>
+                            <?= $cia['cia_habil'] ? 'Desactivar Compañía' : 'Activar Compañía' ?>
                         </button>
                         <a href="<?= base_url('users?cia_id=' . (int)$cia['cia_id']) ?>" class="btn btn-outline-primary">
-                            <i class="fas fa-user-plus me-2"></i> Agregar / Gestionar Usuarios
+                            <i class="fas fa-users me-2"></i> Gestionar Usuarios (<?= $userStats['total'] ?>)
                         </a>
+                        <?php if ($userStats['total'] === 0): ?>
+                            <a href="<?= base_url('users/create?cia_id=' . (int)$cia['cia_id']) ?>" class="btn btn-outline-success">
+                                <i class="fas fa-user-plus me-2"></i> Crear Primer Usuario
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal eliminar -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Confirmar Eliminación</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center">
-                    <i class="fas fa-building fa-3x text-danger mb-3"></i>
-                    <h5>¿Eliminar compañía?</h5>
-                    <p class="mb-3">
-                        Estás a punto de eliminar <strong>"<?= esc($cia['cia_nombre']) ?>"</strong>
-                    </p>
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Advertencia:</strong> Esta acción no se puede deshacer.
-                        <?php if (!empty($cia['cia_logo'])): ?>
-                            <br>También se eliminará el logo asociado.
-                        <?php endif; ?>
+    <!-- Información importante -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info border-0">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="fas fa-info-circle fa-2x text-info"></i>
+                    </div>
+                    <div>
+                        <h6 class="alert-heading">Política de Datos</h6>
+                        <p class="mb-1">
+                            <strong>Desactivación:</strong> Al desactivar esta compañía, todos los usuarios asociados (<?= $userStats['total'] ?>) se desactivarán automáticamente para mantener la integridad del sistema.
+                        </p>
+                        <p class="mb-0">
+                            <strong>Conservación:</strong> Los datos de la compañía y usuarios se conservan en el sistema. No se eliminan registros, solo se cambia su estado.
+                        </p>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                <form method="post" action="<?= base_url('cias/delete/' . (int)$cia['cia_id']) ?>" style="display:inline;">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="_method" value="DELETE">
-                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
-                        <i class="fas fa-trash"></i> Sí, Eliminar
-                    </button>
-                </form>
             </div>
         </div>
     </div>
@@ -393,60 +433,77 @@
 <?= $this->section('scripts') ?>
 <script>
 $(function () {
-    // Confirmación de eliminación
-    $('#confirmDeleteBtn').on('click', function (e) {
-        e.preventDefault();
-        const form = $(this).closest('form');
-        Swal.fire({
-            title: 'Última confirmación',
-            text: 'Esta acción eliminará permanentemente la compañía',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar definitivamente',
-            cancelButtonText: 'Cancelar',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                form.submit();
-            }
-        });
-    });
+    // Auto-hide alerts
+    $('.alert-dismissible').delay(5000).fadeOut();
 });
 
 // Toggle estado
 function toggleStatus(id) {
     const isActive = <?= $cia['cia_habil'] ? 'true' : 'false' ?>;
+    const totalUsers = <?= $userStats['total'] ?>;
     const action = isActive ? 'desactivar' : 'activar';
     const newStatus = isActive ? 'inactiva' : 'activa';
 
+    let confirmText = `La compañía quedará ${newStatus}`;
+    let warningHtml = '';
+    
+    if (!isActive) {
+        confirmText += '. Los usuarios podrán volver a acceder.';
+    } else if (totalUsers > 0) {
+        warningHtml = `
+            <div class="alert alert-warning mt-3 mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Importante:</strong> Esta acción desactivará automáticamente ${totalUsers} usuario${totalUsers > 1 ? 's' : ''} asociado${totalUsers > 1 ? 's' : ''}. 
+                Los usuarios no podrán acceder hasta ser reactivados individualmente.
+            </div>
+        `;
+    }
+
     Swal.fire({
         title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} compañía?`,
-        text: `La compañía quedará ${newStatus}`,
+        html: `<p>${confirmText}</p>${warningHtml}`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: isActive ? '#dc3545' : '#198754',
         cancelButtonColor: '#6c757d',
         confirmButtonText: `Sí, ${action}`,
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ 
+                title: 'Procesando...', 
+                text: 'Actualizando estado de la compañía',
+                allowOutsideClick: false, 
+                didOpen: () => Swal.showLoading() 
+            });
+            
             $.post('<?= base_url('cias/toggleStatus') ?>/' + id, {
                 '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
             })
             .done(function (response) {
                 if (response.success) {
-                    Swal.fire({ icon: 'success', title: 'Estado actualizado', text: response.message, timer: 1500, showConfirmButton: false })
-                    .then(() => location.reload());
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Estado actualizado', 
+                        text: response.message, 
+                        timer: 3000, 
+                        showConfirmButton: false 
+                    }).then(() => location.reload());
                 } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: response.message });
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'Error', 
+                        text: response.message || 'No se pudo actualizar el estado' 
+                    });
                 }
             })
             .fail(function () {
-                Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar con el servidor' });
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Error de conexión', 
+                    text: 'No se pudo conectar con el servidor' 
+                });
             });
         }
     });

@@ -199,16 +199,38 @@ class Perfiles extends BaseController
      */
     public function toggleStatus($id)
     {
-        if (! $this->request->isAJAX()) {
-            return redirect()->to('/perfiles');
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                ->setJSON(['success' => false, 'message' => 'Solicitud inválida']);
         }
 
-        $ok = $this->perfilModel->toggleStatus((int) $id);
+        try {
+            $perfil = $this->perfilModel->find($id);
+            if (!$perfil) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Perfil no encontrado']);
+            }
 
-        return $this->response->setJSON([
-            'success' => (bool) $ok,
-            'message' => $ok ? 'Estado actualizado correctamente' : 'Error al actualizar el estado',
-        ]);
+            $newStatus = (int)($perfil['perfil_habil'] == 1 ? 0 : 1);
+            
+            if ($this->perfilModel->update($id, ['perfil_habil' => $newStatus])) {
+                $message = $newStatus ? 'Perfil activado correctamente' : 'Perfil desactivado correctamente';
+                
+                return $this->response
+                    ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                    ->setJSON([
+                        'success' => true,
+                        'newStatus' => $newStatus,
+                        'message' => $message
+                    ]);
+            }
+
+            return $this->response->setJSON(['success' => false, 'message' => 'No se pudo actualizar el estado']);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error en toggleStatus perfiles: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Error interno del servidor']);
+        }
     }
 
     /**

@@ -170,6 +170,10 @@ Gestión de Perfiles
 <?= $this->section('scripts') ?>
 <script>
 $(document).ready(function() {
+    // Variable para mantener el token CSRF actualizado
+    let csrfToken = '<?= csrf_hash() ?>';
+    const csrfName = '<?= csrf_token() ?>';
+
     // Contar por tipo
     let countCompania = 0;
     let countInterno = 0;
@@ -201,45 +205,114 @@ $(document).ready(function() {
         }
     });
 
-    // Toggle status via AJAX
+    // Toggle status via AJAX con manejo correcto de CSRF
     $('.status-toggle').on('change', function() {
-        const toggle = $(this);
-        const id = toggle.data('id');
-        const isChecked = toggle.is(':checked');
+        const $toggle = $(this);
+        const id = $toggle.data('id');
+        const isChecked = $toggle.is(':checked');
+        const $row = $toggle.closest('tr');
         
-        $.post('<?= base_url('perfiles/toggleStatus') ?>/' + id, {
-            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-        })
-        .done(function(response) {
-            if (response.success) {
+        // Mostrar estado de carga
+        $row.addClass('table-warning');
+        
+        // Preparar data con token CSRF actualizado
+        const postData = {};
+        postData[csrfName] = csrfToken;
+        
+        $.post('<?= base_url('perfiles/toggleStatus') ?>/' + id, postData)
+        .done(function(response, textStatus, xhr) {
+            $row.removeClass('table-warning');
+            
+            // CRÍTICO: Actualizar el token CSRF para la siguiente petición
+            const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+            if (newToken) {
+                csrfToken = newToken;
+                // También actualizar el token en cualquier input hidden del DOM si existe
+                $('input[name="' + csrfName + '"]').val(newToken);
+            }
+            
+            if (response && response.success) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Estado actualizado',
-                    text: response.message,
+                    text: response.message || 'El estado del perfil se actualizó correctamente',
                     timer: 2000,
                     showConfirmButton: false
                 });
             } else {
-                toggle.prop('checked', !isChecked); // Revertir
+                $toggle.prop('checked', !isChecked); // Revertir
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: response.message
+                    text: response.message || 'No se pudo actualizar el estado del perfil'
                 });
             }
         })
-        .fail(function() {
-            toggle.prop('checked', !isChecked); // Revertir
+        .fail(function(xhr) {
+            $row.removeClass('table-warning');
+            $toggle.prop('checked', !isChecked); // Revertir
+            
+            let errorMsg = 'Error de conexión con el servidor';
+            if (xhr.status === 403) {
+                errorMsg = 'Token de seguridad expirado. Por favor, recarga la página.';
+            } else if (xhr.status === 404) {
+                errorMsg = 'La funcionalidad de cambio de estado no está disponible.';
+            }
+            
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Error de conexión'
+                text: errorMsg
             });
         });
     });
 
-    // Auto-hide alerts
-    $('.alert').delay(5000).fadeOut();
+    // Mejorar confirmación de eliminación de perfiles
+    $('form[action*="/delete/"]').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const perfilRow = form.closest('tr');
+        const perfilName = perfilRow.find('.fw-medium').text().trim();
+        
+        Swal.fire({
+            title: '¿Eliminar perfil?',
+            html: `
+                <div class="text-center">
+                    <i class="fas fa-user-tag fa-3x text-danger mb-3"></i>
+                    <p>¿Estás seguro de que deseas eliminar el perfil:</p>
+                    <strong>"${perfilName}"</strong>
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Esta acción no se puede deshacer.
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Eliminando...',
+                    text: 'Por favor espera',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+                
+                form.off('submit').submit(); // Evitar bucle infinito
+            }
+        });
+    });
+
+    // Auto-hide alerts con mejor timing
+    $('.alert-dismissible').delay(5000).slideUp();
+    
+    // Tooltips para botones de acción
+    $('[title]').tooltip();
 });
 </script>
 <?= $this->endSection() ?>

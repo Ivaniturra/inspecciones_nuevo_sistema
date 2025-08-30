@@ -339,15 +339,28 @@ Detalles del Perfil
 
 <?= $this->section('scripts') ?>
 <script>
+// Script corregido para app/Views/perfiles/show.php
 $(document).ready(function() {
-    // Confirmar eliminación
+    // Inicializar tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+    
+    // Confirmar eliminación mejorado
     $('#confirmDeleteBtn').on('click', function(e) {
         e.preventDefault();
         const form = $(this).closest('form');
         
         Swal.fire({
             title: 'Última confirmación',
-            text: 'Esta acción eliminará permanentemente el perfil',
+            html: `
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                    <p>Esta acción eliminará <strong>permanentemente</strong> el perfil:</p>
+                    <div class="alert alert-danger mt-3 mb-3">
+                        <strong>"<?= esc($perfil['perfil_nombre']) ?>"</strong>
+                    </div>
+                    <p class="text-muted">No podrás recuperar esta información.</p>
+                </div>
+            `,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
@@ -359,7 +372,7 @@ $(document).ready(function() {
             if (result.isConfirmed) {
                 // Mostrar loading
                 Swal.fire({
-                    title: 'Eliminando...',
+                    title: 'Eliminando perfil...',
                     text: 'Por favor espera',
                     allowOutsideClick: false,
                     didOpen: () => {
@@ -373,7 +386,11 @@ $(document).ready(function() {
     });
 });
 
-// Cambiar estado del perfil
+// Variables globales para CSRF
+let csrfToken = '<?= csrf_hash() ?>';
+const csrfName = '<?= csrf_token() ?>';
+
+// Cambiar estado del perfil con manejo correcto de CSRF
 function toggleStatus(id) {
     const isActive = <?= $perfil['perfil_habil'] ? 'true' : 'false' ?>;
     const action = isActive ? 'desactivar' : 'activar';
@@ -381,79 +398,172 @@ function toggleStatus(id) {
     
     Swal.fire({
         title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} perfil?`,
-        text: `El perfil quedará ${newStatus}`,
+        html: `
+            <div class="text-center">
+                <i class="fas fa-user-tag fa-3x ${isActive ? 'text-warning' : 'text-success'} mb-3"></i>
+                <p>El perfil <strong>"<?= esc($perfil['perfil_nombre']) ?>"</strong> quedará ${newStatus}.</p>
+                ${!isActive ? '<div class="alert alert-success mt-3 mb-0"><i class="fas fa-check me-2"></i>Los usuarios podrán usar este perfil nuevamente.</div>' : '<div class="alert alert-warning mt-3 mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Los usuarios con este perfil podrían verse afectados.</div>'}
+            </div>
+        `,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: isActive ? '#dc3545' : '#198754',
         cancelButtonColor: '#6c757d',
         confirmButtonText: `Sí, ${action}`,
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
             // Mostrar loading
             Swal.fire({
                 title: 'Procesando...',
+                text: 'Actualizando estado del perfil',
                 allowOutsideClick: false,
                 didOpen: () => {
                     Swal.showLoading();
                 }
             });
             
-            $.post('<?= base_url('perfiles/toggleStatus') ?>/' + id, {
-                '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-            })
-            .done(function(response) {
-                if (response.success) {
+            // Preparar data con token CSRF actualizado
+            const postData = {};
+            postData[csrfName] = csrfToken;
+            
+            $.post('<?= base_url('perfiles/toggleStatus') ?>/' + id, postData)
+            .done(function(response, textStatus, xhr) {
+                // CRÍTICO: Actualizar el token CSRF para la siguiente petición
+                const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+                if (newToken) {
+                    csrfToken = newToken;
+                    // También actualizar el token en cualquier input hidden del DOM si existe
+                    $('input[name="' + csrfName + '"]').val(newToken);
+                }
+                
+                if (response && response.success) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Estado actualizado',
-                        text: response.message,
-                        timer: 2000,
+                        text: response.message || `Perfil ${newStatus} correctamente`,
+                        timer: 3000,
                         showConfirmButton: false
                     }).then(() => {
+                        // Recargar página para reflejar cambios
                         location.reload();
                     });
                 } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: response.message
+                        text: response.message || 'No se pudo actualizar el estado del perfil'
                     });
                 }
             })
-            .fail(function() {
+            .fail(function(xhr) {
+                let errorMsg = 'No se pudo conectar con el servidor';
+                if (xhr.status === 403) {
+                    errorMsg = 'Token de seguridad expirado. Por favor, recarga la página.';
+                } else if (xhr.status === 404) {
+                    errorMsg = 'La funcionalidad de cambio de estado no está disponible.';
+                } else if (xhr.status === 500) {
+                    errorMsg = 'Error interno del servidor. Intenta nuevamente.';
+                }
+                
                 Swal.fire({
                     icon: 'error',
                     title: 'Error de conexión',
-                    text: 'No se pudo conectar con el servidor'
+                    text: errorMsg
                 });
             });
         }
     });
 }
 
-// Duplicar perfil
+// Duplicar perfil con validación mejorada
 function duplicateProfile() {
     Swal.fire({
         title: 'Duplicar perfil',
-        text: 'Ingresa el nombre para el nuevo perfil',
-        input: 'text',
-        inputValue: '<?= esc($perfil['perfil_nombre']) ?> - Copia',
+        html: `
+            <div class="text-start">
+                <label for="nuevo-nombre" class="form-label">Nombre para el nuevo perfil:</label>
+                <input type="text" id="nuevo-nombre" class="form-control" value="<?= esc($perfil['perfil_nombre']) ?> - Copia" maxlength="255">
+                <div class="form-text">El nuevo perfil tendrá los mismos permisos y configuración.</div>
+            </div>
+        `,
         showCancelButton: true,
-        confirmButtonText: 'Duplicar',
+        confirmButtonText: '<i class="fas fa-copy me-1"></i> Duplicar',
         cancelButtonText: 'Cancelar',
-        inputValidator: (value) => {
-            if (!value || value.length < 3) {
-                return 'El nombre debe tener al menos 3 caracteres'
+        preConfirm: () => {
+            const nombre = Swal.getPopup().querySelector('#nuevo-nombre').value.trim();
+            if (!nombre || nombre.length < 3) {
+                Swal.showValidationMessage('El nombre debe tener al menos 3 caracteres');
+                return false;
             }
+            if (nombre === '<?= esc($perfil['perfil_nombre']) ?>') {
+                Swal.showValidationMessage('El nombre debe ser diferente al perfil original');
+                return false;
+            }
+            return nombre;
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // Aquí podrías implementar la funcionalidad de duplicar
+            const nuevoNombre = result.value;
+            
+            // Mostrar loading
             Swal.fire({
-                icon: 'info',
-                title: 'Funcionalidad en desarrollo',
-                text: 'La duplicación de perfiles estará disponible próximamente'
+                title: 'Duplicando perfil...',
+                text: 'Creando nueva copia',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+            
+            // Preparar data para duplicación
+            const postData = {
+                nuevo_nombre: nuevoNombre,
+                perfil_origen_id: <?= $perfil['perfil_id'] ?>
+            };
+            postData[csrfName] = csrfToken;
+            
+            $.post('<?= base_url('perfiles/duplicate') ?>', postData)
+            .done(function(response, textStatus, xhr) {
+                // Actualizar token CSRF
+                const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+                if (newToken) {
+                    csrfToken = newToken;
+                }
+                
+                if (response && response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Perfil duplicado',
+                        text: 'El perfil se duplicó correctamente',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ver nuevo perfil',
+                        cancelButtonText: 'Quedarse aquí'
+                    }).then((result) => {
+                        if (result.isConfirmed && response.new_id) {
+                            window.location.href = '<?= base_url('perfiles/show') ?>/' + response.new_id;
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error al duplicar',
+                        text: response.message || 'No se pudo duplicar el perfil'
+                    });
+                }
+            })
+            .fail(function(xhr) {
+                let errorMsg = 'Error al duplicar el perfil';
+                if (xhr.status === 403) {
+                    errorMsg = 'No tienes permisos para duplicar perfiles.';
+                } else if (xhr.status === 404) {
+                    errorMsg = 'La funcionalidad de duplicación no está disponible.';
+                }
+                
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Funcionalidad en desarrollo',
+                    text: 'La duplicación de perfiles estará disponible próximamente'
+                });
             });
         }
     });

@@ -1,4 +1,4 @@
- <?= $this->extend('layouts/main') ?>
+<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 Gestión de Compañías
@@ -117,7 +117,7 @@ Gestión de Compañías
                                         <?php endif; ?>
                                     </td>
 
-                                    <!-- Total usuarios -->
+                                    <!-- Total usuarios (si viene desde getCiasWithUserCount) -->
                                     <td class="text-center">
                                         <?php 
                                             $totalUsers = isset($cia['total_usuarios']) ? (int)$cia['total_usuarios'] : 0;
@@ -167,8 +167,17 @@ Gestión de Compañías
                                                data-bs-toggle="tooltip">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+                                            
+                                            <a href="<?= base_url('users?cia_id=' . $cia['cia_id']) ?>"
+                                               class="btn btn-sm btn-outline-info"
+                                               title="Ver usuarios (<?= $totalUsers ?>)"
+                                               data-bs-toggle="tooltip">
+                                                <i class="fas fa-users"></i>
+                                            </a>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
+
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -193,133 +202,118 @@ Gestión de Compañías
 
 <?= $this->section('scripts') ?>
 <script>
-$(function () {
-  // Tooltips (si los usas en esta vista)
-  $('[data-bs-toggle="tooltip"]').tooltip?.();
+$(function() {
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
 
-  // ---- CSRF global (igual que en Corredores) ----
-  let CSRF = { name: '<?= csrf_token() ?>', hash: '<?= csrf_hash() ?>' };
-  const inFlight = new Set(); // evita llamadas concurrentes por ID
+    // Toggle estado compañía (AJAX)
+    $('.cia-status-toggle').on('change', function() {
+        const $toggle = $(this);
+        const id = $toggle.data('id');
+        const users = $toggle.data('users');
+        const checked = $toggle.is(':checked');
+        const action = checked ? 'activar' : 'desactivar';
 
-  function postToggle(id) {
-    return $.ajax({
-      url: '<?= base_url('cias/toggleStatus') ?>/' + id,
-      type: 'POST',
-      dataType: 'json',
-      data: { [CSRF.name]: CSRF.hash },
-      headers: { 'X-CSRF-TOKEN': CSRF.hash, 'Accept': 'application/json' }
-    }).always(function (xhr) {
-      // refrescar hash si viene nuevo en header
-      const newTok = xhr?.getResponseHeader?.('X-CSRF-TOKEN');
-      if (newTok) CSRF.hash = newTok;
+        // Mostrar confirmación especial si va a desactivar y tiene usuarios
+        if (!checked && users > 0) {
+            Swal.fire({
+                title: '¿Desactivar compañía?',
+                html: `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <p>Esta acción desactivará la compañía y <strong>automáticamente desactivará ${users} usuario${users > 1 ? 's' : ''} asociado${users > 1 ? 's' : ''}.</strong></p>
+                        <div class="alert alert-warning">
+                            Los usuarios no podrán acceder al sistema hasta que sean reactivados individualmente.
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, desactivar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    executeToggle(id, $toggle, checked);
+                } else {
+                    $toggle.prop('checked', !checked); // revertir
+                }
+            });
+        } else {
+            executeToggle(id, $toggle, checked);
+        }
     });
-  }
 
-  function actualizarFilaUI($row, nuevoEstado, $toggle) {
-    const $badge = $row.find('.badge:last');
-    const $statusInfo = $row.find('small.text-warning');
-
-    if (nuevoEstado === 1) {
-      $badge.removeClass('bg-secondary').addClass('bg-success').text('Activa');
-      $toggle.attr('title', 'Clic para desactivar');
-      $statusInfo.hide();
-    } else {
-      $badge.removeClass('bg-success').addClass('bg-secondary').text('Inactiva');
-      $toggle.attr('title', 'Clic para activar');
-      if ($toggle.data('users') > 0) {
-        if ($statusInfo.length === 0) {
-          $badge.after('<small class="text-warning d-block mt-1"><i class="fas fa-exclamation-triangle me-1"></i>Usuarios desactivados</small>');
-        } else {
-          $statusInfo.show();
-        }
-      }
-    }
-  }
-
-  function handleToggleChange() {
-    const $t = $(this);
-    if ($t.data('reverting')) return;  // evitar rebotes al revertir
-
-    const id = $t.data('id');
-    const users = Number($t.data('users') || 0);
-    const checked = $t.is(':checked'); // estado al que intenta ir
-    const $row = $t.closest('tr');
-
-    // Si ya hay request en curso para este ID, revierte visualmente y sal
-    if (inFlight.has(id)) {
-      $t.data('reverting', true).prop('checked', !checked).data('reverting', false);
-      return;
-    }
-
-    // Confirmación al desactivar si hay usuarios
-    const continuar = () => {
-      inFlight.add(id);
-      $t.prop('disabled', true);
-      $row.addClass('table-warning');
-
-      Swal.fire({
-        title: 'Procesando...',
-        text: 'Actualizando estado de la compañía',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-      });
-
-      postToggle(id)
-        .done(function (resp) {
-          if (!resp || !resp.success) {
-            $t.data('reverting', true).prop('checked', !checked).data('reverting', false);
-            Swal.fire({ icon: 'error', title: 'Error', text: (resp && resp.message) ? resp.message : 'No se pudo actualizar el estado' });
-            return;
-          }
-
-          actualizarFilaUI($row, Number(resp.newStatus), $t);
-          Swal.fire({ icon: 'success', title: 'Estado actualizado', text: resp.message, timer: 2000, showConfirmButton: false });
-        })
-        .fail(function (xhr) {
-          $t.data('reverting', true).prop('checked', !checked).data('reverting', false);
-          const msg = (xhr?.status === 403) ? 'CSRF inválido. Recarga la página.' : 'No se pudo conectar con el servidor';
-          Swal.fire({ icon: 'error', title: 'Error', text: msg });
-        })
-        .always(function () {
-          $row.removeClass('table-warning');
-          setTimeout(() => $t.prop('disabled', false), 300);
-          inFlight.delete(id);
+    function executeToggle(id, $toggle, checked) {
+        // Mostrar loading
+        const $row = $toggle.closest('tr');
+        $row.addClass('table-warning');
+        
+        Swal.fire({
+            title: 'Procesando...',
+            text: 'Actualizando estado de la compañía',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
         });
-    };
 
-    if (!checked && users > 0) {
-      Swal.fire({
-        title: '¿Desactivar compañía?',
-        html: `
-          <div class="text-center">
-            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-            <p>Esta acción desactivará la compañía y <strong>automáticamente desactivará ${users} usuario${users > 1 ? 's' : ''} asociado${users > 1 ? 's' : ''}.</strong></p>
-            <div class="alert alert-warning">Los usuarios no podrán acceder hasta ser reactivados.</div>
-          </div>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, desactivar',
-        cancelButtonText: 'Cancelar',
-        reverseButtons: true
-      }).then((r) => {
-        if (r.isConfirmed) {
-          continuar();
-        } else {
-          // revertir sin disparar otro change
-          $t.data('reverting', true).prop('checked', !checked).data('reverting', false);
-        }
-      });
-    } else {
-      continuar();
+        $.post('<?= base_url('cias/toggleStatus') ?>/' + id, {
+            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+        })
+        .done(function(resp) {
+            $row.removeClass('table-warning');
+            
+            if (!resp || !resp.success) {
+                $toggle.prop('checked', !checked); // revertir
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: (resp && resp.message) ? resp.message : 'No se pudo actualizar el estado'
+                });
+            } else {
+                // Actualizar badge y tooltip
+                const $badge = $row.find('.badge:last');
+                const $statusInfo = $row.find('small.text-warning');
+                
+                if (resp.newStatus === 1) {
+                    $badge.removeClass('bg-secondary').addClass('bg-success').text('Activa');
+                    $toggle.attr('title', 'Clic para desactivar');
+                    $statusInfo.hide();
+                } else {
+                    $badge.removeClass('bg-success').addClass('bg-secondary').text('Inactiva');
+                    $toggle.attr('title', 'Clic para activar');
+                    if ($toggle.data('users') > 0) {
+                        if ($statusInfo.length === 0) {
+                            $badge.after('<small class="text-warning d-block mt-1"><i class="fas fa-exclamation-triangle me-1"></i>Usuarios desactivados</small>');
+                        } else {
+                            $statusInfo.show();
+                        }
+                    }
+                }
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Estado actualizado',
+                    text: resp.message,
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+        })
+        .fail(function() {
+            $row.removeClass('table-warning');
+            $toggle.prop('checked', !checked); // revertir
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudo conectar con el servidor'
+            });
+        });
     }
-  }
 
-  $('.cia-status-toggle').on('change', handleToggleChange);
-
-  // Auto-hide alerts suave
-  $('.alert').delay(8000).fadeOut();
+    // Auto-hide alerts
+    $('.alert').delay(8000).fadeOut();
 });
 </script>
 <?= $this->endSection() ?>

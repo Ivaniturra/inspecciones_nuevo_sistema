@@ -256,7 +256,6 @@ class Cias extends BaseController
                 ->setJSON(['success' => false, 'message' => 'Solicitud inválida']);
         }
 
-
         $db = \Config\Database::connect();
         $db->transStart();
 
@@ -267,7 +266,7 @@ class Cias extends BaseController
             }
 
             $newStatus = (int)($cia['cia_habil'] == 1 ? 0 : 1);
-            
+
             // Actualizar estado de la compañía
             if (!$this->ciaModel->update($id, ['cia_habil' => $newStatus])) {
                 throw new \Exception('No se pudo actualizar el estado de la compañía');
@@ -276,9 +275,9 @@ class Cias extends BaseController
             // Si se está desactivando la compañía, desactivar todos sus usuarios
             if ($newStatus === 0) {
                 $affectedUsers = $this->userModel->where('cia_id', $id)
-                                                 ->where('user_habil', 1)
-                                                 ->countAllResults();
-                
+                                                ->where('user_habil', 1)
+                                                ->countAllResults();
+
                 if ($affectedUsers > 0) {
                     $this->userModel->where('cia_id', $id)
                                     ->set('user_habil', 0)
@@ -299,13 +298,13 @@ class Cias extends BaseController
                 throw new \Exception('Error en la transacción de base de datos');
             }
 
-             return $this->response
-            ->setHeader('X-CSRF-TOKEN', csrf_hash())
-            ->setJSON([
-                'success'   => true,
-                'newStatus' => (int)$newStatus,
-                'message'   => $msg
-            ]);
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())  // Aquí refrescas el token CSRF
+                ->setJSON([
+                    'success'   => true,
+                    'newStatus' => $newStatus,  // Pasa el nuevo estado
+                    'message'   => $message     // Usa el mensaje correctamente
+                ]);
 
         } catch (\Exception $e) {
             $db->transRollback();
@@ -313,6 +312,7 @@ class Cias extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Error interno del servidor']);
         }
     }
+
 
     /** Select de compañías activas (AJAX) */
     public function getSelect()

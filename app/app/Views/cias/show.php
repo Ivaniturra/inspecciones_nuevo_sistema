@@ -432,10 +432,15 @@
 
 <?= $this->section('scripts') ?>
 <script>
+    // Script corregido para app/Views/cias/show.php
 $(function () {
     // Auto-hide alerts
     $('.alert-dismissible').delay(5000).fadeOut();
 });
+
+// Variable global para el token CSRF
+let csrfToken = '<?= csrf_hash() ?>';
+const csrfName = '<?= csrf_token() ?>';
 
 // Toggle estado
 function toggleStatus(id) {
@@ -478,10 +483,20 @@ function toggleStatus(id) {
                 didOpen: () => Swal.showLoading() 
             });
             
-            $.post('<?= base_url('cias/toggleStatus') ?>/' + id, {
-                '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-            })
-            .done(function (response) {
+            // Preparar data con token CSRF actualizado
+            const postData = {};
+            postData[csrfName] = csrfToken;
+            
+            $.post('<?= base_url('cias/toggleStatus') ?>/' + id, postData)
+            .done(function (response, textStatus, xhr) {
+                // CRÍTICO: Actualizar el token CSRF para la siguiente petición
+                const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+                if (newToken) {
+                    csrfToken = newToken;
+                    // También actualizar el token en cualquier input hidden del DOM si existe
+                    $('input[name="' + csrfName + '"]').val(newToken);
+                }
+                
                 if (response.success) {
                     Swal.fire({ 
                         icon: 'success', 
@@ -498,11 +513,16 @@ function toggleStatus(id) {
                     });
                 }
             })
-            .fail(function () {
+            .fail(function (xhr) {
+                let errorMsg = 'No se pudo conectar con el servidor';
+                if (xhr.status === 403) {
+                    errorMsg = 'Token de seguridad expirado. Recarga la página.';
+                }
+                
                 Swal.fire({ 
                     icon: 'error', 
                     title: 'Error de conexión', 
-                    text: 'No se pudo conectar con el servidor' 
+                    text: errorMsg
                 });
             });
         }

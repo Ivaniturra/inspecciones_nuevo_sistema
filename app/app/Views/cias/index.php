@@ -211,17 +211,22 @@ $(function () {
   const inFlight = new Set(); // evita llamadas concurrentes por ID
 
   function postToggle(id) {
-    return $.ajax({
-      url: '<?= base_url('cias/toggleStatus') ?>/' + id,
-      type: 'POST',
-      dataType: 'json',
-      data: { [CSRF.name]: CSRF.hash },
-      headers: { 'X-CSRF-TOKEN': CSRF.hash, 'Accept': 'application/json' }
-    }).always(function (xhr) {
-      // refrescar hash si viene nuevo en header
-      const newTok = xhr?.getResponseHeader?.('X-CSRF-TOKEN');
-      if (newTok) CSRF.hash = newTok;
-    });
+    $.ajax({
+    url: '<?= base_url('cias/toggleStatus') ?>/' + id,
+    type: 'POST',
+    dataType: 'json',
+    data: { [CSRF.name]: CSRF.hash },  // Enviar token en el cuerpo
+    headers: { 'X-CSRF-TOKEN': CSRF.hash }  // Enviar token en el header
+})
+.done(function (resp) {
+    // Verifica que el nuevo token CSRF esté siendo actualizado
+    const newTok = resp?.newToken || '';
+    if (newTok) CSRF.hash = newTok;
+})
+.fail(function (xhr) {
+    const newTok = xhr?.getResponseHeader('X-CSRF-TOKEN') || '';
+    if (newTok) CSRF.hash = newTok;
+});
   }
 
   function actualizarFilaUI($row, nuevoEstado, $toggle) {

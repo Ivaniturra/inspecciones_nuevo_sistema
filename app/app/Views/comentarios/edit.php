@@ -102,23 +102,45 @@ Editar Comentario
                                 </div>
                             </div>
 
-                            <!-- ID interno (opcional) -->
+                            <!-- Perfil -->
                             <div class="col-md-6 mb-3">
-                                <label for="comentario_id_cia_interno" class="form-label">
-                                    <i class="fas fa-hashtag text-secondary me-1"></i>
-                                    ID Interno (opcional)
+                                <label for="perfil_id" class="form-label">
+                                    <i class="fas fa-user-tag text-success me-1"></i>
+                                    Perfil (opcional)
                                 </label>
-                                <input type="number"
-                                    class="form-control <?= session('errors.comentario_id_cia_interno') ? 'is-invalid' : '' ?>"
-                                    id="comentario_id_cia_interno"
-                                    name="comentario_id_cia_interno"
-                                    value="<?= esc(old('comentario_id_cia_interno', $comentario['comentario_id_cia_interno'])) ?>"
-                                    placeholder="Ej. 12345">
+                                <select
+                                    class="form-select <?= session('errors.perfil_id') ? 'is-invalid' : '' ?>"
+                                    id="perfil_id" name="perfil_id">
+                                    <option value="">Todos los perfiles...</option>
+                                    <?php foreach (($perfiles ?? []) as $id => $nombre): ?>
+                                        <option value="<?= esc($id) ?>" <?= (string)old('perfil_id', $comentario['perfil_id']) === (string)$id ? 'selected' : '' ?>>
+                                            <?= esc($nombre) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                                 <div class="invalid-feedback">
-                                    <?= esc(session('errors.comentario_id_cia_interno')) ?>
+                                    <?= esc(session('errors.perfil_id')) ?>
                                 </div>
-                                <div class="form-text">Relaciona este comentario con un registro interno de la compañía.</div>
+                                <div class="form-text">Si no seleccionas un perfil, el comentario será visible para todos.</div>
                             </div>
+                        </div>
+
+                        <!-- ID interno (opcional) -->
+                        <div class="mb-3">
+                            <label for="comentario_id_cia_interno" class="form-label">
+                                <i class="fas fa-hashtag text-secondary me-1"></i>
+                                ID Interno (opcional)
+                            </label>
+                            <input type="number"
+                                class="form-control <?= session('errors.comentario_id_cia_interno') ? 'is-invalid' : '' ?>"
+                                id="comentario_id_cia_interno"
+                                name="comentario_id_cia_interno"
+                                value="<?= esc(old('comentario_id_cia_interno', $comentario['comentario_id_cia_interno'])) ?>"
+                                placeholder="Ej. 12345">
+                            <div class="invalid-feedback">
+                                <?= esc(session('errors.comentario_id_cia_interno')) ?>
+                            </div>
+                            <div class="form-text">Relaciona este comentario con un registro interno de la compañía.</div>
                         </div>
 
                         <!-- Flags -->
@@ -193,6 +215,12 @@ Editar Comentario
                                         </h6>
                                         <small class="text-muted">
                                             <strong>ID:</strong> <?= (int)$comentario['comentario_id'] ?><br>
+                                            <?php if (!empty($comentario['cia_nombre'])): ?>
+                                                <strong>Compañía:</strong> <?= esc($comentario['cia_nombre']) ?><br>
+                                            <?php endif; ?>
+                                            <?php if (!empty($comentario['perfil_nombre'])): ?>
+                                                <strong>Perfil:</strong> <?= esc($comentario['perfil_nombre']) ?><br>
+                                            <?php endif; ?>
                                             <?php if (!empty($comentario['comentario_created_at'])): ?>
                                                 <strong>Creado:</strong> <?= date('d/m/Y H:i', strtotime($comentario['comentario_created_at'])) ?><br>
                                             <?php endif; ?>

@@ -12,7 +12,7 @@ Gestión de Comentarios
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h3 mb-0">Gestión de Comentarios</h1>
-                    <p class="text-muted">Administra los comentarios del sistema organizados por compañía</p>
+                    <p class="text-muted">Administra los comentarios del sistema organizados por compañía y perfil</p>
                 </div>
                 <a href="<?= base_url('comentarios/create') ?>" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Nuevo Comentario
@@ -53,13 +53,24 @@ Gestión de Comentarios
                         <?php endforeach ?>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <label for="perfil_id" class="form-label small text-muted">Perfil</label>
+                    <select name="perfil_id" id="perfil_id" class="form-select">
+                        <option value="">-- Todos los perfiles --</option>
+                        <?php foreach ($perfiles as $id => $nombre): ?>
+                            <option value="<?= esc($id) ?>" <?= $filtros['perfil_id']==$id ? 'selected' : '' ?>>
+                                <?= esc($nombre) ?>
+                            </option>
+                        <?php endforeach ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label for="q" class="form-label small text-muted">Buscar</label>
                     <input type="text" name="q" id="q" class="form-control" 
-                           placeholder="Buscar en comentarios o ID interno..." 
+                           placeholder="Buscar en comentarios..." 
                            value="<?= esc($filtros['q']) ?>">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <label for="per_page" class="form-label small text-muted">Por página</label>
                     <select name="per_page" id="per_page" class="form-select">
                         <?php foreach ([10,20,50,100] as $pp): ?>
@@ -69,7 +80,7 @@ Gestión de Comentarios
                         <?php endforeach ?>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="btn-group w-100" role="group">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i> Filtrar
@@ -89,7 +100,7 @@ Gestión de Comentarios
             <h5 class="card-title mb-0">
                 <i class="fas fa-comments text-primary me-2"></i>
                 Listado de Comentarios
-                <?php if (!empty($filtros['cia_id']) || !empty($filtros['q'])): ?>
+                <?php if (!empty($filtros['cia_id']) || !empty($filtros['perfil_id']) || !empty($filtros['q'])): ?>
                     <small class="text-muted">
                         (<?= is_countable($rows) ? count($rows) : 0 ?> resultados filtrados)
                     </small>
@@ -103,13 +114,13 @@ Gestión de Comentarios
                     <i class="fas fa-comments fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">No hay comentarios registrados</h5>
                     <p class="text-muted">
-                        <?php if (!empty($filtros['cia_id']) || !empty($filtros['q'])): ?>
+                        <?php if (!empty($filtros['cia_id']) || !empty($filtros['perfil_id']) || !empty($filtros['q'])): ?>
                             No se encontraron comentarios con los filtros aplicados.
                         <?php else: ?>
                             Comienza creando tu primer comentario.
                         <?php endif; ?>
                     </p>
-                    <?php if (empty($filtros['cia_id']) && empty($filtros['q'])): ?>
+                    <?php if (empty($filtros['cia_id']) && empty($filtros['perfil_id']) && empty($filtros['q'])): ?>
                         <a href="<?= base_url('comentarios/create') ?>" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Crear Comentario
                         </a>
@@ -121,11 +132,12 @@ Gestión de Comentarios
                         <thead class="table-light">
                             <tr>
                                 <th style="width:80px">ID</th>
-                                <th style="width:180px">Compañía</th>
+                                <th style="width:160px">Compañía</th>
+                                <th style="width:140px">Perfil</th>
                                 <th>Comentario</th>
-                                <th style="width:120px" class="text-center">ID Interno</th>
-                                <th style="width:280px" class="text-center">Flags</th>
-                                <th style="width:200px" class="text-end">Acciones</th>
+                                <th style="width:100px" class="text-center">ID Interno</th>
+                                <th style="width:250px" class="text-center">Flags</th>
+                                <th style="width:120px" class="text-end">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -136,13 +148,20 @@ Gestión de Comentarios
                                     </td>
                                     <td>
                                         <div>
-                                            <strong><?= esc($cias[$r['cia_id']] ?? 'Compañía #' . $r['cia_id']) ?></strong>
+                                            <strong><?= esc($r['cia_nombre'] ?? 'Compañía #' . $r['cia_id']) ?></strong>
                                             <br>
                                             <small class="text-muted">ID: <?= esc($r['cia_id']) ?></small>
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="text-truncate" style="max-width: 300px;" title="<?= esc($r['comentario_nombre']) ?>">
+                                        <?php if (!empty($r['perfil_nombre'])): ?>
+                                            <span class="badge bg-info"><?= esc($r['perfil_nombre']) ?></span>
+                                        <?php else: ?>
+                                            <span class="badge bg-secondary">Todos</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 250px;" title="<?= esc($r['comentario_nombre']) ?>">
                                             <?= esc($r['comentario_nombre']) ?>
                                         </div>
                                         <?php if (!empty($r['comentario_created_at'])): ?>
@@ -154,7 +173,7 @@ Gestión de Comentarios
                                     </td>
                                     <td class="text-center">
                                         <?php if (!empty($r['comentario_id_cia_interno'])): ?>
-                                            <span class="badge bg-info"><?= esc($r['comentario_id_cia_interno']) ?></span>
+                                            <span class="badge bg-warning text-dark"><?= esc($r['comentario_id_cia_interno']) ?></span>
                                         <?php else: ?>
                                             <span class="text-muted">-</span>
                                         <?php endif; ?>
@@ -163,21 +182,21 @@ Gestión de Comentarios
                                         <div class="d-flex flex-wrap justify-content-center gap-1">
                                             <?php if ($r['comentario_devuelve']): ?>
                                                 <span class="badge bg-warning text-dark" title="Requiere devolución">
-                                                    <i class="fas fa-undo me-1"></i>Devuelve
+                                                    <i class="fas fa-undo me-1"></i>Dev
                                                 </span>
                                             <?php endif; ?>
                                             <?php if ($r['comentario_elimina']): ?>
                                                 <span class="badge bg-danger" title="Sugiere eliminación">
-                                                    <i class="fas fa-trash me-1"></i>Elimina
+                                                    <i class="fas fa-trash me-1"></i>Del
                                                 </span>
                                             <?php endif; ?>
                                             <?php if ($r['comentario_envia_correo']): ?>
                                                 <span class="badge bg-success" title="Envía notificación por correo">
-                                                    <i class="fas fa-envelope me-1"></i>Correo
+                                                    <i class="fas fa-envelope me-1"></i>Mail
                                                 </span>
                                             <?php endif; ?>
                                             <?php if (!$r['comentario_devuelve'] && !$r['comentario_elimina'] && !$r['comentario_envia_correo']): ?>
-                                                <span class="text-muted small">Sin flags</span>
+                                                <span class="text-muted small">-</span>
                                             <?php endif; ?>
                                         </div>
                                     </td>

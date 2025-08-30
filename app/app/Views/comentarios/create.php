@@ -1,5 +1,4 @@
- <!-- app/Views/comentarios/create.php -->
-<?= $this->extend('layouts/main') ?>
+ <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 Nuevo Comentario
@@ -13,7 +12,7 @@ Nuevo Comentario
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h3 mb-0">Nuevo Comentario</h1>
-                    <p class="text-muted">Agrega un comentario asociado a una compañía y (opcional) a un registro interno</p>
+                    <p class="text-muted">Agrega un comentario asociado a una compañía y perfil específico</p>
                 </div>
                 <a href="<?= base_url('comentarios') ?>" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Volver al listado
@@ -76,69 +75,101 @@ Nuevo Comentario
                                 </div>
                             </div>
 
-                            <!-- ID interno (opcional) -->
+                            <!-- Perfil -->
                             <div class="col-md-6 mb-3">
-                                <label for="comentario_id_cia_interno" class="form-label">
-                                    <i class="fas fa-hashtag text-secondary me-1"></i>
-                                    ID Interno (opcional)
+                                <label for="perfil_id" class="form-label">
+                                    <i class="fas fa-user-tag text-success me-1"></i>
+                                    Perfil (opcional)
                                 </label>
-                                <input type="number"
-                                    class="form-control <?= session('errors.comentario_id_cia_interno') ? 'is-invalid' : '' ?>"
-                                    id="comentario_id_cia_interno"
-                                    name="comentario_id_cia_interno"
-                                    value="<?= esc(old('comentario_id_cia_interno')) ?>"
-                                    placeholder="Ej. 12345">
+                                <select
+                                    class="form-select <?= session('errors.perfil_id') ? 'is-invalid' : '' ?>"
+                                    id="perfil_id" name="perfil_id">
+                                    <option value="">Todos los perfiles...</option>
+                                    <?php foreach (($perfiles ?? []) as $id => $nombre): ?>
+                                        <option value="<?= esc($id) ?>" <?= (string)old('perfil_id') === (string)$id ? 'selected' : '' ?>>
+                                            <?= esc($nombre) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                                 <div class="invalid-feedback">
-                                    <?= esc(session('errors.comentario_id_cia_interno')) ?>
+                                    <?= esc(session('errors.perfil_id')) ?>
                                 </div>
-                                <div class="form-text">Relaciona este comentario con un registro interno de la compañía.</div>
+                                <div class="form-text">Si no seleccionas un perfil, el comentario será visible para todos.</div>
                             </div>
                         </div>
 
+                        <!-- ID interno (opcional) -->
+                        <div class="mb-3">
+                            <label for="comentario_id_cia_interno" class="form-label">
+                                <i class="fas fa-hashtag text-secondary me-1"></i>
+                                ID Interno (opcional)
+                            </label>
+                            <input type="number"
+                                class="form-control <?= session('errors.comentario_id_cia_interno') ? 'is-invalid' : '' ?>"
+                                id="comentario_id_cia_interno"
+                                name="comentario_id_cia_interno"
+                                value="<?= esc(old('comentario_id_cia_interno')) ?>"
+                                placeholder="Ej. 12345">
+                            <div class="invalid-feedback">
+                                <?= esc(session('errors.comentario_id_cia_interno')) ?>
+                            </div>
+                            <div class="form-text">Relaciona este comentario con un registro interno de la compañía.</div>
+                        </div>
+
                         <!-- Flags -->
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label d-block">
-                                    <i class="fas fa-undo text-warning me-1"></i>
-                                    ¿Devuelve?
-                                </label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox"
-                                           id="comentario_devuelve" name="comentario_devuelve"
-                                           value="1" <?= old('comentario_devuelve') ? 'checked' : '' ?>>
-                                    <label class="form-check-label" for="comentario_devuelve">
-                                        Marcar para indicar que requiere devolución
-                                    </label>
-                                </div>
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-cogs me-1 text-secondary"></i>
+                                    Configuración de Acciones
+                                </h6>
                             </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label d-block">
+                                            <i class="fas fa-undo text-warning me-1"></i>
+                                            ¿Devuelve?
+                                        </label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="comentario_devuelve" name="comentario_devuelve"
+                                                   value="1" <?= old('comentario_devuelve') ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="comentario_devuelve">
+                                                Marcar para indicar que requiere devolución
+                                            </label>
+                                        </div>
+                                    </div>
 
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label d-block">
-                                    <i class="fas fa-trash-alt text-danger me-1"></i>
-                                    ¿Elimina?
-                                </label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox"
-                                           id="comentario_elimina" name="comentario_elimina"
-                                           value="1" <?= old('comentario_elimina') ? 'checked' : '' ?>>
-                                    <label class="form-check-label" for="comentario_elimina">
-                                        Marcar si sugiere eliminación
-                                    </label>
-                                </div>
-                            </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label d-block">
+                                            <i class="fas fa-trash-alt text-danger me-1"></i>
+                                            ¿Elimina?
+                                        </label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="comentario_elimina" name="comentario_elimina"
+                                                   value="1" <?= old('comentario_elimina') ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="comentario_elimina">
+                                                Marcar si sugiere eliminación
+                                            </label>
+                                        </div>
+                                    </div>
 
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label d-block">
-                                    <i class="fas fa-envelope text-success me-1"></i>
-                                    Enviar correo
-                                </label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox"
-                                           id="comentario_envia_correo" name="comentario_envia_correo"
-                                           value="1" <?= old('comentario_envia_correo', '1') ? 'checked' : '' ?>>
-                                    <label class="form-check-label" for="comentario_envia_correo">
-                                        Notificar por email al guardar
-                                    </label>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label d-block">
+                                            <i class="fas fa-envelope text-success me-1"></i>
+                                            Enviar correo
+                                        </label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="comentario_envia_correo" name="comentario_envia_correo"
+                                                   value="1" <?= old('comentario_envia_correo', '1') ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="comentario_envia_correo">
+                                                Notificar por email al guardar
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -169,8 +200,17 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('submit', function (e) {
         const texto = document.getElementById('comentario_nombre').value.trim();
         const cia   = document.getElementById('cia_id').value;
-        if (texto.length < 2) { e.preventDefault(); alert('El comentario es obligatorio.'); return; }
-        if (!cia)             { e.preventDefault(); alert('Debes seleccionar una compañía.'); return; }
+        
+        if (texto.length < 2) { 
+            e.preventDefault(); 
+            alert('El comentario es obligatorio y debe tener al menos 2 caracteres.'); 
+            return; 
+        }
+        if (!cia) { 
+            e.preventDefault(); 
+            alert('Debes seleccionar una compañía.'); 
+            return; 
+        }
     });
 
     // Autofocus

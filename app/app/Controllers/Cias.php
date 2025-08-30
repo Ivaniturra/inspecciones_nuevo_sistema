@@ -251,8 +251,11 @@ class Cias extends BaseController
     public function toggleStatus($id)
     {
         if (! $this->request->isAJAX()) {
-            return redirect()->to('/cias');
+            return $this->response->setStatusCode(400)
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                ->setJSON(['success' => false, 'message' => 'Solicitud inválida']);
         }
+
 
         $db = \Config\Database::connect();
         $db->transStart();
@@ -296,10 +299,12 @@ class Cias extends BaseController
                 throw new \Exception('Error en la transacción de base de datos');
             }
 
-            return $this->response->setJSON([
-                'success' => true, 
-                'message' => $message,
-                'newStatus' => $newStatus
+             return $this->response
+            ->setHeader('X-CSRF-TOKEN', csrf_hash())
+            ->setJSON([
+                'success'   => true,
+                'newStatus' => (int)$newStatus,
+                'message'   => $msg
             ]);
 
         } catch (\Exception $e) {

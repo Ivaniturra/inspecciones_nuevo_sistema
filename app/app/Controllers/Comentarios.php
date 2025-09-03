@@ -60,7 +60,70 @@ class Comentarios extends BaseController
             ],
         ]);
     }
+    public function toggleStatus($id)
+    {
+        // Validar que sea petici?n AJAX
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/comentarios')->with('error', 'M?todo no permitido');
+        }
 
+        // Validar permisos (ajusta seg?n tu sistema de permisos)
+        // if (!$this->hasPermission('gestionar_comentarios')) {
+        //     return $this->response->setJSON([
+        //         'success' => false,
+        //         'message' => 'No tienes permisos para cambiar estados de comentarios'
+        //     ])->setStatusCode(403);
+        // }
+
+        $id = (int) $id;
+        $comentario = $this->comentarioModel->find($id);
+        
+        if (!$comentario) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Comentario no encontrado'
+            ])->setStatusCode(404);
+        }
+
+        $oldStatus = (int) ($comentario['comentario_habil'] ?? 1);
+        $newStatus = $oldStatus === 1 ? 0 : 1;
+
+        try {
+            if ($this->comentarioModel->update($id, ['comentario_habil' => $newStatus])) {
+                // Log de auditor?a opcional
+                // $this->logAuditAction('comentario_status_changed', [
+                //     'comentario_id' => $id,
+                //     'old_status'    => $oldStatus,
+                //     'new_status'    => $newStatus,
+                //     'changed_by'    => $this->session->get('user_id') ?? 'system',
+                //     'ip_address'    => $this->request->getIPAddress(),
+                // ]);
+
+                // ? RETORNAR CON NUEVO TOKEN CSRF
+                return $this->response
+                    ->setHeader('X-CSRF-TOKEN', csrf_hash()) // ? Nuevo token para el siguiente request
+                    ->setJSON([
+                        'success'    => true,
+                        'message'    => 'Estado actualizado correctamente',
+                        'new_status' => $newStatus,
+                        'status_text'=> $newStatus ? 'Activo' : 'Inactivo',
+                    ]);
+            }
+
+            throw new \Exception('Error al actualizar en la base de datos');
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error en toggleStatus comentario: ' . $e->getMessage());
+            
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash()) // ? Token incluso en error
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Error interno al actualizar el estado'
+                ])
+                ->setStatusCode(500);
+        }
+    }
     public function create()
     {
         return view('comentarios/create', [

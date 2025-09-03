@@ -1,4 +1,4 @@
- <?= $this->extend('layouts/main') ?>
+<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 Nuevo Comentario
@@ -75,7 +75,7 @@ Nuevo Comentario
                                 </div>
                             </div>
 
-                            <!-- Perfil -->
+                            <!-- Perfil mejorado -->
                             <div class="col-md-6 mb-3">
                                 <label for="perfil_id" class="form-label">
                                     <i class="fas fa-user-tag text-success me-1"></i>
@@ -85,11 +85,24 @@ Nuevo Comentario
                                     class="form-select <?= session('errors.perfil_id') ? 'is-invalid' : '' ?>"
                                     id="perfil_id" name="perfil_id">
                                     <option value="">Todos los perfiles...</option>
-                                    <?php foreach (($perfiles ?? []) as $id => $nombre): ?>
-                                        <option value="<?= esc($id) ?>" <?= (string)old('perfil_id') === (string)$id ? 'selected' : '' ?>>
-                                            <?= esc($nombre) ?>
-                                        </option>
-                                    <?php endforeach; ?>
+                                    <optgroup label="🛡️ Perfiles Internos">
+                                        <?php foreach (($perfiles ?? []) as $id => $nombre): ?>
+                                            <?php if (strpos($nombre, 'Interno') !== false || strpos($nombre, 'Admin') !== false): ?>
+                                                <option value="<?= esc($id) ?>" <?= (string)old('perfil_id') === (string)$id ? 'selected' : '' ?>>
+                                                    <?= esc($nombre) ?>
+                                                </option>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                    <optgroup label="🏢 Perfiles de Compañía">
+                                        <?php foreach (($perfiles ?? []) as $id => $nombre): ?>
+                                            <?php if (strpos($nombre, 'Interno') === false && strpos($nombre, 'Admin') === false): ?>
+                                                <option value="<?= esc($id) ?>" <?= (string)old('perfil_id') === (string)$id ? 'selected' : '' ?>>
+                                                    <?= esc($nombre) ?>
+                                                </option>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </optgroup>
                                 </select>
                                 <div class="invalid-feedback">
                                     <?= esc(session('errors.perfil_id')) ?>
@@ -98,22 +111,41 @@ Nuevo Comentario
                             </div>
                         </div>
 
-                        <!-- ID interno (opcional) -->
-                        <div class="mb-3">
-                            <label for="comentario_id_cia_interno" class="form-label">
-                                <i class="fas fa-hashtag text-secondary me-1"></i>
-                                ID Interno (opcional)
-                            </label>
-                            <input type="number"
-                                class="form-control <?= session('errors.comentario_id_cia_interno') ? 'is-invalid' : '' ?>"
-                                id="comentario_id_cia_interno"
-                                name="comentario_id_cia_interno"
-                                value="<?= esc(old('comentario_id_cia_interno')) ?>"
-                                placeholder="Ej. 12345">
-                            <div class="invalid-feedback">
-                                <?= esc(session('errors.comentario_id_cia_interno')) ?>
+                        <div class="row">
+                            <!-- ID interno -->
+                            <div class="col-md-6 mb-3">
+                                <label for="comentario_id_cia_interno" class="form-label">
+                                    <i class="fas fa-hashtag text-secondary me-1"></i>
+                                    ID Interno (opcional)
+                                </label>
+                                <input type="number"
+                                    class="form-control <?= session('errors.comentario_id_cia_interno') ? 'is-invalid' : '' ?>"
+                                    id="comentario_id_cia_interno"
+                                    name="comentario_id_cia_interno"
+                                    value="<?= esc(old('comentario_id_cia_interno')) ?>"
+                                    placeholder="Ej. 12345">
+                                <div class="invalid-feedback">
+                                    <?= esc(session('errors.comentario_id_cia_interno')) ?>
+                                </div>
+                                <div class="form-text">Relaciona este comentario con un registro interno de la compañía.</div>
                             </div>
-                            <div class="form-text">Relaciona este comentario con un registro interno de la compañía.</div>
+
+                            <!-- Estado -->
+                            <div class="col-md-6 mb-3">
+                                <label for="comentario_habil" class="form-label">
+                                    <i class="fas fa-toggle-on text-success me-1"></i>
+                                    Estado inicial
+                                </label>
+                                <select class="form-select" id="comentario_habil" name="comentario_habil">
+                                    <option value="1" <?= old('comentario_habil', '1') === '1' ? 'selected' : '' ?>>
+                                        ✅ Activo (visible para los usuarios)
+                                    </option>
+                                    <option value="0" <?= old('comentario_habil') === '0' ? 'selected' : '' ?>>
+                                        ❌ Inactivo (oculto para los usuarios)
+                                    </option>
+                                </select>
+                                <div class="form-text">Estado inicial del comentario al crearlo.</div>
+                            </div>
                         </div>
 
                         <!-- Flags -->
@@ -203,12 +235,20 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (texto.length < 2) { 
             e.preventDefault(); 
-            alert('El comentario es obligatorio y debe tener al menos 2 caracteres.'); 
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                text: 'El comentario es obligatorio y debe tener al menos 2 caracteres.'
+            });
             return; 
         }
         if (!cia) { 
             e.preventDefault(); 
-            alert('Debes seleccionar una compañía.'); 
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                text: 'Debes seleccionar una compañía.'
+            });
             return; 
         }
     });

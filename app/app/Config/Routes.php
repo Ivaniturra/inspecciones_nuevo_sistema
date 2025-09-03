@@ -84,22 +84,20 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     });
    
     $routes->group('valores-comunas',['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
-        $routes->get('/',                 'ValoresComunas::index');
-        $routes->get('create',            'ValoresComunas::create');
-        $routes->post('store',            'ValoresComunas::store');
-        $routes->get('edit/(:num)',       'ValoresComunas::edit/$1');
-        $routes->post('update/(:num)',    'ValoresComunas::update/$1');
-        $routes->get('show/(:num)',       'ValoresComunas::show/$1');
-        $routes->get('delete/(:num)',     'ValoresComunas::delete/$1');
+         $routes->get('/',                 'ValoresComunas::index', ['filter' => 'role:3,7']);
+        $routes->get('create',            'ValoresComunas::create', ['filter' => 'role:3,7']);
+        $routes->post('store',            'ValoresComunas::store', ['filter' => 'role:3,7']);
+        $routes->get('edit/(:num)',       'ValoresComunas::edit/$1', ['filter' => 'role:3,7']);
+        $routes->post('update/(:num)',    'ValoresComunas::update/$1', ['filter' => 'role:3,7']);
+        $routes->get('show/(:num)',       'ValoresComunas::show/$1', ['filter' => 'role:3,7']);
+        $routes->get('delete/(:num)',     'ValoresComunas::delete/$1', ['filter' => 'role:3,7']);
         
-        // ✅ CAMBIAR DE 'toggle' A 'toggleStatus' para que coincida con el JavaScript
-        $routes->post('toggleStatus/(:num)', 'ValoresComunas::toggleStatus/$1');
+        // ✅ Ruta AJAX sin filtro restrictivo (solo autenticación básica si la necesitas)
+        $routes->post('toggle/(:num)',    'ValoresComunas::toggleStatus/$1');
 
-        // AJAX dependientes (nueva jerarquía Región -> Provincia -> Comuna)
+        // AJAX dependientes sin filtro
         $routes->get('getProvinciasByRegion/(:num)',  'ValoresComunas::getProvinciasByRegion/$1');
         $routes->get('getComunasByProvincia/(:num)',  'ValoresComunas::getComunasByProvincia/$1');
-
-        // (Opcional) compat anterior si algo aún llama esto:
         $routes->get('getComunasByRegion/(:num)',     'ValoresComunas::getComunasByRegion/$1');
     });
     $routes->group('TipoVehiculos',['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {

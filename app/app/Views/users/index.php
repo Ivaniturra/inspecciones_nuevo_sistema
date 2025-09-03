@@ -382,17 +382,7 @@ Gestión de Usuarios
                                                 <i class="fas fa-key"></i>
                                             </button>
                                             <?php endif; ?>
-                                            
-                                            <!-- Delete button -->
-                                            <?php if (!empty($canDelete) && $canDelete): ?>
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-outline-danger delete-user-btn"
-                                                    data-id="<?= $usuario['user_id'] ?>"
-                                                    data-name="<?= esc($usuario['user_nombre']) ?>"
-                                                    title="Eliminar usuario">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                            <?php endif; ?>
+                                             
                                         </div>
                                     </td>
                                 </tr>

@@ -294,22 +294,7 @@ Gestión de Usuarios
                                                     data-name="<?= esc($usuario['user_nombre']) ?>">
                                                 <i class="fas fa-key"></i>
                                             </button>
-                                            <?php endif; ?>
-                                            <!-- Eliminar -->
-                                            <?php if (!empty($canDelete) && $canDelete): ?>
-                                               <!-- <form method="post" 
-                                                    action="<?= base_url('users/delete/' . $usuario['user_id']) ?>" 
-                                                    class="delete-user-form" 
-                                                    style="display:inline;">
-                                                    <?= csrf_field() ?>
-                                                    <input type="hidden" name="_method" value="DELETE">
-                                                    <button type="button" 
-                                                            class="btn btn-sm btn-outline-danger delete-user-btn"
-                                                            data-name="<?= esc($usuario['user_nombre']) ?>">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>-->
-                                            <?php endif; ?>
+                                            <?php endif; ?> 
                                         </div>
                                     </td>
                                 </tr>

@@ -54,10 +54,7 @@ Detalles del Usuario
                             data-id="<?= $usuario['user_id'] ?>"
                             data-name="<?= esc($usuario['user_nombre']) ?>">
                         <i class="fas fa-key"></i> Reset Password
-                    </button>
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </button>
+                    </button> 
                     <a href="<?= base_url('users') ?>" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Volver
                     </a>
@@ -328,7 +325,7 @@ Detalles del Usuario
                             Resetear Contraseña
                         </button>
                         
-                        <button type="button" class="btn btn-outline-warning send-email-btn"
+                        <!--<button type="button" class="btn btn-outline-warning send-email-btn"
                                 data-email="<?= esc($usuario['user_email']) ?>"
                                 data-name="<?= esc($usuario['user_nombre']) ?>">
                             <i class="fas fa-envelope me-2"></i>
@@ -339,7 +336,7 @@ Detalles del Usuario
                                 data-id="<?= $usuario['user_id'] ?>">
                             <i class="fas fa-history me-2"></i>
                             Ver Actividad
-                        </button>
+                        </button>-->
                     </div>
                 </div>
             </div>

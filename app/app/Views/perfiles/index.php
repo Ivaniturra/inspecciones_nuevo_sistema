@@ -144,7 +144,7 @@ Gestión de Perfiles
                                                title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <form method="post" action="<?= base_url('perfiles/delete/' . $perfil['perfil_id']) ?>" style="display: inline;">
+                                           <!-- <form method="post" action="<?= base_url('perfiles/delete/' . $perfil['perfil_id']) ?>" style="display: inline;">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="_method" value="DELETE">
                                                 <button type="submit" 
@@ -153,7 +153,7 @@ Gestión de Perfiles
                                                         onclick="return confirm('¿Estás seguro de eliminar este perfil?')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                            </form>
+                                            </form>-->
                                         </div>
                                     </td>
                                 </tr>

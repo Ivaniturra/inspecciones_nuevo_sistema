@@ -197,15 +197,120 @@ class TipoVehiculos extends BaseController
      */
     public function toggleStatus($id)
     {
-        if (! $this->request->isAJAX()) {
-            return redirect()->to('/tipo_vehiculos');
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                ->setJSON(['success' => false, 'message' => 'Solicitud inválida']);
         }
 
-        if ($this->tipoVehiculoModel->toggleStatus($id)) {
-            return $this->response->setJSON(['success' => true, 'message' => 'Estado actualizado correctamente']);
+        try {
+            $tipo = $this->tipoVehiculoModel->find($id);
+            if (!$tipo) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Tipo de vehículo no encontrado']);
+            }
+
+            $newStatus = (int)($tipo['tipo_vehiculo_activo'] == 1 ? 0 : 1);
+            
+            if ($this->tipoVehiculoModel->update($id, ['tipo_vehiculo_activo' => $newStatus])) {
+                $message = $newStatus ? 'Tipo de vehículo activado correctamente' : 'Tipo de vehículo desactivado correctamente';
+                
+                return $this->response
+                    ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                    ->setJSON([
+                        'success' => true,
+                        'newStatus' => $newStatus,
+                        'message' => $message
+                    ]);
+            }
+
+            return $this->response->setJSON(['success' => false, 'message' => 'No se pudo actualizar el estado']);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error en toggleStatus tipo_vehiculos: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Duplicar tipo de vehículo (opcional)
+     */
+    public function duplicate()
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('TipoVehiculos');
         }
 
-        return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el estado']);
+        try {
+            $nuevoNombre = $this->request->getPost('nuevo_nombre');
+            $origenId = $this->request->getPost('tipo_origen_id');
+
+            if (!$nuevoNombre || !$origenId) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Datos incompletos']);
+            }
+
+            $tipoOrigen = $this->tipoVehiculoModel->find($origenId);
+            if (!$tipoOrigen) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Tipo origen no encontrado']);
+            }
+
+            // Preparar datos para el nuevo tipo
+            $newData = [
+                'tipo_vehiculo_nombre' => trim($nuevoNombre),
+                'tipo_vehiculo_clave' => $this->generateUniqueKey(trim($nuevoNombre)),
+                'tipo_vehiculo_descripcion' => $tipoOrigen['tipo_vehiculo_descripcion'],
+                'tipo_vehiculo_activo' => 1 // Nuevo tipo siempre activo
+            ];
+
+            $newId = $this->tipoVehiculoModel->insert($newData);
+
+            if ($newId) {
+                return $this->response
+                    ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                    ->setJSON([
+                        'success' => true,
+                        'message' => 'Tipo de vehículo duplicado correctamente',
+                        'new_id' => $newId
+                    ]);
+            }
+
+            return $this->response->setJSON(['success' => false, 'message' => 'Error al duplicar el tipo']);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error en duplicate tipo_vehiculos: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Genera una clave única basada en el nombre
+     */
+    private function generateUniqueKey($nombre)
+    {
+        helper(['text', 'url']);
+        
+        $baseKey = strtolower($nombre);
+        $baseKey = remove_accents($baseKey); // Si tienes helper para esto
+        $baseKey = preg_replace('/[^a-z0-9]/', '_', $baseKey);
+        $baseKey = preg_replace('/_+/', '_', $baseKey);
+        $baseKey = trim($baseKey, '_');
+        $baseKey = substr($baseKey, 0, 45); // Dejar espacio para sufijo
+
+        // Verificar si existe
+        $counter = 1;
+        $finalKey = $baseKey;
+        
+        while ($this->tipoVehiculoModel->where('tipo_vehiculo_clave', $finalKey)->first()) {
+            $finalKey = $baseKey . '_' . $counter;
+            $counter++;
+            
+            // Prevenir loop infinito
+            if ($counter > 999) {
+                $finalKey = $baseKey . '_' . uniqid();
+                break;
+            }
+        }
+
+        return $finalKey;
     }
 
     /**

@@ -282,66 +282,245 @@ Gestión de Tipos de Vehículo
 
 <?= $this->section('scripts') ?>
 <script>
+// Script corregido para app/Views/tipo_vehiculos/index.php
 $(function() {
-    // Toggle estado via AJAX
+    // Variable para mantener el token CSRF actualizado
+    let csrfToken = '<?= csrf_hash() ?>';
+    const csrfName = '<?= csrf_token() ?>';
+
+    // Toggle estado via AJAX con manejo correcto de CSRF
     $('.status-toggle').on('change', function() {
-        const toggle = $(this);
-        const id = toggle.data('id');
-        const isChecked = toggle.is(':checked');
+        const $toggle = $(this);
+        const id = $toggle.data('id');
+        const isChecked = $toggle.is(':checked');
+        const $row = $toggle.closest('tr');
         
-        $.post('<?= base_url('TipoVehiculos/toggleStatus') ?>/' + id, {
-            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-        })
-        .done(function(response) {
-            if (response.success) {
+        // Mostrar estado de carga
+        $row.addClass('table-warning');
+        
+        // Preparar data con token CSRF actualizado
+        const postData = {};
+        postData[csrfName] = csrfToken;
+        
+        $.post('<?= base_url('TipoVehiculos/toggleStatus') ?>/' + id, postData)
+        .done(function(response, textStatus, xhr) {
+            $row.removeClass('table-warning');
+            
+            // CRÍTICO: Actualizar el token CSRF para la siguiente petición
+            const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+            if (newToken) {
+                csrfToken = newToken;
+                // También actualizar el token en cualquier input hidden del DOM si existe
+                $('input[name="' + csrfName + '"]').val(newToken);
+            }
+            
+            if (response && response.success) {
+                // Actualizar estadísticas si es necesario
+                updateStats(response.newStatus, isChecked);
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'Estado actualizado',
-                    text: response.message,
+                    text: response.message || 'El estado del tipo de vehículo se actualizó correctamente',
                     timer: 2000,
                     showConfirmButton: false
                 });
             } else {
-                toggle.prop('checked', !isChecked); // Revertir
+                $toggle.prop('checked', !isChecked); // Revertir
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: response.message
+                    text: response.message || 'No se pudo actualizar el estado del tipo de vehículo'
                 });
             }
         })
-        .fail(function() {
-            toggle.prop('checked', !isChecked); // Revertir
+        .fail(function(xhr) {
+            $row.removeClass('table-warning');
+            $toggle.prop('checked', !isChecked); // Revertir
+            
+            let errorMsg = 'Error de conexión con el servidor';
+            if (xhr.status === 403) {
+                errorMsg = 'Token de seguridad expirado. Por favor, recarga la página.';
+            } else if (xhr.status === 404) {
+                errorMsg = 'La funcionalidad de cambio de estado no está disponible.';
+            }
+            
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Error de conexión'
+                text: errorMsg
             });
         });
     });
 
-    // Confirmación de eliminación
+    // Función para actualizar estadísticas en tiempo real
+    function updateStats(newStatus, wasChecked) {
+        const $statsCards = $('.card .d-flex .bg-primary, .card .d-flex .bg-success, .card .d-flex .bg-warning');
+        
+        if ($statsCards.length >= 3) {
+            const $totalCard = $statsCards.eq(0).siblings('div').find('h5');
+            const $activosCard = $statsCards.eq(1).siblings('div').find('h5');
+            const $inactivosCard = $statsCards.eq(2).siblings('div').find('h5');
+            
+            if (newStatus === 1 && !wasChecked) {
+                // Se activó un tipo
+                const activos = parseInt($activosCard.text()) + 1;
+                const inactivos = parseInt($inactivosCard.text()) - 1;
+                $activosCard.text(activos);
+                $inactivosCard.text(Math.max(0, inactivos));
+            } else if (newStatus === 0 && wasChecked) {
+                // Se desactivó un tipo
+                const activos = parseInt($activosCard.text()) - 1;
+                const inactivos = parseInt($inactivosCard.text()) + 1;
+                $activosCard.text(Math.max(0, activos));
+                $inactivosCard.text(inactivos);
+            }
+        }
+    }
+
+    // Confirmación de eliminación mejorada
     $('.btn-delete').on('click', function(e) {
         e.preventDefault();
         const form = $(this).closest('form');
-        const msg  = $(this).data('confirm') || '¿Eliminar tipo de vehículo?';
+        const $row = $(this).closest('tr');
+        const tipoName = $row.find('strong').first().text().trim();
+        const msg = $(this).data('confirm') || '¿Eliminar tipo de vehículo?';
 
         Swal.fire({
             title: 'Confirmar eliminación',
-            text: msg,
+            html: `
+                <div class="text-center">
+                    <i class="fas fa-car fa-3x text-danger mb-3"></i>
+                    <p>¿Estás seguro de que deseas eliminar el tipo de vehículo:</p>
+                    <strong>"${tipoName}"</strong>
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Esta acción no se puede deshacer.
+                    </div>
+                </div>
+            `,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then((r) => {
-            if (r.isConfirmed) form.submit();
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Eliminando...',
+                    text: 'Por favor espera',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+                
+                form.off('click').submit(); // Evitar bucle infinito
+            }
         });
     });
 
-    // Auto-hide alerts
-    $('.alert').delay(5000).fadeOut();
+    // Mejorar el filtrado en tiempo real
+    const $searchInput = $('#q');
+    let searchTimeout;
+    
+    $searchInput.on('input', function() {
+        clearTimeout(searchTimeout);
+        const query = $(this).val().toLowerCase().trim();
+        
+        searchTimeout = setTimeout(() => {
+            if (query === '') {
+                $('tbody tr').show();
+                return;
+            }
+            
+            $('tbody tr').each(function() {
+                const $row = $(this);
+                const nombre = $row.find('strong').text().toLowerCase();
+                const clave = $row.find('.badge').text().toLowerCase();
+                const descripcion = $row.find('td').eq(2).text().toLowerCase();
+                
+                const matches = nombre.includes(query) || 
+                              clave.includes(query) || 
+                              descripcion.includes(query);
+                
+                $row.toggle(matches);
+            });
+        }, 300);
+    });
+
+    // Auto-hide alerts con mejor timing
+    $('.alert-dismissible').delay(5000).slideUp();
+    
+    // Tooltips para botones de acción
+    $('[title]').tooltip();
+    
+    // Inicializar contador de resultados visibles
+    function updateResultCount() {
+        const visibleRows = $('tbody tr:visible').length;
+        const $cardTitle = $('.card-title');
+        
+        if ($cardTitle.find('.result-count').length === 0) {
+            $cardTitle.append(' <span class="result-count badge bg-secondary"></span>');
+        }
+        
+        $cardTitle.find('.result-count').text(`${visibleRows} visible${visibleRows !== 1 ? 's' : ''}`);
+    }
+    
+    // Actualizar contador al filtrar
+    $searchInput.on('input', () => {
+        setTimeout(updateResultCount, 350);
+    });
+    
+    // Mejorar selects de filtro
+    $('#estado, #per_page').on('change', function() {
+        const $form = $(this).closest('form');
+        // Auto-submit si hay búsqueda activa
+        if ($('#q').val().trim() !== '') {
+            $form.submit();
+        }
+    });
+    
+    // Indicador de filtros activos
+    function showActiveFilters() {
+        const activeFilters = [];
+        
+        if ($('#q').val().trim()) {
+            activeFilters.push(`Búsqueda: "${$('#q').val()}"`);
+        }
+        
+        if ($('#estado').val()) {
+            const estadoText = $('#estado option:selected').text();
+            activeFilters.push(`Estado: ${estadoText}`);
+        }
+        
+        if (activeFilters.length > 0) {
+            const $filtersDiv = $('.active-filters');
+            if ($filtersDiv.length === 0) {
+                $('.card.shadow-sm.mb-4 .card-body').append(`
+                    <div class="active-filters mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-filter me-1"></i>
+                            Filtros activos: ${activeFilters.join(' | ')}
+                        </small>
+                    </div>
+                `);
+            } else {
+                $filtersDiv.find('small').html(`
+                    <i class="fas fa-filter me-1"></i>
+                    Filtros activos: ${activeFilters.join(' | ')}
+                `);
+            }
+        } else {
+            $('.active-filters').remove();
+        }
+    }
+    
+    // Mostrar filtros activos al cargar
+    showActiveFilters();
+    
+    // Contador inicial
+    updateResultCount();
 });
 </script>
 <?= $this->endSection() ?>

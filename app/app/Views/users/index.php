@@ -297,7 +297,7 @@ Gestión de Usuarios
                                             <?php endif; ?>
                                             <!-- Eliminar -->
                                             <?php if (!empty($canDelete) && $canDelete): ?>
-                                                <form method="post" 
+                                               <!-- <form method="post" 
                                                     action="<?= base_url('users/delete/' . $usuario['user_id']) ?>" 
                                                     class="delete-user-form" 
                                                     style="display:inline;">
@@ -308,7 +308,7 @@ Gestión de Usuarios
                                                             data-name="<?= esc($usuario['user_nombre']) ?>">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
-                                                </form>
+                                                </form>-->
                                             <?php endif; ?>
                                         </div>
                                     </td>

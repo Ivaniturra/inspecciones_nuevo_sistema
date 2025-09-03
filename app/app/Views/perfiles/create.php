@@ -246,60 +246,220 @@ Nuevo Perfil
 
 <?= $this->section('scripts') ?>
 <script>
+// Script mejorado para validaciones en create.php y edit.php de tipo_vehiculos
 document.addEventListener('DOMContentLoaded', function () {
-    const tipoSelect = document.getElementById('perfil_tipo');
-    const comp = document.getElementById('permisos-compania');
-    const inte = document.getElementById('permisos-interno');
-    const ph   = document.getElementById('permisos-placeholder');
+    const nombreInput = document.getElementById('tipo_vehiculo_nombre');
+    const claveInput = document.getElementById('tipo_vehiculo_clave');
+    const descripcionInput = document.getElementById('tipo_vehiculo_descripcion');
+    const form = document.getElementById('tipoVehiculoForm');
+    
+    const previewNombre = document.getElementById('preview-nombre');
+    const previewClave = document.getElementById('preview-clave');
+    const previewDescripcion = document.getElementById('preview-descripcion');
+    const previewIcon = document.getElementById('preview-icon');
 
-    function togglePermisos() {
-        const t = tipoSelect.value;
-        comp.style.display = (t === 'compania') ? '' : 'none';
-        inte.style.display = (t === 'interno')  ? '' : 'none';
-        ph.style.display   = (t === '')         ? '' : 'none';
+    // Función para actualizar vista previa
+    function updatePreview() {
+        // Actualizar nombre
+        const nombre = nombreInput.value.trim() || 'Nombre del tipo';
+        if (previewNombre) previewNombre.textContent = nombre;
 
-        // Al cambiar tipo desmarca todo para evitar “permisos cruzados”
-        if (t === 'compania') {
-            inte.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-        } else if (t === 'interno') {
-            comp.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-        } else {
-            document.querySelectorAll('input[name="permisos[]"]').forEach(cb => cb.checked = false);
+        // Actualizar clave
+        const clave = claveInput.value.trim() || 'clave';
+        if (previewClave) {
+            previewClave.textContent = clave;
+            previewClave.style.display = clave === 'clave' ? 'none' : 'inline';
+        }
+
+        // Actualizar descripción
+        const descripcion = descripcionInput.value.trim() || 'Descripción del tipo de vehículo...';
+        if (previewDescripcion) previewDescripcion.textContent = descripcion;
+
+        // Actualizar ícono según el nombre
+        if (previewIcon) {
+            const iconClass = getIconByName(nombre.toLowerCase());
+            previewIcon.className = `fas ${iconClass} fa-2x text-primary`;
+            
+            // En show.php puede ser fa-3x
+            if (previewIcon.classList.contains('fa-3x')) {
+                previewIcon.className = `fas ${iconClass} fa-3x text-primary`;
+            }
         }
     }
 
-    tipoSelect.addEventListener('change', togglePermisos);
-
-    // Botones seleccionar/deseleccionar todos (funcionan en ambos bloques)
-    document.addEventListener('click', function (e) {
-        if (e.target.classList.contains('select-all-permisos')) {
-            const card = e.target.closest('.card');
-            card.querySelectorAll('.card-body input[type="checkbox"]').forEach(cb => cb.checked = true);
+    // Función para obtener ícono según el nombre
+    function getIconByName(name) {
+        if (name.includes('liviano') || name.includes('auto') || name.includes('carro') || name.includes('sedan')) {
+            return 'fa-car';
+        } else if (name.includes('pesado') || name.includes('camion') || name.includes('truck') || name.includes('carga')) {
+            return 'fa-truck';
+        } else if (name.includes('motocicleta') || name.includes('moto') || name.includes('motor') || name.includes('scooter')) {
+            return 'fa-motorcycle';
+        } else if (name.includes('bus') || name.includes('autobus') || name.includes('omnibus')) {
+            return 'fa-bus';
+        } else if (name.includes('van') || name.includes('furgon') || name.includes('minivan')) {
+            return 'fa-shuttle-van';
+        } else if (name.includes('taxi') || name.includes('uber')) {
+            return 'fa-taxi';
+        } else {
+            return 'fa-car';
         }
-        if (e.target.classList.contains('deselect-all-permisos')) {
-            const card = e.target.closest('.card');
-            card.querySelectorAll('.card-body input[type="checkbox"]').forEach(cb => cb.checked = false);
+    }
+
+    // Auto-generar clave desde nombre si está vacía (solo en create)
+    if (nombreInput && claveInput && window.location.pathname.includes('/create')) {
+        nombreInput.addEventListener('input', function() {
+            if (claveInput.value.trim() === '') {
+                const clave = this.value.toLowerCase()
+                    .normalize('NFD') // Normalizar para eliminar acentos
+                    .replace(/[\u0300-\u036f]/g, '') // Eliminar diacríticos
+                    .replace(/ñ/g, 'n')
+                    .replace(/[^a-z0-9]/g, '_')
+                    .replace(/_+/g, '_')
+                    .replace(/^_|_$/g, '')
+                    .substring(0, 50); // Limitar longitud
+                claveInput.value = clave;
+            }
+            updatePreview();
+        });
+    } else if (nombreInput) {
+        nombreInput.addEventListener('input', updatePreview);
+    }
+
+    // Event listeners para actualizar preview
+    if (claveInput) claveInput.addEventListener('input', updatePreview);
+    if (descripcionInput) descripcionInput.addEventListener('input', updatePreview);
+
+    // Validación del formulario mejorada
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            const errors = [];
+            
+            // Validar nombre
+            const nombre = nombreInput.value.trim();
+            if (nombre.length < 2) {
+                errors.push('El nombre del tipo debe tener al menos 2 caracteres');
+            }
+            if (nombre.length > 100) {
+                errors.push('El nombre no puede exceder 100 caracteres');
+            }
+
+            // Validar clave si existe
+            if (claveInput && claveInput.value.trim()) {
+                const clave = claveInput.value.trim();
+                if (clave.length > 50) {
+                    errors.push('La clave no puede exceder 50 caracteres');
+                }
+                if (!/^[a-z0-9_]+$/.test(clave)) {
+                    errors.push('La clave solo puede contener letras minúsculas, números y guiones bajos');
+                }
+            }
+
+            // Validar descripción si existe
+            if (descripcionInput && descripcionInput.value.trim()) {
+                const descripcion = descripcionInput.value.trim();
+                if (descripcion.length > 255) {
+                    errors.push('La descripción no puede exceder 255 caracteres');
+                }
+            }
+
+            // Mostrar errores si los hay
+            if (errors.length > 0) {
+                e.preventDefault();
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Errores de validación',
+                    html: '<ul class="text-start mb-0">' + errors.map(error => `<li>${error}</li>`).join('') + '</ul>',
+                    confirmButtonText: 'Corregir'
+                });
+                
+                // Enfocar el primer campo con error
+                nombreInput.focus();
+                return false;
+            }
+
+            // Si todo está bien, mostrar loading
+            Swal.fire({
+                title: form.action.includes('/update/') ? 'Actualizando tipo de vehículo...' : 'Creando tipo de vehículo...',
+                text: 'Por favor espera',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        });
+    }
+
+    // Auto-focus mejorado
+    if (nombreInput) { 
+        nombreInput.focus();
+        // En modo edición, seleccionar todo el texto
+        if (window.location.pathname.includes('/edit/')) {
+            nombreInput.select();
         }
-    });
+    }
 
-    // Validación mínima en cliente
-    const form = document.getElementById('perfilForm');
-    form.addEventListener('submit', function (e) {
-        const nombre = document.getElementById('perfil_nombre').value.trim();
-        const tipo   = tipoSelect.value;
-        const nivel  = document.getElementById('perfil_nivel').value;
+    // Contador de caracteres para campos con límite
+    function addCharCounter(input, maxChars, label) {
+        if (!input) return;
+        
+        const counter = document.createElement('div');
+        counter.className = 'form-text text-end small';
+        counter.id = input.id + '_counter';
+        
+        const updateCounter = () => {
+            const current = input.value.length;
+            const remaining = maxChars - current;
+            counter.textContent = `${current}/${maxChars} caracteres`;
+            
+            if (remaining < 20) {
+                counter.className = 'form-text text-end small text-warning';
+            } else if (remaining < 0) {
+                counter.className = 'form-text text-end small text-danger';
+            } else {
+                counter.className = 'form-text text-end small text-muted';
+            }
+        };
+        
+        input.addEventListener('input', updateCounter);
+        input.parentNode.appendChild(counter);
+        updateCounter();
+    }
 
-        if (nombre.length < 3) { e.preventDefault(); alert('El nombre del perfil debe tener al menos 3 caracteres'); return; }
-        if (!tipo)             { e.preventDefault(); alert('Debes seleccionar un tipo de perfil'); return; }
-        if (!nivel)            { e.preventDefault(); alert('Debes seleccionar un nivel de acceso'); return; }
-    });
+    // Agregar contadores de caracteres
+    addCharCounter(nombreInput, 100, 'nombre');
+    addCharCounter(claveInput, 50, 'clave');
+    addCharCounter(descripcionInput, 255, 'descripción');
 
-    // Auto-focus
-    const nombreInput = document.getElementById('perfil_nombre');
-    if (nombreInput) { nombreInput.focus(); }
+    // Prevenir pérdida de datos al salir
+    let formModified = false;
+    
+    // Detectar cambios en el formulario
+    if (form) {
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                formModified = true;
+            });
+        });
+        
+        // Advertir antes de salir si hay cambios no guardados
+        window.addEventListener('beforeunload', (e) => {
+            if (formModified && !form.classList.contains('submitted')) {
+                e.preventDefault();
+                e.returnValue = '¿Estás seguro de que quieres salir? Los cambios no guardados se perderán.';
+                return e.returnValue;
+            }
+        });
+        
+        // Marcar como enviado cuando se submit
+        form.addEventListener('submit', () => {
+            form.classList.add('submitted');
+        });
+    }
 
-    // Estado inicial coherente (por si no hay JS antes)
-    togglePermisos();
-});
+    // Funcionalidad de reset mejorada
+    const resetBtn = form && form.querySelector('button[type="
 </script>
 <?= $this->endSection() ?>

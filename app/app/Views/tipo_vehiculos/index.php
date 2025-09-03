@@ -249,17 +249,7 @@ Gestión de Tipos de Vehículo
                                                class="btn btn-sm btn-outline-warning"
                                                title="Editar">
                                                 <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form method="post" action="<?= base_url('TipoVehiculos/delete/' . $tipo['tipo_vehiculo_id']) ?>" class="d-inline-block">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="_method" value="DELETE">
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-outline-danger btn-delete"
-                                                        data-confirm="¿Estás seguro de eliminar este tipo de vehículo?"
-                                                        title="Eliminar">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            </a> 
                                         </div>
                                     </td>
                                 </tr>

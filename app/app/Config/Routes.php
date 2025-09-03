@@ -112,6 +112,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->post('delete/(:num)', 'TipoVehiculos::delete/$1');
         $routes->post('toggleStatus/(:num)', 'TipoVehiculos::toggleStatus/$1');
         $routes->get('getSelect', 'TipoVehiculos::getSelect');
+        
     });
     $routes->group('corredores',['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) { 
         $routes->get('/', 'Corredores::index');

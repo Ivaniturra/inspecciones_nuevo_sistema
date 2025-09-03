@@ -68,8 +68,11 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->get('edit/(:num)',       'Comentarios::edit/$1');            // formulario editar
         $routes->match(['post','put'],    'update/(:num)', 'Comentarios::update/$1'); // actualiza
         $routes->match(['post','delete'], 'delete/(:num)', 'Comentarios::delete/$1'); // elimina
-        $routes->post('comentarios/toggleStatus/(:num)', 'Comentarios::toggleStatus/$1');
-        // Si usas los switches AJAX en el index, define sus endpoints (opcional):
+        
+        // ✅ CORREGIDO: Quitar "comentarios/" duplicado
+        $routes->post('toggleStatus/(:num)', 'Comentarios::toggleStatus/$1');
+        
+        // Rutas AJAX adicionales (si las necesitas)
         $routes->post('toggleDevuelve/(:num)',     'Comentarios::toggleDevuelve/$1'); 
         $routes->post('toggleEnviarCorreo/(:num)', 'Comentarios::toggleEnviarCorreo/$1');
     });

@@ -67,30 +67,42 @@ class Comentarios extends BaseController
             return redirect()->to('/comentarios')->with('error', 'M?todo no permitido');
         }
 
-        // Validar permisos (ajusta seg?n tu sistema de permisos)
-        // if (!$this->hasPermission('gestionar_comentarios')) {
+        // Rate limit b?sico (opcional)
+        // if (!$this->checkRateLimit('toggle_comentario', 20, 60)) {
         //     return $this->response->setJSON([
         //         'success' => false,
-        //         'message' => 'No tienes permisos para cambiar estados de comentarios'
-        //     ])->setStatusCode(403);
+        //         'message' => 'Demasiados intentos. Intenta m?s tarde.'
+        //     ])->setStatusCode(429);
         // }
 
         $id = (int) $id;
+        
+        // Buscar comentario
         $comentario = $this->comentarioModel->find($id);
         
         if (!$comentario) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Comentario no encontrado'
-            ])->setStatusCode(404);
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Comentario no encontrado'
+                ])->setStatusCode(404);
         }
 
+        // Obtener estado actual (por defecto 1 si no existe el campo)
         $oldStatus = (int) ($comentario['comentario_habil'] ?? 1);
         $newStatus = $oldStatus === 1 ? 0 : 1;
 
         try {
-            if ($this->comentarioModel->update($id, ['comentario_habil' => $newStatus])) {
-                // Log de auditor?a opcional
+            // Actualizar estado
+            $updateData = ['comentario_habil' => $newStatus];
+            
+            if ($this->comentarioModel->update($id, $updateData)) {
+                
+                // Log opcional de auditor?a
+                log_message('info', "Comentario {$id} cambi? estado: {$oldStatus} -> {$newStatus}");
+                
+                // Si tienes sistema de auditor?a:
                 // $this->logAuditAction('comentario_status_changed', [
                 //     'comentario_id' => $id,
                 //     'old_status'    => $oldStatus,
@@ -99,14 +111,15 @@ class Comentarios extends BaseController
                 //     'ip_address'    => $this->request->getIPAddress(),
                 // ]);
 
-                // ? RETORNAR CON NUEVO TOKEN CSRF
+                // ? RESPUESTA EXITOSA con nuevo token CSRF
                 return $this->response
-                    ->setHeader('X-CSRF-TOKEN', csrf_hash()) // ? Nuevo token para el siguiente request
+                    ->setHeader('X-CSRF-TOKEN', csrf_hash()) // Nuevo token
                     ->setJSON([
-                        'success'    => true,
-                        'message'    => 'Estado actualizado correctamente',
-                        'new_status' => $newStatus,
-                        'status_text'=> $newStatus ? 'Activo' : 'Inactivo',
+                        'success'     => true,
+                        'message'     => 'Estado del comentario actualizado correctamente',
+                        'new_status'  => $newStatus,
+                        'status_text' => $newStatus ? 'Activo' : 'Inactivo',
+                        'comentario_id' => $id
                     ]);
             }
 
@@ -116,13 +129,22 @@ class Comentarios extends BaseController
             log_message('error', 'Error en toggleStatus comentario: ' . $e->getMessage());
             
             return $this->response
-                ->setHeader('X-CSRF-TOKEN', csrf_hash()) // ? Token incluso en error
+                ->setHeader('X-CSRF-TOKEN', csrf_hash()) // Token incluso en error
                 ->setJSON([
                     'success' => false,
-                    'message' => 'Error interno al actualizar el estado'
-                ])
-                ->setStatusCode(500);
+                    'message' => 'Error interno al actualizar el estado del comentario'
+                ])->setStatusCode(500);
         }
+    }
+
+    /**
+     * Rate limit helper (opcional)
+     */
+    private function checkRateLimit(string $action, int $maxAttempts = 5, int $windowSeconds = 900): bool
+    {
+        $ip  = $this->request->getIPAddress();
+        $key = 'rl_' . md5($action . '|' . $ip);
+        return service('throttler')->check($key, $maxAttempts, $windowSeconds);
     }
     public function create()
     {

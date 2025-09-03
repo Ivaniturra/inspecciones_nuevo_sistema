@@ -15,20 +15,24 @@ class ComentarioModel extends Model
     protected $protectFields  = true;
 
     protected $allowedFields = [
-        'comentario_nombre',
-        'cia_id',
-        'comentario_id_cia_interno',
-        'comentario_devuelve',
-        'comentario_elimina',
-        'comentario_envia_correo',
-    ];
+        protected $table = 'comentarios';
+        protected $primaryKey = 'comentario_id';
+        
+        protected $allowedFields = [
+            'comentario_nombre',
+            'cia_id', 
+            'perfil_id',
+            'comentario_id_cia_interno',
+            'comentario_devuelve',
+            'comentario_elimina', 
+            'comentario_envia_correo',
+            'comentario_habil',  // ? ? ASEGURATE DE QUE ESTE CAMPO EST? AQU?
+            // otros campos...
+        ];
 
-    // Fechas - ACTUALIZADO con nomenclatura comentario_XXXX
-    protected $useTimestamps = true;
-    protected $dateFormat    = 'datetime';
-    protected $createdField  = 'comentario_created_at';  // ? CAMBIO AQUÍ
-    protected $updatedField  = 'comentario_updated_at';  // ? CAMBIO AQUÍ
-    protected $deletedField  = 'comentario_deleted_at';  // ? CAMBIO AQUÍ
+        protected $useTimestamps = true;
+        protected $createdField = 'comentario_created_at';
+        protected $updatedField = 'comentario_updated_at';
 
     // Validación
     protected $validationRules = [

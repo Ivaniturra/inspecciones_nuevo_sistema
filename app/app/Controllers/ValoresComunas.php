@@ -223,21 +223,7 @@ class ValoresComunas extends BaseController
         }
 
         return redirect()->to('/valores-comunas')->with('error', 'Error al eliminar el valor');
-    }
-
-    /** Toggle estado (AJAX) */
-    public function toggleStatus($id)
-    {
-        if (! $this->request->isAJAX()) {
-            return redirect()->to('/valores-comunas');
-        }
-
-        if ($this->valoresComunasModel->toggleStatus($id)) {
-            return $this->response->setJSON(['success' => true, 'message' => 'Estado actualizado correctamente']);
-        }
-
-        return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el estado']);
-    }
+    } 
 
     /** Obtener provincias por región (AJAX) */
     public function getProvinciasByRegion($regionId)
@@ -364,7 +350,98 @@ class ValoresComunas extends BaseController
 
         return $result;
     }
+    public function toggleStatus($id)
+    {
+        // Validar que sea petición AJAX
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/valores-comunas')->with('error', 'Método no permitido');
+        }
 
+        // Validar permisos (ajustar según tu sistema)
+        // if (!$this->hasPermission('gestionar_valores')) {
+        //     return $this->response->setJSON([
+        //         'success' => false,
+        //         'message' => 'No tienes permisos para cambiar estados de valores'
+        //     ])->setStatusCode(403);
+        // }
+
+        // Rate limit básico (opcional)
+        // if (!$this->checkRateLimit('toggle_valor', 20, 60)) {
+        //     return $this->response->setJSON([
+        //         'success' => false,
+        //         'message' => 'Demasiados intentos. Intenta más tarde.'
+        //     ])->setStatusCode(429);
+        // }
+
+        $id = (int) $id;
+        
+        // Buscar valor
+        $valor = $this->valoresComunasModel->find($id);
+        
+        if (!$valor) {
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Valor no encontrado'
+                ])->setStatusCode(404);
+        }
+
+        // Obtener estado actual
+        $oldStatus = (int) ($valor['valores_activo'] ?? 1);
+        $newStatus = $oldStatus === 1 ? 0 : 1;
+
+        try {
+            // Actualizar estado
+            if ($this->valoresComunasModel->update($id, ['valores_activo' => $newStatus])) {
+                
+                // Log opcional de auditoría
+                log_message('info', "ValorComuna {$id} cambió estado: {$oldStatus} -> {$newStatus}");
+                
+                // Si tienes sistema de auditoría:
+                // $this->logAuditAction('valor_status_changed', [
+                //     'valor_id'      => $id,
+                //     'old_status'    => $oldStatus,
+                //     'new_status'    => $newStatus,
+                //     'changed_by'    => $this->session->get('user_id') ?? 'system',
+                //     'ip_address'    => $this->request->getIPAddress(),
+                // ]);
+
+                // ✅ RESPUESTA EXITOSA con nuevo token CSRF
+                return $this->response
+                    ->setHeader('X-CSRF-TOKEN', csrf_hash()) // Nuevo token
+                    ->setJSON([
+                        'success'     => true,
+                        'message'     => 'Estado del valor actualizado correctamente',
+                        'new_status'  => $newStatus,
+                        'status_text' => $newStatus ? 'Activo' : 'Inactivo',
+                        'valor_id'    => $id
+                    ]);
+            }
+
+            throw new \Exception('Error al actualizar en la base de datos');
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error en toggleStatus valor: ' . $e->getMessage());
+            
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash()) // Token incluso en error
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Error interno al actualizar el estado del valor'
+                ])->setStatusCode(500);
+        }
+    }
+
+    /**
+     * Rate limit helper (opcional)
+     */
+    private function checkRateLimit(string $action, int $maxAttempts = 5, int $windowSeconds = 900): bool
+    {
+        $ip  = $this->request->getIPAddress();
+        $key = 'rl_' . md5($action . '|' . $ip);
+        return service('throttler')->check($key, $maxAttempts, $windowSeconds);
+    }
     /** Helper para provincias */
     private function getProvinciasByRegionHelper($regionId): array
     {

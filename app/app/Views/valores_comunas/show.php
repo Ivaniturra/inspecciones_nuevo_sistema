@@ -1,4 +1,4 @@
- <?= $this->extend('layouts/main') ?>
+<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 <?= esc($title ?? 'Detalles del Valor') ?>
@@ -43,9 +43,6 @@
                     <a href="<?= base_url('valores-comunas/edit/' . $valor['valores_id']) ?>" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Editar
                     </a>
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </button>
                     <a href="<?= base_url('valores-comunas') ?>" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Volver
                     </a>
@@ -331,54 +328,6 @@
         </div>
     </div>
 </div>
-
-<!-- Modal para eliminar -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    Confirmar Eliminación
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center">
-                    <i class="fas fa-dollar-sign fa-3x text-danger mb-3"></i>
-                    <h5>¿Eliminar valor?</h5>
-                    <p class="mb-3">
-                        Estás a punto de eliminar el valor de 
-                        <strong>
-                            <?php if ($valor['valores_unidad_medida'] == 'UF'): ?>
-                                UF <?= number_format($valor['valores_valor'], 2, ',', '.') ?>
-                            <?php else: ?>
-                                $<?= number_format($valor['valores_valor'], 0, ',', '.') ?>
-                            <?php endif; ?>
-                        </strong>
-                        para <strong><?= esc($valor['cia_nombre'] ?? 'N/A') ?></strong>
-                    </p>
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Advertencia:</strong> Esta acción no se puede deshacer.
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                <form method="post" action="<?= base_url('valores-comunas/delete/' . $valor['valores_id']) ?>" style="display: inline;">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="_method" value="DELETE">
-                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
-                        <i class="fas fa-trash"></i> Sí, Eliminar
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
@@ -424,32 +373,7 @@
 <?= $this->section('scripts') ?>
 <script>
 $(document).ready(function() {
-    // Confirmar eliminación
-    $('#confirmDeleteBtn').on('click', function(e) {
-        e.preventDefault();
-        const form = $(this).closest('form');
-        
-        Swal.fire({
-            title: 'Última confirmación',
-            text: 'Esta acción eliminará permanentemente el valor',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar definitivamente',
-            cancelButtonText: 'Cancelar',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ 
-                    title: 'Eliminando...', 
-                    allowOutsideClick: false, 
-                    didOpen: () => Swal.showLoading() 
-                });
-                form.submit();
-            }
-        });
-    });
+    console.log('ValoresComunas Show: Document ready');
 });
 
 // Cambiar estado del valor
@@ -483,7 +407,7 @@ function toggleStatus(id) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Estado actualizado',
-                        text: response.message,
+                        text: response.message || 'Estado cambiado correctamente',
                         timer: 2000,
                         showConfirmButton: false
                     }).then(() => location.reload());
@@ -491,7 +415,7 @@ function toggleStatus(id) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: response.message
+                        text: response.message || 'No se pudo cambiar el estado'
                     });
                 }
             })

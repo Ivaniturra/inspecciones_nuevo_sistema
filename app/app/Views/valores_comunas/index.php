@@ -1,7 +1,89 @@
- <?= $this->extend('layouts/main') ?>
+<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 <?= esc($title ?? 'Gestión de Valores por Comuna') ?>
+<?= $this->endSection() ?>
+
+<?= $this->section('styles') ?>
+<style>
+/* Estilos para valores deshabilitados */
+.valor-disabled {
+    opacity: 0.7;
+    background-color: #f8f9fa !important;
+}
+
+.valor-disabled .valor-amount {
+    text-decoration: line-through;
+    color: #6c757d !important;
+}
+
+.valor-disabled .badge {
+    filter: grayscale(50%);
+}
+
+.valor-disabled td > div > strong {
+    color: #6c757d !important;
+    text-decoration: line-through;
+}
+
+/* Indicador de estado */
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.status-active {
+    background-color: #28a745;
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+}
+
+.status-inactive {
+    background-color: #dc3545;
+    box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+}
+
+/* Toggle switch mejorado */
+.status-toggle {
+    width: 50px;
+    height: 25px;
+    cursor: pointer;
+}
+
+.status-toggle:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.status-toggle:not(:checked) {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.card { 
+    border: none; 
+    border-radius: 15px; 
+}
+.card-header { 
+    border-radius: 15px 15px 0 0 !important; 
+    font-weight: 600; 
+}
+.btn { 
+    border-radius: 8px; 
+}
+.table th { 
+    font-weight: 600; 
+    color: #495057; 
+}
+.badge { 
+    font-size: 0.75rem; 
+}
+.table td {
+    vertical-align: middle;
+}
+</style>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -57,7 +139,7 @@
                             </div>
                         </div>
                         <div>
-                            <h5 class="text-success mb-0"><?= $estadisticas['total_valores'] ?? 0 ?></h5>
+                            <h5 class="text-success mb-0" id="total-valores"><?= $estadisticas['total_valores'] ?? 0 ?></h5>
                             <small class="text-muted">Total Valores</small>
                         </div>
                     </div>
@@ -110,12 +192,12 @@
                         <div class="me-3">
                             <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" 
                                  style="width: 48px; height: 48px;">
-                                <i class="fas fa-users"></i>
+                                <i class="fas fa-check-circle"></i>
                             </div>
                         </div>
                         <div>
-                            <h5 class="text-warning mb-0"><?= $estadisticas['tipos_usuario'] ?? 0 ?></h5>
-                            <small class="text-muted">Tipos Usuario</small>
+                            <h5 class="text-warning mb-0" id="activos-count">0</h5>
+                            <small class="text-muted">Activos</small>
                         </div>
                     </div>
                 </div>
@@ -134,7 +216,7 @@
         <div class="card-body">
             <form method="get" action="<?= base_url('valores-comunas/filter') ?>">
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Compañía</label>
                         <select name="cia_id" class="form-select">
                             <option value="">Todas las compañías</option>
@@ -148,13 +230,22 @@
                         </select>
                     </div>
                     
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Tipo de Usuario</label>
                         <select name="tipo_usuario" class="form-select">
                             <option value="">Todos los tipos</option>
                             <option value="inspector" <?= (isset($filtros['tipo_usuario']) && $filtros['tipo_usuario'] == 'inspector') ? 'selected' : '' ?>>Inspector</option>
                             <option value="compania" <?= (isset($filtros['tipo_usuario']) && $filtros['tipo_usuario'] == 'compania') ? 'selected' : '' ?>>Compañía</option>
                             <option value="supervisor" <?= (isset($filtros['tipo_usuario']) && $filtros['tipo_usuario'] == 'supervisor') ? 'selected' : '' ?>>Supervisor</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Estado</label>
+                        <select name="estado" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="1" <?= (isset($filtros['estado']) && $filtros['estado'] == '1') ? 'selected' : '' ?>>Activos</option>
+                            <option value="0" <?= (isset($filtros['estado']) && $filtros['estado'] == '0') ? 'selected' : '' ?>>Inactivos</option>
                         </select>
                     </div>
 
@@ -223,14 +314,25 @@
                         </thead>
                         <tbody>
                             <?php foreach ($valores as $valor): ?>
-                                <tr>
+                                <tr data-id="<?= $valor['valores_id'] ?>" 
+                                    data-estado="<?= !empty($valor['valores_activo']) ? 'activo' : 'inactivo' ?>"
+                                    data-activo="<?= !empty($valor['valores_activo']) ? '1' : '0' ?>"
+                                    class="<?= empty($valor['valores_activo']) ? 'valor-disabled' : '' ?>">
                                     <td class="align-middle">
                                         <div class="d-flex align-items-center">
+                                            <span class="status-indicator <?= !empty($valor['valores_activo']) ? 'status-active' : 'status-inactive' ?>"></span>
                                             <div class="me-2">
                                                 <i class="fas fa-building text-primary"></i>
                                             </div>
                                             <div>
-                                                <strong><?= esc($valor['cia_nombre'] ?? 'N/A') ?></strong>
+                                                <strong class="<?= empty($valor['valores_activo']) ? 'text-muted' : '' ?>">
+                                                    <?= esc($valor['cia_nombre'] ?? 'N/A') ?>
+                                                </strong>
+                                                <?php if (empty($valor['valores_activo'])): ?>
+                                                    <small class="text-danger ms-1">
+                                                        <i class="fas fa-ban"></i>
+                                                    </small>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </td>
@@ -240,7 +342,9 @@
                                                 <i class="fas fa-map-marker-alt text-info"></i>
                                             </div>
                                             <div>
-                                                <?= esc($valor['comunas_nombre'] ?? ('Comuna: ' . ($valor['comunas_id'] ?? 'N/A'))) ?>
+                                                <span class="<?= empty($valor['valores_activo']) ? 'text-muted' : '' ?>">
+                                                    <?= esc($valor['comunas_nombre'] ?? ('Comuna: ' . ($valor['comunas_id'] ?? 'N/A'))) ?>
+                                                </span>
                                                 <br><small class="text-muted"><?= esc($valor['region_nombre'] ?? 'N/A') ?></small>
                                             </div>
                                         </div>
@@ -269,7 +373,9 @@
                                                         : number_format($monto, 2, ',', '.');
                                         ?>
                                         <div>
-                                            <strong class="text-success"><?= $simbolo . ' ' . $fmt ?></strong>
+                                            <strong class="text-success valor-amount <?= empty($valor['valores_activo']) ? 'text-muted' : '' ?>">
+                                                <?= $simbolo . ' ' . $fmt ?>
+                                            </strong>
                                             <small class="text-muted d-block"><?= esc($moneda) ?></small>
                                         </div>
                                     </td>
@@ -291,9 +397,23 @@
                                         </div>
                                     </td>
                                     <td class="align-middle text-center">
-                                        <span class="badge <?= !empty($valor['valores_activo']) ? 'bg-success' : 'bg-danger' ?>">
-                                            <?= !empty($valor['valores_activo']) ? 'Activo' : 'Inactivo' ?>
-                                        </span>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <!-- Badge de estado -->
+                                            <span class="badge me-2 <?= !empty($valor['valores_activo']) ? 'bg-success' : 'bg-danger' ?>">
+                                                <i class="fas <?= !empty($valor['valores_activo']) ? 'fa-check' : 'fa-times' ?> me-1"></i>
+                                                <?= !empty($valor['valores_activo']) ? 'Activo' : 'Inactivo' ?>
+                                            </span>
+                                            
+                                            <!-- Toggle switch -->
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input status-toggle"
+                                                    type="checkbox"
+                                                    <?= !empty($valor['valores_activo']) ? 'checked' : '' ?>
+                                                    data-id="<?= $valor['valores_id'] ?>"
+                                                    data-name="Valor #<?= $valor['valores_id'] ?>"
+                                                    title="<?= !empty($valor['valores_activo']) ? 'Desactivar valor' : 'Activar valor' ?>">
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="align-middle text-center">
                                         <div class="btn-group btn-group-sm">
@@ -307,19 +427,6 @@
                                                data-bs-toggle="tooltip" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button type="button" 
-                                                    class="btn btn-outline-<?= !empty($valor['valores_activo']) ? 'danger' : 'success' ?>" 
-                                                    onclick="toggleStatus(<?= (int)$valor['valores_id'] ?>, '<?= !empty($valor['valores_activo']) ? 'desactivar' : 'activar' ?>')"
-                                                    data-bs-toggle="tooltip" 
-                                                    title="<?= !empty($valor['valores_activo']) ? 'Desactivar' : 'Activar' ?>">
-                                                <i class="fas fa-<?= !empty($valor['valores_activo']) ? 'pause' : 'play' ?>"></i>
-                                            </button>
-                                            <button type="button" 
-                                                    class="btn btn-outline-danger" 
-                                                    onclick="confirmDelete(<?= (int)$valor['valores_id'] ?>, '<?= esc(($valor['cia_nombre'] ?? '') . ' - ' . ($valor['comunas_nombre'] ?? ($valor['comunas_id'] ?? ''))) ?>')"
-                                                    data-bs-toggle="tooltip" title="Eliminar">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -331,76 +438,32 @@
         </div>
     </div>
 </div>
-
-<!-- Modal de confirmación de eliminación -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center">
-                    <i class="fas fa-dollar-sign fa-3x text-danger mb-3"></i>
-                    <h5>¿Eliminar valor?</h5>
-                    <p class="mb-3">
-                        Estás a punto de eliminar el valor para <strong id="valorInfo"></strong>
-                    </p>
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Advertencia:</strong> Esta acción no se puede deshacer.
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                <form id="deleteForm" method="post" style="display:inline;">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="_method" value="DELETE">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash"></i> Sí, Eliminar
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-<?= $this->endSection() ?>
-
-<?= $this->section('styles') ?>
-<style>
-.card { 
-    border: none; 
-    border-radius: 15px; 
-}
-.card-header { 
-    border-radius: 15px 15px 0 0 !important; 
-    font-weight: 600; 
-}
-.btn { 
-    border-radius: 8px; 
-}
-.table th { 
-    font-weight: 600; 
-    color: #495057; 
-}
-.badge { 
-    font-size: 0.75rem; 
-}
-.table td {
-    vertical-align: middle;
-}
-</style>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
-$(function () {
+$(document).ready(function() {
+    console.log('=== ValoresComunas: Document ready ===');
+    
+    // Token CSRF global
+    let CSRF = { 
+        name: '<?= csrf_token() ?>', 
+        hash: '<?= csrf_hash() ?>' 
+    };
+    
+    // Flash messages
+    const flashSuccess = `<?= addslashes(session()->getFlashdata('success') ?? '') ?>`;
+    if (flashSuccess) {
+        Swal.fire({
+            icon: 'success',
+            title: flashSuccess,
+            timer: 2500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    }
+    
     // Inicializar tooltips
     $('[data-bs-toggle="tooltip"]').tooltip();
 
@@ -411,77 +474,154 @@ $(function () {
             $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
         });
     });
-});
+    
+    // Contar valores activos
+    function updateCounters() {
+        let activos = 0;
+        
+        $('tr[data-activo]').each(function() {
+            const activo = $(this).attr('data-activo');
+            if (activo === '1') activos++;
+        });
+        
+        $('#activos-count').text(activos);
+    }
+    
+    // Actualizar contadores iniciales
+    updateCounters();
 
-// Toggle estado
-function toggleStatus(id, action) {
-    const actionText = action === 'activar' ? 'activar' : 'desactivar';
-    const newStatus = action === 'activar' ? 'activo' : 'inactivo';
-
-    Swal.fire({
-        title: `¿${actionText.charAt(0).toUpperCase() + actionText.slice(1)} valor?`,
-        text: `El valor quedará ${newStatus}`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: action === 'activar' ? '#198754' : '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: `Sí, ${actionText}`,
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({ 
-                title: 'Procesando...', 
-                allowOutsideClick: false, 
-                didOpen: () => Swal.showLoading() 
-            });
-
-            $.post('<?= base_url('valores-comunas/toggleStatus') ?>/' + id, {
-                '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-            })
-            .done(function (response) {
-                if (response.success) {
-                    Swal.fire({ 
-                        icon: 'success', 
-                        title: 'Estado actualizado', 
-                        text: response.message, 
-                        timer: 1500, 
-                        showConfirmButton: false 
-                    }).then(() => location.reload());
-                } else {
-                    Swal.fire({ 
-                        icon: 'error', 
-                        title: 'Error', 
-                        text: response.message 
+    // ✅ TOGGLE STATUS para valores
+    $('.status-toggle').on('change', function() {
+        const toggle = $(this);
+        const id = toggle.data('id');
+        const name = toggle.data('name') || 'valor';
+        const isChecked = toggle.is(':checked');
+        const action = isChecked ? 'activar' : 'desactivar';
+        const row = toggle.closest('tr');
+        
+        // Confirmación antes del cambio
+        Swal.fire({
+            title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} valor?`,
+            text: `¿Deseas ${action} este valor?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: isChecked ? '#28a745' : '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, ${action}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                toggle.prop('disabled', true);
+                
+                $.ajax({
+                    url: '<?= base_url('valores-comunas/toggleStatus') ?>/' + id,
+                    type: 'POST',
+                    data: {
+                        [CSRF.name]: CSRF.hash
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': CSRF.hash,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .done(function(response, textStatus, xhr) {
+                    // Actualizar token CSRF
+                    const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+                    if (newToken) {
+                        CSRF.hash = newToken;
+                    }
+                    
+                    if (response.success) {
+                        // Actualizar visualmente la fila
+                        updateRowStatus(row, isChecked);
+                        
+                        // Actualizar data-estado y data-activo
+                        row.attr('data-estado', isChecked ? 'activo' : 'inactivo');
+                        row.attr('data-activo', isChecked ? '1' : '0');
+                        
+                        // Actualizar contadores
+                        updateCounters();
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Estado actualizado',
+                            text: `Valor ${isChecked ? 'activado' : 'desactivado'} correctamente`,
+                            timer: 2000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+                    } else {
+                        toggle.prop('checked', !isChecked);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'No se pudo cambiar el estado'
+                        });
+                    }
+                })
+                .fail(function(xhr) {
+                    const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+                    if (newToken) {
+                        CSRF.hash = newToken;
+                    }
+                    
+                    toggle.prop('checked', !isChecked);
+                    
+                    let errorMsg = 'Error de conexión';
+                    if (xhr.status === 403) errorMsg = 'Sin permisos. Recarga la página.';
+                    else if (xhr.status === 419) errorMsg = 'Sesión expirada. Recarga la página.';
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMsg
                     });
-                }
-            })
-            .fail(function () {
-                Swal.fire({ 
-                    icon: 'error', 
-                    title: 'Error de conexión', 
-                    text: 'No se pudo conectar con el servidor' 
+                })
+                .always(function() {
+                    toggle.prop('disabled', false);
                 });
-            });
+            } else {
+                toggle.prop('checked', !isChecked);
+            }
+        });
+    });
+    
+    // Función para actualizar visualmente una fila
+    function updateRowStatus(row, isActive) {
+        const statusIndicator = row.find('.status-indicator');
+        const statusBadge = row.find('.badge:contains("Activo"), .badge:contains("Inactivo")');
+        const valorAmount = row.find('.valor-amount');
+        const companyName = row.find('td:first strong');
+        const toggle = row.find('.status-toggle');
+        
+        if (isActive) {
+            // Activar valor
+            row.removeClass('valor-disabled');
+            statusIndicator.removeClass('status-inactive').addClass('status-active');
+            statusBadge.removeClass('bg-danger').addClass('bg-success')
+                .html('<i class="fas fa-check me-1"></i>Activo');
+            valorAmount.removeClass('text-muted');
+            companyName.removeClass('text-muted');
+            row.find('.fa-ban').parent().remove();
+            toggle.attr('title', 'Desactivar valor');
+        } else {
+            // Desactivar valor
+            row.addClass('valor-disabled');
+            statusIndicator.removeClass('status-active').addClass('status-inactive');
+            statusBadge.removeClass('bg-success').addClass('bg-danger')
+                .html('<i class="fas fa-times me-1"></i>Inactivo');
+            valorAmount.addClass('text-muted');
+            companyName.addClass('text-muted');
+            if (!row.find('.fa-ban').length) {
+                companyName.append('<small class="text-danger ms-1"><i class="fas fa-ban"></i></small>');
+            }
+            toggle.attr('title', 'Activar valor');
         }
-    });
-}
+    }
 
-// Confirmar eliminación
-function confirmDelete(id, info) {
-    $('#valorInfo').text(info);
-    $('#deleteForm').attr('action', '<?= base_url('valores-comunas/delete') ?>/' + id);
-    $('#deleteModal').modal('show');
-}
-
-// Envío del form de eliminación
-$(document).on('submit', '#deleteForm', function (e) {
-    e.preventDefault();
-    Swal.fire({
-        title: 'Eliminando valor...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-    });
-    setTimeout(() => { this.submit(); }, 500);
+    // Auto-hide alerts
+    $('.alert').delay(5000).fadeOut();
 });
 </script>
 <?= $this->endSection() ?>

@@ -2,82 +2,244 @@
 
 namespace App\Controllers;
 
-use App\Models\ComentarioModel;
+use App\Controllers\BaseController;
 
 class Comentarios extends BaseController
 {
-    protected ComentarioModel $comentarios;
+    protected $comentarioModel;
+    protected $ciaModel;
+    protected $perfilModel;
 
     public function __construct()
     {
-        $this->comentarios = new ComentarioModel();
-        helper(['form']);
+        // Aseg?rate de tener estos modelos
+        $this->comentarioModel = new \App\Models\ComentarioModel();
+        $this->ciaModel = new \App\Models\CiaModel();
+        $this->perfilModel = new \App\Models\PerfilModel();
+        
+        // Helpers necesarios
+        helper(['form', 'url']);
     }
 
+    /**
+     * P?gina principal de comentarios
+     */
     public function index()
     {
-        $perPage = (int)($this->request->getGet('per_page') ?? 10);
-        $perPage = in_array($perPage, [10,20,50,100]) ? $perPage : 10;
+        // Obtener filtros de la URL
+        $filtros = [
+            'cia_id' => $this->request->getGet('cia_id') ?: '',
+            'perfil_id' => $this->request->getGet('perfil_id') ?: '',
+            'estado' => $this->request->getGet('estado') ?: '',
+            'q' => $this->request->getGet('q') ?: '',
+            'per_page' => (int)($this->request->getGet('per_page') ?: 20)
+        ];
 
-        $ciaId    = $this->request->getGet('cia_id');
-        $perfilId = $this->request->getGet('perfil_id');
-        $q        = trim((string)$this->request->getGet('q'));
+        // Construir query b?sica
+        $builder = $this->comentarioModel
+            ->select('comentarios.*, cias.cia_nombre, perfiles.perfil_nombre')
+            ->join('cias', 'cias.cia_id = comentarios.cia_id', 'left')
+            ->join('perfiles', 'perfiles.perfil_id = comentarios.perfil_id', 'left');
 
-        $builder = $this->comentarios
+        // Aplicar filtros
+        if (!empty($filtros['cia_id'])) {
+            $builder->where('comentarios.cia_id', $filtros['cia_id']);
+        }
+        if (!empty($filtros['perfil_id'])) {
+            $builder->where('comentarios.perfil_id', $filtros['perfil_id']);
+        }
+        if ($filtros['estado'] !== '') {
+            $builder->where('comentarios.comentario_habil', (int)$filtros['estado']);
+        }
+        if (!empty($filtros['q'])) {
+            $builder->like('comentarios.comentario_nombre', $filtros['q']);
+        }
+
+        // Obtener resultados
+        $rows = $builder->orderBy('comentarios.comentario_id', 'DESC')
+                       ->findAll();
+
+        // Obtener datos para los dropdowns
+        $cias = [];
+        foreach ($this->ciaModel->findAll() as $cia) {
+            $cias[$cia['cia_id']] = $cia['cia_nombre'];
+        }
+
+        $perfiles = [];
+        foreach ($this->perfilModel->findAll() as $perfil) {
+            $perfiles[$perfil['perfil_id']] = $perfil['perfil_nombre'];
+        }
+
+        $data = [
+            'title' => 'Gesti?n de Comentarios',
+            'rows' => $rows,
+            'filtros' => $filtros,
+            'cias' => $cias,
+            'perfiles' => $perfiles,
+            'pager' => null // Agregar paginaci?n despu?s si es necesario
+        ];
+
+        return view('comentarios/index', $data);
+    }
+
+    /**
+     * Formulario crear comentario
+     */
+    public function create()
+    {
+        // Obtener datos para dropdowns
+        $cias = [];
+        foreach ($this->ciaModel->findAll() as $cia) {
+            $cias[$cia['cia_id']] = $cia['cia_nombre'];
+        }
+
+        $perfiles = [];
+        foreach ($this->perfilModel->findAll() as $perfil) {
+            $perfiles[$perfil['perfil_id']] = $perfil['perfil_nombre'];
+        }
+
+        $data = [
+            'title' => 'Nuevo Comentario',
+            'cias' => $cias,
+            'perfiles' => $perfiles
+        ];
+
+        return view('comentarios/create', $data);
+    }
+
+    /**
+     * Guardar nuevo comentario
+     */
+    public function store()
+    {
+        // Validaci?n b?sica
+        $rules = [
+            'comentario_nombre' => 'required|min_length[2]|max_length[2000]',
+            'cia_id' => 'required|integer',
+            'perfil_id' => 'permit_empty|integer',
+            'comentario_id_cia_interno' => 'permit_empty|integer'
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', $this->validator->getErrors());
+        }
+
+        // Preparar datos
+        $data = [
+            'comentario_nombre' => $this->request->getPost('comentario_nombre'),
+            'cia_id' => (int)$this->request->getPost('cia_id'),
+            'perfil_id' => $this->request->getPost('perfil_id') ?: null,
+            'comentario_id_cia_interno' => $this->request->getPost('comentario_id_cia_interno') ?: null,
+            'comentario_devuelve' => (int)($this->request->getPost('comentario_devuelve') ?? 0),
+            'comentario_elimina' => (int)($this->request->getPost('comentario_elimina') ?? 0),
+            'comentario_envia_correo' => (int)($this->request->getPost('comentario_envia_correo') ?? 0),
+            'comentario_habil' => (int)($this->request->getPost('comentario_habil') ?? 1)
+        ];
+
+        if ($this->comentarioModel->insert($data)) {
+            return redirect()->to('/comentarios')
+                ->with('success', 'Comentario creado exitosamente');
+        }
+
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'Error al crear el comentario');
+    }
+
+    /**
+     * Formulario editar comentario
+     */
+    public function edit($id)
+    {
+        $comentario = $this->comentarioModel
             ->select('comentarios.*, cias.cia_nombre, perfiles.perfil_nombre')
             ->join('cias', 'cias.cia_id = comentarios.cia_id', 'left')
             ->join('perfiles', 'perfiles.perfil_id = comentarios.perfil_id', 'left')
-            ->orderBy('comentarios.comentario_id', 'DESC');
+            ->find($id);
 
-        if ($ciaId) {
-            $builder->where('comentarios.cia_id', (int)$ciaId);
-        }
-        if ($perfilId) {
-            $builder->where('comentarios.perfil_id', (int)$perfilId);
-        }
-        if ($q !== '') {
-            $builder->groupStart()
-                ->like('comentarios.comentario_nombre', $q)
-                ->orLike('comentarios.comentario_id_cia_interno', $q)
-                ->orLike('cias.cia_nombre', $q)
-                ->orLike('perfiles.perfil_nombre', $q)
-            ->groupEnd();
+        if (!$comentario) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Comentario no encontrado');
         }
 
-        $rows  = $builder->paginate($perPage);
-        $pager = $this->comentarios->pager;
+        // Obtener datos para dropdowns
+        $cias = [];
+        foreach ($this->ciaModel->findAll() as $cia) {
+            $cias[$cia['cia_id']] = $cia['cia_nombre'];
+        }
 
-        return view('comentarios/index', [
-            'rows'     => $rows,
-            'pager'    => $pager,
-            'cias'     => $this->getCiasList(),
-            'perfiles' => $this->getPerfilesList(),
-            'filtros'  => [
-                'cia_id'    => $ciaId,
-                'perfil_id' => $perfilId,
-                'q'         => $q,
-                'per_page'  => $perPage
-            ],
-        ]);
+        $perfiles = [];
+        foreach ($this->perfilModel->findAll() as $perfil) {
+            $perfiles[$perfil['perfil_id']] = $perfil['perfil_nombre'];
+        }
+
+        $data = [
+            'title' => 'Editar Comentario',
+            'comentario' => $comentario,
+            'cias' => $cias,
+            'perfiles' => $perfiles
+        ];
+
+        return view('comentarios/edit', $data);
     }
+
+    /**
+     * Actualizar comentario
+     */
+    public function update($id)
+    {
+        $comentario = $this->comentarioModel->find($id);
+        if (!$comentario) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Comentario no encontrado');
+        }
+
+        // Validaci?n
+        $rules = [
+            'comentario_nombre' => 'required|min_length[2]|max_length[2000]',
+            'cia_id' => 'required|integer',
+            'perfil_id' => 'permit_empty|integer',
+            'comentario_id_cia_interno' => 'permit_empty|integer'
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', $this->validator->getErrors());
+        }
+
+        // Preparar datos
+        $data = [
+            'comentario_nombre' => $this->request->getPost('comentario_nombre'),
+            'cia_id' => (int)$this->request->getPost('cia_id'),
+            'perfil_id' => $this->request->getPost('perfil_id') ?: null,
+            'comentario_id_cia_interno' => $this->request->getPost('comentario_id_cia_interno') ?: null,
+            'comentario_devuelve' => (int)($this->request->getPost('comentario_devuelve') ?? 0),
+            'comentario_elimina' => (int)($this->request->getPost('comentario_elimina') ?? 0),
+            'comentario_envia_correo' => (int)($this->request->getPost('comentario_envia_correo') ?? 0),
+            'comentario_habil' => (int)($this->request->getPost('comentario_habil') ?? 1)
+        ];
+
+        if ($this->comentarioModel->update($id, $data)) {
+            return redirect()->to('/comentarios')
+                ->with('success', 'Comentario actualizado exitosamente');
+        }
+
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'Error al actualizar el comentario');
+    }
+
+    /**
+     * Toggle status AJAX
+     */
     public function toggleStatus($id)
     {
-        // Validar que sea petici?n AJAX
         if (!$this->request->isAJAX()) {
             return redirect()->to('/comentarios')->with('error', 'M?todo no permitido');
         }
 
-        // Rate limit b?sico (opcional)
-        // if (!$this->checkRateLimit('toggle_comentario', 20, 60)) {
-        //     return $this->response->setJSON([
-        //         'success' => false,
-        //         'message' => 'Demasiados intentos. Intenta m?s tarde.'
-        //     ])->setStatusCode(429);
-        // }
-
         $id = (int) $id;
-        
-        // Buscar comentario
         $comentario = $this->comentarioModel->find($id);
         
         if (!$comentario) {
@@ -89,37 +251,18 @@ class Comentarios extends BaseController
                 ])->setStatusCode(404);
         }
 
-        // Obtener estado actual (por defecto 1 si no existe el campo)
         $oldStatus = (int) ($comentario['comentario_habil'] ?? 1);
         $newStatus = $oldStatus === 1 ? 0 : 1;
 
         try {
-            // Actualizar estado
-            $updateData = ['comentario_habil' => $newStatus];
-            
-            if ($this->comentarioModel->update($id, $updateData)) {
-                
-                // Log opcional de auditor?a
-                log_message('info', "Comentario {$id} cambi? estado: {$oldStatus} -> {$newStatus}");
-                
-                // Si tienes sistema de auditor?a:
-                // $this->logAuditAction('comentario_status_changed', [
-                //     'comentario_id' => $id,
-                //     'old_status'    => $oldStatus,
-                //     'new_status'    => $newStatus,
-                //     'changed_by'    => $this->session->get('user_id') ?? 'system',
-                //     'ip_address'    => $this->request->getIPAddress(),
-                // ]);
-
-                // ? RESPUESTA EXITOSA con nuevo token CSRF
+            if ($this->comentarioModel->update($id, ['comentario_habil' => $newStatus])) {
                 return $this->response
-                    ->setHeader('X-CSRF-TOKEN', csrf_hash()) // Nuevo token
+                    ->setHeader('X-CSRF-TOKEN', csrf_hash())
                     ->setJSON([
-                        'success'     => true,
-                        'message'     => 'Estado del comentario actualizado correctamente',
-                        'new_status'  => $newStatus,
+                        'success' => true,
+                        'message' => 'Estado actualizado correctamente',
+                        'new_status' => $newStatus,
                         'status_text' => $newStatus ? 'Activo' : 'Inactivo',
-                        'comentario_id' => $id
                     ]);
             }
 
@@ -129,199 +272,11 @@ class Comentarios extends BaseController
             log_message('error', 'Error en toggleStatus comentario: ' . $e->getMessage());
             
             return $this->response
-                ->setHeader('X-CSRF-TOKEN', csrf_hash()) // Token incluso en error
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
                 ->setJSON([
                     'success' => false,
-                    'message' => 'Error interno al actualizar el estado del comentario'
+                    'message' => 'Error interno al actualizar el estado'
                 ])->setStatusCode(500);
         }
-    }
-
-    /**
-     * Rate limit helper (opcional)
-     */
-    private function checkRateLimit(string $action, int $maxAttempts = 5, int $windowSeconds = 900): bool
-    {
-        $ip  = $this->request->getIPAddress();
-        $key = 'rl_' . md5($action . '|' . $ip);
-        return service('throttler')->check($key, $maxAttempts, $windowSeconds);
-    }
-    public function create()
-    {
-        return view('comentarios/create', [
-            'cias'     => $this->getCiasList(),
-            'perfiles' => $this->getPerfilesList()
-        ]);
-    }
-
-    public function store()
-    {
-        $data = $this->request->getPost();
-        
-        // Validaciones
-        $rules = [
-            'comentario_nombre' => 'required|min_length[2]|max_length[2000]',
-            'cia_id'           => 'required|integer',
-            'perfil_id'        => 'permit_empty|integer'
-        ];
-
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
-
-        $data['comentario_devuelve']     = isset($data['comentario_devuelve']) ? 1 : 0;
-        $data['comentario_elimina']      = isset($data['comentario_elimina']) ? 1 : 0;
-        $data['comentario_envia_correo'] = isset($data['comentario_envia_correo']) ? 1 : 0;
-
-        // Si perfil_id viene vacío, guardarlo como NULL
-        if (empty($data['perfil_id'])) {
-            $data['perfil_id'] = null;
-        }
-
-        if (! $this->comentarios->insert($data)) {
-            return redirect()->back()->withInput()->with('errors', $this->comentarios->errors());
-        }
-        
-        return redirect()->to(base_url('comentarios'))->with('success', 'Comentario creado correctamente.');
-    } 
-
-    public function show($id = null)
-    {
-        $id  = (int)$id;
-        $row = $this->comentarios
-            ->select('comentarios.*, cias.cia_nombre, perfiles.perfil_nombre')
-            ->join('cias', 'cias.cia_id = comentarios.cia_id', 'left')
-            ->join('perfiles', 'perfiles.perfil_id = comentarios.perfil_id', 'left')
-            ->find($id);
-
-        if (! $row) {
-            return redirect()->to(base_url('comentarios'))
-                            ->with('error','Comentario no encontrado.');
-        }  
-        return redirect()->to(base_url('comentarios'))
-                        ->with('success','Comentario Editado: '.$row['comentario_nombre']);
-    } 
-
-    public function edit($id = null)
-    {
-        $id  = (int)$id;
-        $row = $this->comentarios
-            ->select('comentarios.*, cias.cia_nombre, perfiles.perfil_nombre')
-            ->join('cias', 'cias.cia_id = comentarios.cia_id', 'left')
-            ->join('perfiles', 'perfiles.perfil_id = comentarios.perfil_id', 'left')
-            ->find($id);
-            
-        if (! $row) {
-            return redirect()->to(base_url('comentarios'))->with('error','Comentario no encontrado.');
-        }
-        
-        return view('comentarios/edit', [
-            'comentario' => $row,
-            'cias'       => $this->getCiasList(),
-            'perfiles'   => $this->getPerfilesList()
-        ]);
-    }
-
-    public function update($id = null)
-    {
-        $id   = (int)$id;
-        $data = $this->request->getPost() ?: $this->request->getRawInput();
-
-        // Validaciones
-        $rules = [
-            'comentario_nombre' => 'required|min_length[2]|max_length[2000]',
-            'cia_id'           => 'required|integer',
-            'perfil_id'        => 'permit_empty|integer'
-        ];
-
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
-
-        $data['comentario_devuelve']     = isset($data['comentario_devuelve']) ? 1 : 0;
-        $data['comentario_elimina']      = isset($data['comentario_elimina']) ? 1 : 0;
-        $data['comentario_envia_correo'] = isset($data['comentario_envia_correo']) ? 1 : 0;
-
-        // Si perfil_id viene vacío, guardarlo como NULL
-        if (empty($data['perfil_id'])) {
-            $data['perfil_id'] = null;
-        }
-
-        if (! $this->comentarios->find($id)) {
-            return redirect()->to(base_url('comentarios'))->with('error','Comentario no encontrado.');
-        }
-        
-        if (! $this->comentarios->update($id, $data)) {
-            return redirect()->back()->withInput()->with('errors', $this->comentarios->errors());
-        }
-        
-        return redirect()->to(base_url('comentarios/show/'.$id))->with('success','Comentario actualizado correctamente.');
-    }
-
-    public function delete($id = null)
-    {
-        $id = (int)$id;
-        if (! $this->comentarios->find($id)) {
-            return redirect()->to(base_url('comentarios'))->with('error','Comentario no encontrado.');
-        }
-        if (! $this->comentarios->delete($id)) {
-            return redirect()->back()->with('error','No se pudo eliminar el comentario.');
-        }
-        return redirect()->to(base_url('comentarios'))->with('success','Comentario eliminado.');
-    }
-
-    /**
-     * Obtiene lista de compañías para los dropdowns
-     */
-    private function getCiasList(): array
-    {
-        $CompanyModel = model('CiaModel');
-        $rows = $CompanyModel->asArray()
-            ->select('cia_id, cia_nombre')
-            ->where('cia_habil', 1)
-            ->orderBy('cia_nombre')
-            ->findAll();
-        return array_column($rows, 'cia_nombre', 'cia_id');
-    }
-
-    /**
-     * Obtiene lista de perfiles para los dropdowns
-     */
-    private function getPerfilesList(): array
-    {
-        $PerfilModel = model('PerfilModel'); // Asegúrate de que este modelo exista
-        $rows = $PerfilModel->asArray()
-            ->select('perfil_id, perfil_nombre, perfil_tipo')
-            ->where('perfil_habil', 1)
-            ->orderBy('perfil_tipo, perfil_nombre')
-            ->findAll();
-        
-        $perfiles = [];
-        foreach ($rows as $row) {
-            $perfiles[$row['perfil_id']] = $row['perfil_nombre'] . ' (' . ucfirst($row['perfil_tipo']) . ')';
-        }
-        return $perfiles;
-    }
-
-    /**
-     * API: Obtiene comentarios filtrados por perfil
-     */
-    public function getByPerfil($perfilId = null)
-    {
-        if (!$perfilId) {
-            return $this->response->setJSON(['error' => 'Perfil ID requerido']);
-        }
-
-        $comentarios = $this->comentarios
-            ->select('comentario_id, comentario_nombre, comentario_id_cia_interno, comentario_devuelve, comentario_elimina, comentario_envia_correo')
-            ->where('perfil_id', (int)$perfilId)
-            ->where('comentario_deleted_at IS NULL')
-            ->orderBy('comentario_nombre')
-            ->findAll();
-
-        return $this->response->setJSON([
-            'success' => true,
-            'data'    => $comentarios
-        ]);
     }
 }

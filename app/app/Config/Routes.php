@@ -64,21 +64,8 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->get('comentarios', 'Comentarios::index');
         $routes->get('comentarios/create', 'Comentarios::create');
         $routes->post('comentarios/store', 'Comentarios::store');
-        $routes->get('comentarios/show/(:num)', 'Comentarios::show/$1');
         $routes->get('comentarios/edit/(:num)', 'Comentarios::edit/$1');
         $routes->post('comentarios/update/(:num)', 'Comentarios::update/$1');
-        $routes->put('comentarios/update/(:num)', 'Comentarios::update/$1');
-
-        // ✅ RUTA FALTANTE - Toggle status AJAX
-        $routes->post('comentarios/toggleStatus/(:num)', 'Comentarios::toggleStatus/$1');
-
-        // O si prefieres usar resource routes (más limpio):
-        $routes->resource('comentarios', [
-            'controller' => 'Comentarios',
-            'except' => ['delete'] // excluir delete ya que no lo usas
-        ]);
-
-        // Y agregar manualmente las rutas adicionales:
         $routes->post('comentarios/toggleStatus/(:num)', 'Comentarios::toggleStatus/$1');
     });
     // Rutas para Estados (solo lectura)

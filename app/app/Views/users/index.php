@@ -408,8 +408,16 @@ Gestión de Usuarios
 
 <?= $this->section('scripts') ?>
 <script>
+ // ✅ SOLUCIÓN PARA EL ERROR CSRF EN TOGGLE USUARIOS
+
 $(document).ready(function() {
     console.log('=== Index Users: Document ready ===');
+    
+    // Token CSRF global que se actualiza
+    let CSRF = { 
+        name: '<?= csrf_token() ?>', 
+        hash: '<?= csrf_hash() ?>' 
+    };
     
     // Flash messages
     const flashSuccess = `<?= addslashes(session()->getFlashdata('success') ?? '') ?>`;
@@ -498,11 +506,11 @@ $(document).ready(function() {
         $('tr[data-search]').show();
     });
 
-    // ✅ TOGGLE STATUS MEJORADO - Con confirmación y actualización visual
+    // ✅ TOGGLE STATUS ARREGLADO - Sin error CSRF
     $('.status-toggle').on('change', function() {
         const toggle = $(this);
         const id = toggle.data('id');
-        const name = toggle.data('name');
+        const name = toggle.data('name') || 'usuario';
         const isChecked = toggle.is(':checked');
         const action = isChecked ? 'activar' : 'desactivar';
         const row = toggle.closest('tr');
@@ -519,11 +527,30 @@ $(document).ready(function() {
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Realizar el cambio
-                $.post('<?= base_url('users/toggleStatus') ?>/' + id, {
-                    '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                // Deshabilitar el toggle durante la petición
+                toggle.prop('disabled', true);
+                
+                // ✅ AJAX con manejo correcto de CSRF
+                $.ajax({
+                    url: '<?= base_url('users/toggleStatus') ?>/' + id,
+                    type: 'POST',
+                    data: {
+                        [CSRF.name]: CSRF.hash
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': CSRF.hash,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 })
-                .done(function(response) {
+                .done(function(response, textStatus, xhr) {
+                    // ✅ Actualizar token CSRF si viene en la respuesta
+                    const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+                    if (newToken) {
+                        CSRF.hash = newToken;
+                        // Actualizar también cualquier meta tag CSRF si existe
+                        $('meta[name="csrf-token"]').attr('content', newToken);
+                    }
+                    
                     if (response.success) {
                         // ✅ ACTUALIZAR VISUALMENTE LA FILA
                         updateRowStatus(row, isChecked);
@@ -554,14 +581,33 @@ $(document).ready(function() {
                         });
                     }
                 })
-                .fail(function() {
+                .fail(function(xhr) {
+                    // ✅ Intentar actualizar token incluso en error
+                    const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+                    if (newToken) {
+                        CSRF.hash = newToken;
+                        $('meta[name="csrf-token"]').attr('content', newToken);
+                    }
+                    
                     // Revertir el toggle
                     toggle.prop('checked', !isChecked);
+                    
+                    let errorMsg = 'Error de conexión';
+                    if (xhr.status === 403) {
+                        errorMsg = 'Error de permisos. Recarga la página.';
+                    } else if (xhr.status === 419) {
+                        errorMsg = 'Sesión expirada. Recarga la página.';
+                    }
+                    
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error de conexión',
-                        text: 'No se pudo conectar con el servidor'
+                        title: 'Error',
+                        text: errorMsg
                     });
+                })
+                .always(function() {
+                    // Re-habilitar el toggle
+                    toggle.prop('disabled', false);
                 });
             } else {
                 // Usuario canceló - revertir el toggle
@@ -620,7 +666,7 @@ $(document).ready(function() {
         $('#count-inactivo').text(counts.inactivo);
     }
 
-    // Reset password
+    // Reset password con CSRF arreglado
     $('.reset-password-btn').on('click', function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
@@ -636,10 +682,24 @@ $(document).ready(function() {
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.post('<?= base_url('users/resetPassword') ?>/' + id, {
-                    '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                $.ajax({
+                    url: '<?= base_url('users/resetPassword') ?>/' + id,
+                    type: 'POST',
+                    data: {
+                        [CSRF.name]: CSRF.hash
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': CSRF.hash,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 })
-                .done(function(response) {
+                .done(function(response, textStatus, xhr) {
+                    // Actualizar token CSRF
+                    const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+                    if (newToken) {
+                        CSRF.hash = newToken;
+                    }
+                    
                     if (response.success) {
                         Swal.fire({
                             icon: 'success',
@@ -678,7 +738,12 @@ $(document).ready(function() {
                         });
                     }
                 })
-                .fail(function() {
+                .fail(function(xhr) {
+                    const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+                    if (newToken) {
+                        CSRF.hash = newToken;
+                    }
+                    
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
@@ -689,7 +754,7 @@ $(document).ready(function() {
         });
     });
 
-    // Delete user
+    // Delete user con CSRF arreglado
     $('.delete-user-btn').on('click', function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
@@ -712,7 +777,13 @@ $(document).ready(function() {
                     action: '<?= base_url('users/delete') ?>/' + id
                 });
                 
-                form.append('<?= csrf_field() ?>');
+                // ✅ Usar el token CSRF actualizado
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: CSRF.name,
+                    value: CSRF.hash
+                }));
+                
                 form.append($('<input>', {
                     type: 'hidden',
                     name: '_method',

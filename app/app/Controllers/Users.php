@@ -392,14 +392,6 @@ class Users extends BaseController
             ])->setStatusCode(403);
         }
 
-        // Rate limit para evitar spam
-        if (!$this->checkRateLimit('toggle_status', 10, 60)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Demasiados intentos. Intenta más tarde.'
-            ])->setStatusCode(429);
-        }
-
         $id = (int) $id;
         $usuario = $this->userModel->find($id);
         
@@ -433,13 +425,16 @@ class Users extends BaseController
                     'ip_address'       => $this->request->getIPAddress(),
                 ]);
 
-                return $this->response->setJSON([
-                    'success'    => true,
-                    'message'    => 'Estado actualizado correctamente',
-                    'new_status' => $newStatus,
-                    'status_text'=> $newStatus ? 'Activo' : 'Inactivo',
-                    'user_name'  => $usuario['user_nombre'] ?? 'Usuario'
-                ]);
+                // ✅ RETORNAR CON NUEVO TOKEN CSRF
+                return $this->response
+                    ->setHeader('X-CSRF-TOKEN', csrf_hash()) // ← Nuevo token para el siguiente request
+                    ->setJSON([
+                        'success'    => true,
+                        'message'    => 'Estado actualizado correctamente',
+                        'new_status' => $newStatus,
+                        'status_text'=> $newStatus ? 'Activo' : 'Inactivo',
+                        'user_name'  => $usuario['user_nombre'] ?? 'Usuario'
+                    ]);
             }
 
             throw new \Exception('Error al actualizar en la base de datos');
@@ -447,33 +442,51 @@ class Users extends BaseController
         } catch (\Exception $e) {
             log_message('error', 'Error en toggleStatus: ' . $e->getMessage());
             
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Error interno al actualizar el estado'
-            ])->setStatusCode(500);
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash()) // ← Token incluso en error
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Error interno al actualizar el estado'
+                ])
+                ->setStatusCode(500);
         }
     }
 
     /** Reset password (AJAX) */
     public function resetPassword($id)
     {
-        if (! $this->request->isAJAX()) {
+        if (!$this->request->isAJAX()) {
             return redirect()->to('/users')->with('error', 'Método no permitido');
         }
 
-        if (! $this->hasPermission('reset_passwords')) {
-            return $this->response->setJSON(['success' => false, 'message' => 'No tienes permisos para resetear contraseñas']);
+        if (!$this->hasPermission('reset_passwords')) {
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                ->setJSON([
+                    'success' => false, 
+                    'message' => 'No tienes permisos para resetear contraseñas'
+                ]);
         }
 
         // Rate limit para reset
-        if (! $this->checkRateLimit('reset_password', 10, 60)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Demasiados intentos. Intenta más tarde.']);
+        if (!$this->checkRateLimit('reset_password', 10, 60)) {
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                ->setJSON([
+                    'success' => false, 
+                    'message' => 'Demasiados intentos. Intenta más tarde.'
+                ]);
         }
 
         $usuario = $this->userModel->find($id);
-        if (! $usuario) {
+        if (!$usuario) {
             log_message('warning', "Intento de reset de contraseña para usuario inexistente: {$id} por IP: {$this->request->getIPAddress()}");
-            return $this->response->setJSON(['success' => false, 'message' => 'Usuario no encontrado']);
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                ->setJSON([
+                    'success' => false, 
+                    'message' => 'Usuario no encontrado'
+                ]);
         }
 
         $tempPassword = $this->generateSecurePassword(12);
@@ -494,19 +507,28 @@ class Users extends BaseController
                     'ip_address'        => $this->request->getIPAddress(),
                 ]);
 
-                return $this->response->setJSON([
-                    'success'      => true,
-                    'message'      => 'Contraseña reseteada exitosamente',
-                    'tempPassword' => $tempPassword,
-                    'userName'     => $usuario['user_nombre'] ?? '',
-                    'userEmail'    => $usuario['user_email'] ?? '',
-                ]);
+                // ✅ RETORNAR CON NUEVO TOKEN CSRF
+                return $this->response
+                    ->setHeader('X-CSRF-TOKEN', csrf_hash()) // ← Nuevo token
+                    ->setJSON([
+                        'success'      => true,
+                        'message'      => 'Contraseña reseteada exitosamente',
+                        'tempPassword' => $tempPassword,
+                        'userName'     => $usuario['user_nombre'] ?? '',
+                        'userEmail'    => $usuario['user_email'] ?? '',
+                    ]);
             }
 
             throw new \Exception('Error al actualizar la base de datos');
+            
         } catch (\Exception $e) {
             log_message('error', 'Error reseteando contraseña: ' . $e->getMessage());
-            return $this->response->setJSON(['success' => false, 'message' => 'Error al procesar la solicitud']);
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash()) // ← Token incluso en error
+                ->setJSON([
+                    'success' => false, 
+                    'message' => 'Error al procesar la solicitud'
+                ]);
         }
     }
 

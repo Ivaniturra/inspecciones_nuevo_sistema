@@ -335,6 +335,6 @@ $(function() {
 
     // Auto-hide alerts
     $('.alert').delay(8000).fadeOut();
-});
+}); 
 </script>
 <?= $this->endSection() ?>

@@ -36,7 +36,9 @@ class Users extends BaseController
             'canCreate' => $this->hasPermission('create_users'),
             'canEdit'   => $this->hasPermission('update_users'),
             'canDelete' => $this->hasPermission('delete_users'),
-            'canReset' => $this->hasPermission('reset_users'),
+            'canReset'  => $this->hasPermission('reset_passwords'),
+            // ✅ AGREGAR ESTA LÍNEA que faltaba
+            'canToggle' => $this->hasPermission('gestionar_usuarios'), // o el permiso que uses
         ];
 
         $this->logAuditAction('users_index_viewed', ['total_users' => $stats['total']]);
@@ -377,38 +379,79 @@ class Users extends BaseController
     /** Toggle status (AJAX) */
     public function toggleStatus($id)
     {
-         if (!$this->request->isAJAX()) {
-            return redirect()->to('/users');
+        // Validar que sea petición AJAX
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/users')->with('error', 'Método no permitido');
         }
 
+        // Validar permisos
         if (!$this->hasPermission('gestionar_usuarios')) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'No tienes permisos para cambiar estados de usuarios'
-            ]);
+            ])->setStatusCode(403);
         }
 
+        // Rate limit para evitar spam
+        if (!$this->checkRateLimit('toggle_status', 10, 60)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Demasiados intentos. Intenta más tarde.'
+            ])->setStatusCode(429);
+        }
+
+        $id = (int) $id;
         $usuario = $this->userModel->find($id);
-        if (! $usuario) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Usuario no encontrado']);
+        
+        if (!$usuario) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Usuario no encontrado'
+            ])->setStatusCode(404);
+        }
+
+        // No permitir desactivar el propio usuario
+        if ($id === (int) $this->session->get('user_id')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No puedes cambiar tu propio estado'
+            ])->setStatusCode(409);
         }
 
         $oldStatus = (int) $usuario['user_habil'];
+        $newStatus = $oldStatus === 1 ? 0 : 1;
 
-        if ($this->userModel->toggleStatus($id)) {
-            $newStatus = $oldStatus === 1 ? 0 : 1;
+        try {
+            if ($this->userModel->update($id, ['user_habil' => $newStatus, 'user_intentos_login' => 0])) {
+                // Log de auditoría
+                $this->logAuditAction('user_status_changed', [
+                    'user_id'          => $id,
+                    'user_email'       => $usuario['user_email'] ?? null,
+                    'old_status'       => $oldStatus,
+                    'new_status'       => $newStatus,
+                    'changed_by'       => $this->session->get('user_id') ?? 'system',
+                    'ip_address'       => $this->request->getIPAddress(),
+                ]);
 
-            $this->logAuditAction('user_status_changed', [
-                'user_id'    => $id,
-                'old_status' => $oldStatus,
-                'new_status' => $newStatus,
-                'changed_by' => $this->session->get('user_id') ?? 'system',
-            ]);
+                return $this->response->setJSON([
+                    'success'    => true,
+                    'message'    => 'Estado actualizado correctamente',
+                    'new_status' => $newStatus,
+                    'status_text'=> $newStatus ? 'Activo' : 'Inactivo',
+                    'user_name'  => $usuario['user_nombre'] ?? 'Usuario'
+                ]);
+            }
 
-            return $this->response->setJSON(['success' => true, 'message' => 'Estado actualizado correctamente', 'new_status' => $newStatus]);
+            throw new \Exception('Error al actualizar en la base de datos');
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error en toggleStatus: ' . $e->getMessage());
+            
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error interno al actualizar el estado'
+            ])->setStatusCode(500);
         }
-
-        return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el estado']);
     }
 
     /** Reset password (AJAX) */

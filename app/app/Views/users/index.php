@@ -4,6 +4,61 @@
 Gestión de Usuarios
 <?= $this->endSection() ?>
 
+<?= $this->section('styles') ?>
+<style>
+/* Estilos para usuarios deshabilitados */
+.user-disabled {
+    opacity: 0.7;
+    background-color: #f8f9fa !important;
+}
+
+.user-disabled .user-name {
+    text-decoration: line-through;
+    color: #6c757d !important;
+}
+
+.user-disabled .badge {
+    filter: grayscale(50%);
+}
+
+/* Toggle switch mejorado */
+.status-toggle {
+    width: 50px;
+    height: 25px;
+    cursor: pointer;
+}
+
+.status-toggle:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.status-toggle:not(:checked) {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+/* Indicador visual adicional */
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.status-active {
+    background-color: #28a745;
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+}
+
+.status-inactive {
+    background-color: #dc3545;
+    box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+}
+</style>
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
 <div class="container-fluid">
     <!-- Header -->
@@ -14,9 +69,11 @@ Gestión de Usuarios
                     <h1 class="h3 mb-0">Gestión de Usuarios</h1>
                     <p class="text-muted">Administra los usuarios del sistema</p>
                 </div>
+                <?php if (!empty($canCreate) && $canCreate): ?>
                 <a href="<?= base_url('users/create') ?>" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Nuevo Usuario
                 </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -162,9 +219,11 @@ Gestión de Usuarios
                     <i class="fas fa-users fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">No hay usuarios registrados</h5>
                     <p class="text-muted">Comienza creando tu primer usuario</p>
+                    <?php if (!empty($canCreate) && $canCreate): ?>
                     <a href="<?= base_url('users/create') ?>" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Crear Usuario
                     </a>
+                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <div class="table-responsive">
@@ -185,9 +244,13 @@ Gestión de Usuarios
                                 <tr data-id="<?= (int)$usuario['user_id'] ?>"
                                     data-tipo="<?= $usuario['perfil_tipo'] ?>" 
                                     data-estado="<?= $usuario['user_habil'] ? 'activo' : 'inactivo' ?>"
-                                    data-search="<?= strtolower($usuario['user_nombre'] . ' ' . $usuario['user_email'] . ' ' . ($usuario['cia_nombre'] ?? '')) ?>">
+                                    data-search="<?= strtolower($usuario['user_nombre'] . ' ' . $usuario['user_email'] . ' ' . ($usuario['cia_nombre'] ?? '')) ?>"
+                                    class="<?= !$usuario['user_habil'] ? 'user-disabled' : '' ?>">
                                     <td>
                                         <div class="d-flex align-items-center">
+                                            <!-- Indicador de estado -->
+                                            <span class="status-indicator <?= $usuario['user_habil'] ? 'status-active' : 'status-inactive' ?>"></span>
+                                            
                                             <!-- Avatar -->
                                             <?php if (!empty($usuario['user_avatar'])): ?>
                                                 <img src="<?= base_url('uploads/avatars/' . $usuario['user_avatar']) ?>" 
@@ -204,7 +267,14 @@ Gestión de Usuarios
                                             <?php endif; ?>
                                             
                                             <div>
-                                                <span class="fw-medium"><?= esc($usuario['user_nombre']) ?></span>
+                                                <span class="fw-medium user-name <?= !$usuario['user_habil'] ? 'text-muted' : '' ?>">
+                                                    <?= esc($usuario['user_nombre']) ?>
+                                                    <?php if (!$usuario['user_habil']): ?>
+                                                        <small class="text-danger">
+                                                            <i class="fas fa-ban ms-1"></i>
+                                                        </small>
+                                                    <?php endif; ?>
+                                                </span>
                                                 <br>
                                                 <?php if (!empty($usuario['user_telefono'])): ?>
                                                     <small class="text-muted">
@@ -216,7 +286,9 @@ Gestión de Usuarios
                                         </div>
                                     </td>
                                     <td>
-                                        <span><?= esc($usuario['user_email']) ?></span>
+                                        <span class="<?= !$usuario['user_habil'] ? 'text-muted' : '' ?>">
+                                            <?= esc($usuario['user_email']) ?>
+                                        </span>
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">
@@ -265,14 +337,25 @@ Gestión de Usuarios
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php if (!empty($canToggle) && $canToggle): ?>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input status-toggle"
-                                                type="checkbox"
-                                                <?= $usuario['user_habil'] ? 'checked' : '' ?>
-                                                data-id="<?= $usuario['user_id'] ?>">
+                                        <div class="d-flex align-items-center">
+                                            <!-- Badge de estado -->
+                                            <span class="badge me-2 <?= $usuario['user_habil'] ? 'bg-success' : 'bg-danger' ?>">
+                                                <i class="fas <?= $usuario['user_habil'] ? 'fa-check' : 'fa-times' ?> me-1"></i>
+                                                <?= $usuario['user_habil'] ? 'Activo' : 'Inactivo' ?>
+                                            </span>
+                                            
+                                            <!-- Toggle switch -->
+                                            <?php if (!empty($canToggle) && $canToggle): ?>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input status-toggle"
+                                                    type="checkbox"
+                                                    <?= $usuario['user_habil'] ? 'checked' : '' ?>
+                                                    data-id="<?= $usuario['user_id'] ?>"
+                                                    data-name="<?= esc($usuario['user_nombre']) ?>"
+                                                    title="<?= $usuario['user_habil'] ? 'Desactivar usuario' : 'Activar usuario' ?>">
+                                            </div>
+                                            <?php endif; ?>
                                         </div>
-                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
@@ -281,20 +364,35 @@ Gestión de Usuarios
                                                title="Ver detalles">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            <?php if (!empty($canEdit) && $canEdit): ?>
                                             <a href="<?= base_url('users/edit/' . $usuario['user_id']) ?>" 
                                                class="btn btn-sm btn-outline-warning" 
                                                title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+                                            <?php endif; ?>
+                                            
                                             <!-- Reset password -->
                                             <?php if (!empty($canReset) && $canReset): ?>
                                             <button type="button"
                                                     class="btn btn-sm btn-outline-info reset-password-btn"
                                                     data-id="<?= $usuario['user_id'] ?>"
-                                                    data-name="<?= esc($usuario['user_nombre']) ?>">
+                                                    data-name="<?= esc($usuario['user_nombre']) ?>"
+                                                    title="Resetear contraseña">
                                                 <i class="fas fa-key"></i>
                                             </button>
-                                            <?php endif; ?> 
+                                            <?php endif; ?>
+                                            
+                                            <!-- Delete button -->
+                                            <?php if (!empty($canDelete) && $canDelete): ?>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-danger delete-user-btn"
+                                                    data-id="<?= $usuario['user_id'] ?>"
+                                                    data-name="<?= esc($usuario['user_nombre']) ?>"
+                                                    title="Eliminar usuario">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
@@ -311,33 +409,32 @@ Gestión de Usuarios
 <?= $this->section('scripts') ?>
 <script>
 $(document).ready(function() {
+    console.log('=== Index Users: Document ready ===');
+    
+    // Flash messages
     const flashSuccess = `<?= addslashes(session()->getFlashdata('success') ?? '') ?>`;
     if (flashSuccess) {
-    Swal.fire({
-        icon: 'success',
-        title: flashSuccess,
-        timer: 2500,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end'
-    });
+        Swal.fire({
+            icon: 'success',
+            title: flashSuccess,
+            timer: 2500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
     }
+    
+    // Highlight new user
     const newId = '<?= (int)(session()->getFlashdata('new_user_id') ?? 0) ?>';
-        if (Number(newId) > 0) {
+    if (Number(newId) > 0) {
         const $row = $('tr[data-id="'+ newId +'"]');
         if ($row.length) {
-            $row.addClass('table-success'); // highlight Bootstrap
+            $row.addClass('table-success');
             $row[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
             setTimeout(() => $row.removeClass('table-success'), 4000);
         }
     }
-    console.log('=== Index Users: Document ready ===');
     
-    // Debug: verificar si existen los botones
-    console.log('Botones reset encontrados:', $('.reset-password-btn').length);
-    $('.reset-password-btn').each(function(index) {
-        console.log('Botón', index, '- ID:', $(this).data('id'), '- Name:', $(this).data('name'));
-    });
     // Contar por categorías
     let counts = {
         interno: 0,
@@ -365,11 +462,9 @@ $(document).ready(function() {
     $('[data-filter]').on('click', function() {
         const filter = $(this).data('filter');
         
-        // Actualizar botones activos
         $('[data-filter]').removeClass('active');
         $(this).addClass('active');
         
-        // Filtrar filas
         $('tr[data-tipo]').show();
         
         if (filter !== 'todos') {
@@ -380,7 +475,6 @@ $(document).ready(function() {
             }
         }
         
-        // Limpiar búsqueda
         $('#searchInput').val('');
     });
 
@@ -404,65 +498,128 @@ $(document).ready(function() {
         $('tr[data-search]').show();
     });
 
-    // Toggle status via AJAX
+    // ✅ TOGGLE STATUS MEJORADO - Con confirmación y actualización visual
     $('.status-toggle').on('change', function() {
         const toggle = $(this);
         const id = toggle.data('id');
+        const name = toggle.data('name');
         const isChecked = toggle.is(':checked');
+        const action = isChecked ? 'activar' : 'desactivar';
+        const row = toggle.closest('tr');
         
-        $.post('<?= base_url('users/toggleStatus') ?>/' + id, {
-            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-        })
-        .done(function(response) {
-            if (response.success) {
-                // Actualizar data-estado
-                const row = toggle.closest('tr');
-                row.attr('data-estado', isChecked ? 'activo' : 'inactivo');
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Estado actualizado',
-                    text: response.message,
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            } else {
-                toggle.prop('checked', !isChecked); // Revertir
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: response.message
-                });
-            }
-        })
-        .fail(function() {
-            toggle.prop('checked', !isChecked); // Revertir
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Error de conexión'
-            });
-        });
-    }); 
-    $('.delete-user-btn').on('click', function() {  
-        const form = this.closest('form');
-        const userName = this.dataset.name || 'este usuario';
-
+        // Confirmación antes del cambio
         Swal.fire({
-            title: '¿Eliminar usuario?',
-            text: `Se eliminará ${userName}. Esta acción no se puede deshacer.`,
-            icon: 'warning',
+            title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} usuario?`,
+            text: `¿Deseas ${action} a ${name}?`,
+            icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
+            confirmButtonColor: isChecked ? '#28a745' : '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar',
+            confirmButtonText: `Sí, ${action}`,
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                form.submit();
+                // Realizar el cambio
+                $.post('<?= base_url('users/toggleStatus') ?>/' + id, {
+                    '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        // ✅ ACTUALIZAR VISUALMENTE LA FILA
+                        updateRowStatus(row, isChecked);
+                        
+                        // Actualizar data-estado para filtros
+                        row.attr('data-estado', isChecked ? 'activo' : 'inactivo');
+                        
+                        // Actualizar contadores
+                        updateCounters();
+                        
+                        // Mostrar mensaje de éxito
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Estado actualizado',
+                            text: `Usuario ${isChecked ? 'activado' : 'desactivado'} correctamente`,
+                            timer: 2000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+                    } else {
+                        // Revertir el toggle
+                        toggle.prop('checked', !isChecked);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'No se pudo cambiar el estado'
+                        });
+                    }
+                })
+                .fail(function() {
+                    // Revertir el toggle
+                    toggle.prop('checked', !isChecked);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'No se pudo conectar con el servidor'
+                    });
+                });
+            } else {
+                // Usuario canceló - revertir el toggle
+                toggle.prop('checked', !isChecked);
             }
-        }); 
-    }); 
+        });
+    });
+    
+    // ✅ FUNCIÓN PARA ACTUALIZAR VISUALMENTE UNA FILA
+    function updateRowStatus(row, isActive) {
+        const statusIndicator = row.find('.status-indicator');
+        const statusBadge = row.find('.badge:contains("Activo"), .badge:contains("Inactivo")');
+        const userName = row.find('.user-name');
+        const toggle = row.find('.status-toggle');
+        
+        if (isActive) {
+            // Activar usuario
+            row.removeClass('user-disabled');
+            statusIndicator.removeClass('status-inactive').addClass('status-active');
+            statusBadge.removeClass('bg-danger').addClass('bg-success')
+                .html('<i class="fas fa-check me-1"></i>Activo');
+            userName.removeClass('text-muted');
+            userName.find('.fa-ban').remove();
+            toggle.attr('title', 'Desactivar usuario');
+        } else {
+            // Desactivar usuario
+            row.addClass('user-disabled');
+            statusIndicator.removeClass('status-active').addClass('status-inactive');
+            statusBadge.removeClass('bg-success').addClass('bg-danger')
+                .html('<i class="fas fa-times me-1"></i>Inactivo');
+            userName.addClass('text-muted');
+            if (!userName.find('.fa-ban').length) {
+                userName.append('<small class="text-danger"><i class="fas fa-ban ms-1"></i></small>');
+            }
+            toggle.attr('title', 'Activar usuario');
+        }
+    }
+    
+    // ✅ FUNCIÓN PARA ACTUALIZAR CONTADORES
+    function updateCounters() {
+        let counts = { interno: 0, compania: 0, activo: 0, inactivo: 0 };
+        
+        $('tr[data-tipo]').each(function() {
+            const tipo = $(this).data('tipo');
+            const estado = $(this).data('estado');
+            
+            if (tipo === 'interno') counts.interno++;
+            if (tipo === 'compania') counts.compania++;
+            if (estado === 'activo') counts.activo++;
+            if (estado === 'inactivo') counts.inactivo++;
+        });
+        
+        $('#count-interno').text(counts.interno);
+        $('#count-compania').text(counts.compania);
+        $('#count-activo').text(counts.activo);
+        $('#count-inactivo').text(counts.inactivo);
+    }
+
     // Reset password
     $('.reset-password-btn').on('click', function() {
         const id = $(this).data('id');
@@ -484,7 +641,6 @@ $(document).ready(function() {
                 })
                 .done(function(response) {
                     if (response.success) {
-                        // Mostrar la contraseña temporal
                         Swal.fire({
                             icon: 'success',
                             title: 'Contraseña Reseteada',
@@ -533,26 +689,61 @@ $(document).ready(function() {
         });
     });
 
-    // Función para copiar contraseña
-    function copyPassword() {
-        const passwordField = document.getElementById('tempPasswordField');
-        passwordField.select();
-        document.execCommand('copy');
+    // Delete user
+    $('.delete-user-btn').on('click', function() {
+        const id = $(this).data('id');
+        const name = $(this).data('name');
         
-        // Feedback visual
         Swal.fire({
-            icon: 'success',
-            title: 'Copiado',
-            text: 'Contraseña copiada al portapapeles',
-            timer: 1500,
-            showConfirmButton: false,
-            position: 'top-end',
-            toast: true
+            title: '¿Eliminar usuario?',
+            text: `Se eliminará permanentemente a ${name}. Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Crear formulario dinámico para enviar DELETE
+                const form = $('<form>', {
+                    method: 'POST',
+                    action: '<?= base_url('users/delete') ?>/' + id
+                });
+                
+                form.append('<?= csrf_field() ?>');
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: '_method',
+                    value: 'DELETE'
+                }));
+                
+                $('body').append(form);
+                form.submit();
+            }
         });
-    }
+    });
 
     // Auto-hide alerts
     $('.alert').delay(5000).fadeOut();
 });
+
+// Función global para copiar contraseña
+window.copyPassword = function() {
+    const passwordField = document.getElementById('tempPasswordField');
+    passwordField.select();
+    document.execCommand('copy');
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Copiado',
+        text: 'Contraseña copiada al portapapeles',
+        timer: 1500,
+        showConfirmButton: false,
+        position: 'top-end',
+        toast: true
+    });
+}
 </script>
 <?= $this->endSection() ?>

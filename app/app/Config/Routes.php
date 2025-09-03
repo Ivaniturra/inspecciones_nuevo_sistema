@@ -61,12 +61,17 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     });
     // Comentarios (Web)
     $routes->group('comentarios', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
-        $routes->get('comentarios', 'Comentarios::index');
-        $routes->get('comentarios/create', 'Comentarios::create');
-        $routes->post('comentarios/store', 'Comentarios::store');
-        $routes->get('comentarios/edit/(:num)', 'Comentarios::edit/$1');
-        $routes->post('comentarios/update/(:num)', 'Comentarios::update/$1');
+        $routes->get('/',                 'Comentarios::index');              // listado
+        $routes->get('create',            'Comentarios::create');             // formulario crear
+        $routes->post('store',            'Comentarios::store');              // guarda nuevo
+        $routes->get('show/(:num)',       'Comentarios::show/$1');            // detalle
+        $routes->get('edit/(:num)',       'Comentarios::edit/$1');            // formulario editar
+        $routes->match(['post','put'],    'update/(:num)', 'Comentarios::update/$1'); // actualiza
+        $routes->match(['post','delete'], 'delete/(:num)', 'Comentarios::delete/$1'); // elimina
         $routes->post('comentarios/toggleStatus/(:num)', 'Comentarios::toggleStatus/$1');
+        // Si usas los switches AJAX en el index, define sus endpoints (opcional):
+        $routes->post('toggleDevuelve/(:num)',     'Comentarios::toggleDevuelve/$1'); 
+        $routes->post('toggleEnviarCorreo/(:num)', 'Comentarios::toggleEnviarCorreo/$1');
     });
     // Rutas para Estados (solo lectura)
     $routes->group('estados', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {

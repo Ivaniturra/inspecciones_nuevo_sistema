@@ -3,36 +3,27 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
-
 class ComentarioModel extends Model
 {
-    protected $table            = 'comentarios';
-    protected $primaryKey       = 'comentario_id';
-    protected $useAutoIncrement = true;
-
-    protected $returnType     = 'array';
-    protected $useSoftDeletes = true; // Usa soft deletes
-    protected $protectFields  = true;
-
+    protected $table = 'comentarios';
+    protected $primaryKey = 'comentario_id';
+    
     protected $allowedFields = [
-        protected $table = 'comentarios';
-        protected $primaryKey = 'comentario_id';
-        
-        protected $allowedFields = [
-            'comentario_nombre',
-            'cia_id', 
-            'perfil_id',
-            'comentario_id_cia_interno',
-            'comentario_devuelve',
-            'comentario_elimina', 
-            'comentario_envia_correo',
-            'comentario_habil',  // ? ? ASEGURATE DE QUE ESTE CAMPO EST? AQU?
-            // otros campos...
-        ];
+        'comentario_nombre',
+        'cia_id', 
+        'perfil_id',
+        'comentario_id_cia_interno',
+        'comentario_devuelve',
+        'comentario_elimina', 
+        'comentario_envia_correo',
+        'comentario_habil',  // ? ? ASEGURATE DE QUE ESTE CAMPO EST? AQU?
+        // otros campos...
+    ];
 
-        protected $useTimestamps = true;
-        protected $createdField = 'comentario_created_at';
-        protected $updatedField = 'comentario_updated_at';
+    protected $useTimestamps = true;
+    protected $createdField = 'comentario_created_at';
+    protected $updatedField = 'comentario_updated_at';
+ 
 
     // Validación
     protected $validationRules = [

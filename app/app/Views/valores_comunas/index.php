@@ -514,7 +514,7 @@ $(document).ready(function() {
                 toggle.prop('disabled', true);
                 
                 $.ajax({
-                    url: '<?= base_url('valores-comunas/toggleStatus') ?>/' + id,
+                    url: '<?= base_url('valores-comunas/toggle') ?>/' + id,
                     type: 'POST',
                     data: {
                         [CSRF.name]: CSRF.hash

@@ -82,6 +82,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->get('show/(:num)', 'Estados::show/$1');
         $routes->post('getSelect', 'Estados::getSelect'); // Para AJAX si lo necesitas
     });
+   
     $routes->group('valores-comunas',['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
         $routes->get('/',                 'ValoresComunas::index');
         $routes->get('create',            'ValoresComunas::create');
@@ -90,7 +91,9 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->post('update/(:num)',    'ValoresComunas::update/$1');
         $routes->get('show/(:num)',       'ValoresComunas::show/$1');
         $routes->get('delete/(:num)',     'ValoresComunas::delete/$1');
-        $routes->post('toggle/(:num)',    'ValoresComunas::toggleStatus/$1');
+        
+        // ✅ CAMBIAR DE 'toggle' A 'toggleStatus' para que coincida con el JavaScript
+        $routes->post('toggleStatus/(:num)', 'ValoresComunas::toggleStatus/$1');
 
         // AJAX dependientes (nueva jerarquía Región -> Provincia -> Comuna)
         $routes->get('getProvinciasByRegion/(:num)',  'ValoresComunas::getProvinciasByRegion/$1');

@@ -6,15 +6,9 @@ use CodeIgniter\Model;
 
 class ValoresComunasModel extends Model
 {
-    protected $table            = 'valores_comunas';
-    protected $primaryKey       = 'valores_id';
-    protected $useAutoIncrement = true;
-
-    protected $returnType     = 'array';
-    protected $useSoftDeletes = false;
-    protected $protectFields  = true;
-
-    // CAMPOS REALES SEGÚN TU BD
+    protected $table = 'valores_comunas';
+    protected $primaryKey = 'valores_id';
+    
     protected $allowedFields = [
         'comunas_id',
         'cia_id',
@@ -26,8 +20,22 @@ class ValoresComunasModel extends Model
         'valores_descripcion',
         'valores_fecha_vigencia_desde',
         'valores_fecha_vigencia_hasta',
-        'valores_activo',
+        'valores_activo', // ← ✅ ASEGURATE DE QUE ESTE CAMPO ESTÉ AQUÍ
     ];
+
+    // ... resto del modelo
+
+    /**
+     * Toggle estado activo/inactivo - Método simplificado
+     */
+    public function toggleStatus($id): bool
+    {
+        $valor = $this->find($id);
+        if (!$valor) return false;
+        
+        $newStatus = ($valor['valores_activo'] ?? 1) == 1 ? 0 : 1;
+        return (bool) $this->update($id, ['valores_activo' => $newStatus]);
+    }
 
     // Fechas
     protected $useTimestamps = true;
@@ -219,22 +227,7 @@ class ValoresComunasModel extends Model
                     ->orderBy('valores_tipo_usuario', 'ASC')
                     ->findColumn('valores_tipo_usuario');
     }
-
-    /**
-     * Toggle estado activo/inactivo
-     */
-    public function toggleStatus($id): bool
-    {
-        $valor = $this->find($id);
-        if (! $valor) return false;
-        
-        $newStatus = $valor['valores_activo'] == 1 ? 0 : 1;
-        return (bool) $this->update($id, ['valores_activo' => $newStatus]);
-    }
-
-    /**
-     * Obtener estadísticas
-     */
+ 
     public function getEstadisticas(): array
     {
         return [

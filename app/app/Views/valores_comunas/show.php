@@ -399,7 +399,7 @@ function toggleStatus(id) {
                 didOpen: () => Swal.showLoading()
             });
             
-            $.post('<?= base_url('valores-comunas/toggleStatus') ?>/' + id, {
+            $.post('<?= base_url('valores-comunas/toggle') ?>/' + id, {
                 '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
             })
             .done(function(response) {

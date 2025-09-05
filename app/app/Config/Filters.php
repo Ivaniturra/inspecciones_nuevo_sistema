@@ -37,14 +37,14 @@ class Filters extends BaseConfig
 
     /**
      * Filtros globales (todas las rutas).
-     * NOTA: No activamos 'auth' global para no bloquear login/recuperación.
+     * NOTA: No activamos 'auth' global para no bloquear login/recuperaciÃ³n.
      */
     public array $globals = [
         'before' => [
             // 'honeypot',
             'csrf',
             'theme',
-            // 'forcehttps', // <-- Habilítalo en producción si usas HTTPS
+            // 'forcehttps', // <-- HabilÃ­talo en producciÃ³n si usas HTTPS
         ],
         'after' => [
             'toolbar',
@@ -53,24 +53,24 @@ class Filters extends BaseConfig
     ];
 
     /**
-     * Filtros por método HTTP (opcional).
+     * Filtros por mÃ©todo HTTP (opcional).
      */
     public array $methods = [
         // 'post' => ['csrf'],
     ];
 
     /**
-     * Filtros por rutas específicas.
+     * Filtros por rutas especÃ­ficas.
      */
     public array $filters = [
-        // ?? Rutas que SÍ requieren sesión
+        // ?? Rutas que SÃ requieren sesiÃ³n
         'auth' => [
             'before' => [
                 // Dashboard
                 'dashboard',
                 'dashboard/*',
 
-                // Módulos de tu app
+                // MÃ³dulos de tu app
                 'cias',
                 'cias/*',
                 'users',
@@ -78,12 +78,12 @@ class Filters extends BaseConfig
                 'perfiles',
                 'perfiles/*', 
             ],
-            // Puedes excluir explícitamente algo si lo necesitas:
+            // Puedes excluir explÃ­citamente algo si lo necesitas:
             // 'except' => ['api/public/*'],
         ],
 
         // ??? RoleGuard se aplica en Routes.php con argumentos (p.ej. 'role:1,7'),
-        // por eso NO lo configuramos aquí globalmente.
+        // por eso NO lo configuramos aquÃ­ globalmente.
         // Ejemplo (NO requerido si ya lo pones en Routes.php):
         // 'role' => [
         //     'before' => [
@@ -91,7 +91,7 @@ class Filters extends BaseConfig
         //     ],
         // ],
 
-        // (Opcional) Excepciones para recursos estáticos si hiciera falta
+        // (Opcional) Excepciones para recursos estÃ¡ticos si hiciera falta
         // 'csrf' => [
         //     'except' => [
         //         'assets/*',

@@ -11,7 +11,7 @@ class AuthGuard implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         if (session('logged_in') && session('user_id')) {
-            return; // ya hay sesión
+            return; // ya hay sesiÃ³n
         }
 
         // Intento de autologin con remember cookie
@@ -24,7 +24,7 @@ class AuthGuard implements FilterInterface
                 $user  = $users->where('user_remember_selector', $selector)->first();
                 if ($user && !empty($user['user_remember_expires']) && strtotime($user['user_remember_expires']) > time()) {
                     if (password_verify($validator, (string)$user['user_remember_validator_hash'])) {
-                        // Reconstituir sesión
+                        // Reconstituir sesiÃ³n
                         session()->regenerate(true);
                         session()->set([
                             'user_id'     => (int)$user['user_id'],
@@ -37,11 +37,11 @@ class AuthGuard implements FilterInterface
                     }
                 }
             }
-            // Si la cookie no es válida, borrarla
+            // Si la cookie no es vÃ¡lida, borrarla
             delete_cookie('remember');
         }
 
-        // No hay sesión ? guardar intended y redirigir a login
+        // No hay sesiÃ³n ? guardar intended y redirigir a login
         session()->set('intended', current_url());
         return redirect()->to(base_url('/'));
     }

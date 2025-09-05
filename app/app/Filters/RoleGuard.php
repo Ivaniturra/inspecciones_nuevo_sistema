@@ -28,7 +28,7 @@ class RoleGuard implements FilterInterface
                     $p = trim($p);
                     if ($p === '') continue;
                     
-                    // Si es numérico, es un perfil_id
+                    // Si es numÃ©rico, es un perfil_id
                     if (is_numeric($p)) {
                         $flat[] = $p;
                     } 
@@ -64,7 +64,7 @@ class RoleGuard implements FilterInterface
         
         if (!$hasAccess) {
             return redirect()->to(base_url('dashboard'))
-                ->with('error', 'No tienes permisos para acceder a esta sección');
+                ->with('error', 'No tienes permisos para acceder a esta secciÃ³n');
         }
     }
 

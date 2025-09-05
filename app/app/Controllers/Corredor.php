@@ -8,18 +8,18 @@ class Dashboard extends BaseController
 {
     public function __construct()
     {
-        // Verificar autenticación
+        // Verificar autenticaciÃ³n
         if (!session('logged_in')) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Acceso denegado');
         }
 
-        // Verificar que sea corredor - mejorar la validación
+        // Verificar que sea corredor - mejorar la validaciÃ³n
         $perfilTipo = session('perfil_tipo');
         $perfilId = session('user_perfil_id');
         
         if ($perfilTipo !== 'corredor' && $perfilId != 8) {
             // Mejor manejo de errores
-            session()->setFlashdata('error', 'No tienes permisos para acceder a esta sección.');
+            session()->setFlashdata('error', 'No tienes permisos para acceder a esta secciÃ³n.');
             header('Location: ' . base_url('dashboard'));
             exit;
         }
@@ -27,10 +27,10 @@ class Dashboard extends BaseController
 
     public function index()
     {
-        /*// Obtener información del corredor
+        /*// Obtener informaciÃ³n del corredor
         $corredorId = session('corredor_id');
         
-        // Puedes cargar modelos específicos aquí
+        // Puedes cargar modelos especÃ­ficos aquÃ­
         // $solicitudesModel = new \App\Models\SolicitudesModel();
         // $clientesModel = new \App\Models\ClientesModel();
         
@@ -39,7 +39,7 @@ class Dashboard extends BaseController
             'corredor_id' => $corredorId,
             'corredor_nombre' => session('brand_title'),
             
-            // Datos específicos del dashboard
+            // Datos especÃ­ficos del dashboard
             'stats' => [
                 'solicitudes_pendientes' => 0, // Implementar
                 'clientes_activos' => 0,       // Implementar  

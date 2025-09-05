@@ -210,11 +210,28 @@ if ($user) {
         $corredor_id = $user['corredor_id'] ?? null;
         
         // Verificar redirección intencionada
-        $intended = session('intended');
-        if (!empty($intended)) {
-            session()->remove('intended');
-            return redirect()->to($intended);
-        }
+        // ✅ LOGS DETALLADOS
+    file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+        date('Y-m-d H:i:s') . " - === REDIRECT DEBUG ===\n", 
+        FILE_APPEND | LOCK_EX
+    );
+    
+    file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+        date('Y-m-d H:i:s') . " - Perfil ID: " . $perfil_id . "\n", 
+        FILE_APPEND | LOCK_EX
+    );
+    
+    file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+        date('Y-m-d H:i:s') . " - Perfil Tipo: '" . $perfil_tipo . "'\n", 
+        FILE_APPEND | LOCK_EX
+    );
+    
+    // Verificar redirección intencionada
+    $intended = session('intended');
+    if (!empty($intended)) {
+        session()->remove('intended');
+        return redirect()->to($intended);
+    }
         
         // ✅ VERIFICACIÓN MÚLTIPLE PARA CORREDORES
         $esCorrector = (

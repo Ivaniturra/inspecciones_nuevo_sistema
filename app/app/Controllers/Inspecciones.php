@@ -39,11 +39,16 @@ class Inspecciones extends BaseController
      */
     public function create()
     {
-        $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
+          $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
+    
+        // ✅ Agregar comunas
+        $comunasModel = new \App\Models\ComunasModel(); // Crear este modelo
+        $comunas = $comunasModel->orderBy('comunas_nombre', 'ASC')->findAll();
 
         $data = [
             'title' => 'Nueva Inspección',
             'cias' => $cias,
+            'comunas' => $comunas, // ← Agregar
             'validation' => null
         ];
 
@@ -66,7 +71,9 @@ class Inspecciones extends BaseController
             'comuna' => 'required|min_length[3]|max_length[50]',
             'celular' => 'required|min_length[8]|max_length[15]',
             'telefono' => 'permit_empty|min_length[8]|max_length[15]',
-            'cia_id' => 'required|is_natural_no_zero'
+            'cia_id' => 'required|is_natural_no_zero',
+            'comunas_id' => 'required|is_natural_no_zero', 
+
         ];
 
         if (!$this->validate($rules)) {
@@ -95,7 +102,9 @@ class Inspecciones extends BaseController
             'telefono' => $this->request->getPost('telefono'),
             'cia_id' => $this->request->getPost('cia_id'),
             'user_id' => session('user_id'),
-            'estado' => 'pendiente'
+            'estado' => 'pendiente',
+            'comunas_id' => $this->request->getPost('comunas_id'), // ← Cambio aquí
+
         ];
 
         // Insertar en base de datos

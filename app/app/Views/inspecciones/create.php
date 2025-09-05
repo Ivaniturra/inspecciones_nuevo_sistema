@@ -277,17 +277,22 @@
                         
                         <div class="col-md-6">
                             <div class="form-group mb-3">
-                                <label for="comuna">Comuna <span class="required">*</span></label>
-                                <input type="text" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('comuna') ? 'is-invalid' : '' ?>" 
-                                       id="comuna" 
-                                       name="comuna" 
-                                       value="<?= old('comuna') ?>" 
-                                       placeholder="Comuna de residencia"
-                                       required>
-                                <?php if (isset($validation) && $validation->hasError('comuna')): ?>
+                                <label for="comunas_id">Comuna <span class="required">*</span></label>
+                                <select class="form-control <?= isset($validation) && $validation->hasError('comunas_id') ? 'is-invalid' : '' ?>" 
+                                        id="comunas_id" 
+                                        name="comunas_id" 
+                                        required>
+                                    <option value="">Seleccione una comuna</option>
+                                    <?php foreach ($comunas as $comuna): ?>
+                                        <option value="<?= $comuna['comunas_id'] ?>" 
+                                                <?= old('comunas_id') == $comuna['comunas_id'] ? 'selected' : '' ?>>
+                                            <?= esc($comuna['comunas_nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if (isset($validation) && $validation->hasError('comunas_id')): ?>
                                     <div class="invalid-feedback">
-                                        <?= $validation->getError('comuna') ?>
+                                        <?= $validation->getError('comunas_id') ?>
                                     </div>
                                 <?php endif; ?>
                             </div>

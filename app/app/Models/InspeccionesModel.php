@@ -47,6 +47,7 @@ class InspeccionesModel extends Model
         'inspecciones_celular' => 'required|min_length[8]|max_length[15]',
         'inspecciones_telefono' => 'permit_empty|min_length[8]|max_length[15]',
         'cia_id' => 'required|is_natural_no_zero',
+            'comunas_id' => 'required|is_natural_no_zero',  
         'user_id' => 'required|is_natural_no_zero'
     ];
 
@@ -122,14 +123,16 @@ class InspeccionesModel extends Model
     public function getInspeccionesWithDetails()
     {
         return $this->select('
-                inspecciones.*,
-                cias.cia_nombre,
-                users.user_nombre
-            ')
-            ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
-            ->join('users', 'users.user_id = inspecciones.user_id', 'left')
-            ->orderBy('inspecciones.inspecciones_created_at', 'DESC')
-            ->findAll();
+            inspecciones.*,
+            cias.cia_nombre,
+            users.user_nombre,
+            comunas.comunas_nombre
+        ')
+        ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
+        ->join('users', 'users.user_id = inspecciones.user_id', 'left')
+        ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left') // ← Agregar
+        ->orderBy('inspecciones.inspecciones_created_at', 'DESC')
+        ->findAll();
     }
 
     /**

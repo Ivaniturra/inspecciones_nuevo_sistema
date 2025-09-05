@@ -6,6 +6,9 @@ use App\Models\UserModel;
 use App\Models\CiaModel;
 use App\Models\PerfilModel;
 use App\Models\AuditLogModel;
+use App\Models\CorredorModel;
+
+
 
 class Users extends BaseController
 {
@@ -14,14 +17,17 @@ class Users extends BaseController
     protected $perfilModel;
     protected $auditModel;
     protected $session;
+    protected $corredorModel;
+
 
     public function __construct()
     {
-        $this->userModel  = new UserModel();
-        $this->ciaModel   = new CiaModel();
-        $this->perfilModel= new PerfilModel();
-        $this->auditModel = new AuditLogModel();
-        $this->session    = session();
+        $this->userModel     = new UserModel();
+        $this->ciaModel      = new CiaModel();
+        $this->perfilModel   = new PerfilModel();
+        $this->corredorModel = new CorredorModel(); // ← Agregar esta línea
+        $this->auditModel    = new AuditLogModel();
+        $this->session       = session();
     }
 
     /** Listado */
@@ -52,12 +58,15 @@ class Users extends BaseController
         $data = [
             'title'             => 'Nuevo Usuario',
             'cias'              => $this->ciaModel->getActiveCias(),
+            'corredores'        => $this->corredorModel->getActiveCorredores(),
             'perfiles'          => $this->perfilModel->getPerfilesByTipo(),
             'perfilesCompania'  => $this->perfilModel->getPerfilesCompania(),
             'perfilesInternos'  => $this->perfilModel->getPerfilesInternos(),
+            'perfilesCorredores'=> $this->perfilModel->where('perfil_tipo', 'corredor')->findAll(),
+            'perfilesInspectores'=> $this->perfilModel->where('perfil_tipo', 'inspector')->findAll(),
         ];
         return view('users/create', $data);
-    }
+}
 
     /** Guardar nuevo (con rate limit, validación y avatar en WRITEPATH) */
     public function store()

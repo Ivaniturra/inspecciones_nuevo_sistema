@@ -90,15 +90,13 @@
           </optgroup>
           
           <optgroup label="🚗 Perfiles de Corredor">
-            <?php foreach ($perfilesCorredores as $p): ?>
-              <option
-                value="<?= (int)$p['perfil_id'] ?>"
-                data-tipo="corredor"
-                <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
-                <?= esc($p['perfil_nombre']) ?>
-                <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
-              </option>
-            <?php endforeach; ?>
+            <?php if (isset($perfilesCorredores) && !empty($perfilesCorredores)): ?>
+            <optgroup label="🚗 Perfiles de Corredor">
+                <?php foreach ($perfilesCorredores as $p): ?>
+                    <!-- contenido del optgroup -->
+                <?php endforeach; ?>
+            </optgroup>
+            <?php endif; ?>
           </optgroup>
           
           <optgroup label="🔍 Perfiles de Inspector">

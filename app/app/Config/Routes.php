@@ -114,7 +114,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->get('getSelCorredorect', 'TipoVehiculos::getSelect');
         
     });
-    $routes->group('corredor', ['filter' => 'role:8'], static function($routes) {
+    $routes->group('corredor', ['filter' => 'role:8,10'], static function($routes) {
     $routes->get('/', 'Corredor\Dashboard::index', ['as' => 'corredor.dashboard']);
      
     // etc.

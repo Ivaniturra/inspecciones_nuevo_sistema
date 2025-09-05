@@ -212,7 +212,7 @@ class Auth extends BaseController
                         return redirect()->to(base_url('dashboard'));
                 }
         }*/
-                echo $perfil_tipo;
+                return $perfil_tipo;
     }
 
     /**

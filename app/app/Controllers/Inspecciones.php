@@ -35,14 +35,14 @@ class Inspecciones extends BaseController
     }
 
     /**
-     * Mostrar formulario para crear nueva inspecci髇
+     * Mostrar formulario para crear nueva inspecci贸n
      */
     public function create()
     {
         $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
 
         $data = [
-            'title' => 'Nueva Inspecci髇',
+            'title' => 'Nueva Inspecci贸n',
             'cias' => $cias,
             'validation' => null
         ];
@@ -51,7 +51,7 @@ class Inspecciones extends BaseController
     }
 
     /**
-     * Procesar creaci髇 de nueva inspecci髇
+     * Procesar creaci贸n de nueva inspecci贸n
      */
     public function store()
     {
@@ -73,7 +73,7 @@ class Inspecciones extends BaseController
             $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
             
             $data = [
-                'title' => 'Nueva Inspecci髇',
+                'title' => 'Nueva Inspecci贸n',
                 'cias' => $cias,
                 'validation' => $this->validator
             ];
@@ -98,20 +98,20 @@ class Inspecciones extends BaseController
             'inspecciones_estado' => 'pendiente'
         ];
 
-        // Crear inspecci髇 con comentario autom醫ico
+        // Crear inspecci贸n con comentario autom谩tico
         $inspecciones_id = $this->inspeccionesModel->crearInspeccionConBitacora($data);
         
         if ($inspecciones_id) {
-            session()->setFlashdata('success', 'Inspecci髇 creada exitosamente');
+            session()->setFlashdata('success', 'Inspecci贸n creada exitosamente');
             return redirect()->to(base_url('inspecciones/show/' . $inspecciones_id));
         } else {
-            session()->setFlashdata('error', 'Error al crear la inspecci髇');
+            session()->setFlashdata('error', 'Error al crear la inspecci贸n');
             return redirect()->back()->withInput();
         }
     }
 
     /**
-     * Mostrar detalles de una inspecci髇
+     * Mostrar detalles de una inspecci贸n
      */
     public function show($id)
     {
@@ -122,15 +122,15 @@ class Inspecciones extends BaseController
             ->find($id);
 
         if (!$inspeccion) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Inspecci髇 no encontrada');
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Inspecci贸n no encontrada');
         }
 
-        // Obtener bit醕ora
+        // Obtener bit谩cora
         $es_inspector = in_array(session('user_perfil_id'), [3, 7]);
         $bitacora = $this->bitacoraModel->getBitacoraByInspeccion($id, $es_inspector);
 
         $data = [
-            'title' => 'Inspecci髇 #' . $id,
+            'title' => 'Inspecci贸n #' . $id,
             'inspeccion' => $inspeccion,
             'bitacora' => $bitacora,
             'puede_comentar' => true,
@@ -156,14 +156,14 @@ class Inspecciones extends BaseController
     } 
 
     /**
-     * Mostrar formulario para crear nueva inspecci髇
+     * Mostrar formulario para crear nueva inspecci贸n
      */
     public function create()
     {
         $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
 
         $data = [
-            'title' => 'Nueva Inspecci髇',
+            'title' => 'Nueva Inspecci贸n',
             'cias' => $cias,
             'validation' => null
         ];
@@ -172,7 +172,7 @@ class Inspecciones extends BaseController
     }
 
     /**
-     * Procesar creaci髇 de nueva inspecci髇
+     * Procesar creaci贸n de nueva inspecci贸n
      */
     public function store()
     {
@@ -194,7 +194,7 @@ class Inspecciones extends BaseController
             $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
             
             $data = [
-                'title' => 'Nueva Inspecci髇',
+                'title' => 'Nueva Inspecci贸n',
                 'cias' => $cias,
                 'validation' => $this->validator
             ];
@@ -223,26 +223,26 @@ class Inspecciones extends BaseController
         $inspeccion_id = $this->inspeccionesModel->insert($data);
         
         if ($inspeccion_id) {
-            // Crear comentario inicial en la bit醕ora
+            // Crear comentario inicial en la bit谩cora
             $this->bitacoraModel->agregarComentario([
                 'inspeccion_id' => $inspeccion_id,
                 'user_id' => session('user_id'),
-                'comentario' => 'Inspecci髇 creada. Estado inicial: Pendiente',
+                'comentario' => 'Inspecci贸n creada. Estado inicial: Pendiente',
                 'tipo_comentario' => 'estado_cambio',
                 'estado_nuevo' => 'pendiente',
                 'es_privado' => 0
             ]);
 
-            session()->setFlashdata('success', 'Inspecci髇 creada exitosamente');
+            session()->setFlashdata('success', 'Inspecci贸n creada exitosamente');
             return redirect()->to(base_url('inspecciones/show/' . $inspeccion_id));
         } else {
-            session()->setFlashdata('error', 'Error al crear la inspecci髇');
+            session()->setFlashdata('error', 'Error al crear la inspecci贸n');
             return redirect()->back()->withInput();
         }
     }
 
     /**
-     * Mostrar detalles de una inspecci髇 con bit醕ora
+     * Mostrar detalles de una inspecci贸n con bit谩cora
      */
     public function show($id)
     {
@@ -253,22 +253,22 @@ class Inspecciones extends BaseController
             ->find($id);
 
         if (!$inspeccion) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Inspecci髇 no encontrada');
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Inspecci贸n no encontrada');
         }
 
-        // Obtener bit醕ora
+        // Obtener bit谩cora
         $es_inspector = in_array(session('user_perfil_id'), [3, 7]); // Perfiles que pueden ver comentarios privados
         $bitacora = $this->bitacoraModel->getBitacoraByInspeccion($id, $es_inspector);
         
-        // Estad韘ticas de la bit醕ora
+        // Estad铆sticas de la bit谩cora
         $stats_bitacora = $this->bitacoraModel->getEstadisticasComentarios($id);
 
         $data = [
-            'title' => 'Inspecci髇 #' . $id,
+            'title' => 'Inspecci贸n #' . $id,
             'inspeccion' => $inspeccion,
             'bitacora' => $bitacora,
             'stats_bitacora' => $stats_bitacora,
-            'puede_comentar' => true, // Ajustar seg鷑 permisos
+            'puede_comentar' => true, // Ajustar seg煤n permisos
             'puede_ver_privados' => $es_inspector
         ];
 
@@ -276,12 +276,12 @@ class Inspecciones extends BaseController
     }
 
     /**
-     * Agregar comentario a la bit醕ora (AJAX)
+     * Agregar comentario a la bit谩cora (AJAX)
      */
     public function agregarComentario()
     {
         if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(400)->setJSON(['error' => 'Solicitud inv醠ida']);
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Solicitud inv谩lida']);
         }
 
         $rules = [
@@ -293,7 +293,7 @@ class Inspecciones extends BaseController
 
         if (!$this->validate($rules)) {
             return $this->response->setStatusCode(400)->setJSON([
-                'error' => 'Datos inv醠idos',
+                'error' => 'Datos inv谩lidos',
                 'messages' => $this->validator->getErrors()
             ]);
         }
@@ -309,7 +309,7 @@ class Inspecciones extends BaseController
         $comentario_id = $this->bitacoraModel->agregarComentario($data);
 
         if ($comentario_id) {
-            // Obtener el comentario reci閚 creado con datos del usuario
+            // Obtener el comentario reci茅n creado con datos del usuario
             $comentario = $this->bitacoraModel
                 ->select('inspeccion_bitacora.*, users.user_nombre, perfiles.perfil_nombre')
                 ->join('users', 'users.user_id = inspeccion_bitacora.user_id', 'left')
@@ -329,12 +329,12 @@ class Inspecciones extends BaseController
     }
 
     /**
-     * Cambiar estado de inspecci髇
+     * Cambiar estado de inspecci贸n
      */
     public function cambiarEstado()
     {
         if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(400)->setJSON(['error' => 'Solicitud inv醠ida']);
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Solicitud inv谩lida']);
         }
 
         $rules = [
@@ -345,7 +345,7 @@ class Inspecciones extends BaseController
 
         if (!$this->validate($rules)) {
             return $this->response->setStatusCode(400)->setJSON([
-                'error' => 'Datos inv醠idos',
+                'error' => 'Datos inv谩lidos',
                 'messages' => $this->validator->getErrors()
             ]);
         }
@@ -357,7 +357,7 @@ class Inspecciones extends BaseController
         // Obtener estado actual
         $inspeccion = $this->inspeccionesModel->find($inspeccion_id);
         if (!$inspeccion) {
-            return $this->response->setStatusCode(404)->setJSON(['error' => 'Inspecci髇 no encontrada']);
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Inspecci贸n no encontrada']);
         }
 
         $estado_anterior = $inspeccion['estado'];
@@ -365,7 +365,7 @@ class Inspecciones extends BaseController
         // Actualizar estado
         $this->inspeccionesModel->update($inspeccion_id, ['estado' => $nuevo_estado]);
 
-        // Registrar en bit醕ora
+        // Registrar en bit谩cora
         $this->bitacoraModel->registrarCambioEstado(
             $inspeccion_id,
             session('user_id'),
@@ -382,12 +382,12 @@ class Inspecciones extends BaseController
     }
 
     /**
-     * Eliminar comentario de la bit醕ora
+     * Eliminar comentario de la bit谩cora
      */
     public function eliminarComentario($bitacora_id)
     {
         if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(400)->setJSON(['error' => 'Solicitud inv醠ida']);
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Solicitud inv谩lida']);
         }
 
         $es_admin = in_array(session('user_perfil_id'), [3, 7]);

@@ -38,7 +38,7 @@ class BitacoraModel extends Model
     ];
 
     /**
-     * Obtener bit·cora de una inspecciÛn con datos del usuario
+     * Obtener bit√°cora de una inspecci√≥n con datos del usuario
      */
     public function getBitacoraByInspeccion($inspecciones_id, $incluir_privados = false)
     {
@@ -61,7 +61,7 @@ class BitacoraModel extends Model
     }
 
     /**
-     * Agregar comentario a la bit·cora y actualizar contador
+     * Agregar comentario a la bit√°cora y actualizar contador
      */
     public function agregarComentario($data)
     {

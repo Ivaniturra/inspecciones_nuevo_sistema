@@ -66,12 +66,12 @@ class InspeccionesModel extends Model
             'min_length' => 'La patente debe tener al menos 6 caracteres'
         ],
         'inspecciones_celular' => [
-            'required' => 'El número de celular es obligatorio'
+            'required' => 'El nÃºmero de celular es obligatorio'
         ]
     ];
 
     /**
-     * Crear inspección con comentario automático en bitácora
+     * Crear inspecciÃ³n con comentario automÃ¡tico en bitÃ¡cora
      */
     public function crearInspeccionConBitacora($data)
     {
@@ -79,17 +79,17 @@ class InspeccionesModel extends Model
         $db->transStart();
 
         try {
-            // Crear inspección
+            // Crear inspecciÃ³n
             $inspecciones_id = $this->insert($data);
 
             if ($inspecciones_id) {
-                // Crear comentario automático en bitácora
+                // Crear comentario automÃ¡tico en bitÃ¡cora
                 $bitacoraModel = new \App\Models\BitacoraModel();
                 
                 $comentario_data = [
                     'inspecciones_id' => $inspecciones_id,
                     'user_id' => $data['user_id'],
-                    'bitacora_comentario' => 'Inspección creada por ' . session('user_name'),
+                    'bitacora_comentario' => 'InspecciÃ³n creada por ' . session('user_name'),
                     'bitacora_tipo_comentario' => 'estado_cambio',
                     'bitacora_estado_nuevo' => 'pendiente',
                     'bitacora_es_privado' => 0
@@ -111,13 +111,13 @@ class InspeccionesModel extends Model
 
         } catch (\Exception $e) {
             $db->transRollback();
-            log_message('error', 'Error al crear inspección: ' . $e->getMessage());
+            log_message('error', 'Error al crear inspecciÃ³n: ' . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Obtener inspecciones con datos de compañía y usuario
+     * Obtener inspecciones con datos de compaÃ±Ã­a y usuario
      */
     public function getInspeccionesWithDetails()
     {
@@ -133,7 +133,7 @@ class InspeccionesModel extends Model
     }
 
     /**
-     * Obtener inspecciones por compañía
+     * Obtener inspecciones por compaÃ±Ã­a
      */
     public function getInspeccionesByCompany($cia_id)
     {
@@ -153,7 +153,7 @@ class InspeccionesModel extends Model
     }
 
     /**
-     * Obtener estadísticas generales
+     * Obtener estadÃ­sticas generales
      */
     public function getEstadisticas()
     {
@@ -172,5 +172,4 @@ class InspeccionesModel extends Model
             'creadas_hoy' => $hoy
         ];
     }
-}
-}
+} 

@@ -209,7 +209,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
   <nav class="nav flex-column">
     <nav class="nav flex-column">
     <div class="rail-section">General</div>
-    <a class="nav-link <?= url_is('/dashboard') ? 'active' : '' ?>" href="<?= base_url('/dashboard') ?>" data-bs-toggle="tooltip" data-bs-title="Dashboard">
+    <a class="nav-link <?= url_is('/corredor') ? 'active' : '' ?>" href="<?= base_url('/corredor') ?>" data-bs-toggle="tooltip" data-bs-title="corredor">
       <i class="icon fa-solid fa-chart-simple"></i><span class="label">Dashboard</span>
     </a>
     

@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main') ?>
+ <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 Detalles del Usuario
@@ -30,9 +30,13 @@ Detalles del Usuario
                         <h1 class="h3 mb-0"><?= esc($usuario['user_nombre']) ?></h1>
                         <p class="text-muted mb-0">
                             <?php if ($usuario['perfil_tipo'] === 'interno'): ?>
-                                <span class="badge bg-warning">🛡️ Usuario Interno</span>
-                            <?php else: ?>
+                                <span class="badge bg-secondary">🛡️ Usuario Interno</span>
+                            <?php elseif ($usuario['perfil_tipo'] === 'corredor'): ?>
+                                <span class="badge bg-warning">🚗 Usuario de Corredor</span>
+                            <?php elseif ($usuario['perfil_tipo'] === 'compania'): ?>
                                 <span class="badge bg-info">🏢 Usuario de Compañía</span>
+                            <?php elseif ($usuario['perfil_tipo'] === 'inspector'): ?>
+                                <span class="badge bg-success">🔍 Inspector</span>
                             <?php endif; ?>
                             
                             <span class="badge <?= $usuario['user_habil'] ? 'bg-success' : 'bg-danger' ?> ms-2">
@@ -148,12 +152,20 @@ Detalles del Usuario
                             <div class="form-control-plaintext">
                                 <div class="d-flex align-items-center">
                                     <?php if ($usuario['perfil_tipo'] === 'interno'): ?>
-                                        <span class="badge bg-warning me-2">
+                                        <span class="badge bg-secondary me-2">
                                             <i class="fas fa-shield-alt"></i>
                                         </span>
-                                    <?php else: ?>
+                                    <?php elseif ($usuario['perfil_tipo'] === 'corredor'): ?>
+                                        <span class="badge bg-warning me-2">
+                                            <i class="fas fa-car"></i>
+                                        </span>
+                                    <?php elseif ($usuario['perfil_tipo'] === 'compania'): ?>
                                         <span class="badge bg-info me-2">
                                             <i class="fas fa-building"></i>
+                                        </span>
+                                    <?php elseif ($usuario['perfil_tipo'] === 'inspector'): ?>
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-search"></i>
                                         </span>
                                     <?php endif; ?>
                                     
@@ -174,12 +186,20 @@ Detalles del Usuario
                         
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">
-                                <i class="fas fa-building text-info me-1"></i>
-                                Compañía
+                                <i class="fas fa-sitemap text-info me-1"></i>
+                                Organización
                             </label>
-                            <?php if (!empty($usuario['cia_nombre'])): ?>
+                            <?php if (!empty($usuario['corredor_nombre'])): ?>
+                                <p class="form-control-plaintext">
+                                    <span class="badge bg-warning text-dark fs-6">
+                                        <i class="fas fa-car me-1"></i>
+                                        <?= esc($usuario['corredor_nombre']) ?>
+                                    </span>
+                                </p>
+                            <?php elseif (!empty($usuario['cia_nombre'])): ?>
                                 <p class="form-control-plaintext">
                                     <span class="badge bg-light text-dark fs-6">
+                                        <i class="fas fa-building me-1"></i>
                                         <?= esc($usuario['cia_nombre']) ?>
                                     </span>
                                 </p>
@@ -187,7 +207,11 @@ Detalles del Usuario
                                 <p class="form-control-plaintext">
                                     <span class="badge bg-secondary fs-6">
                                         <i class="fas fa-shield-alt me-1"></i>
-                                        Usuario Interno
+                                        <?php if ($usuario['perfil_tipo'] === 'inspector'): ?>
+                                            Inspector Independiente
+                                        <?php else: ?>
+                                            Usuario Interno
+                                        <?php endif; ?>
                                     </span>
                                 </p>
                             <?php endif; ?>
@@ -609,83 +633,6 @@ $(document).ready(function() {
                     });
                 });
             }
-        });
-    });
-
-    // Enviar email
-    $('.send-email-btn').on('click', function() {
-        const email = $(this).data('email');
-        const name = $(this).data('name');
-        
-        Swal.fire({
-            title: 'Enviar Email',
-            html: `
-                <p>Enviar correo a <strong>${name}</strong></p>
-                <p class="text-muted">${email}</p>
-                <div class="form-group text-start mt-3">
-                    <label for="emailSubject">Asunto:</label>
-                    <input type="text" id="emailSubject" class="form-control" 
-                           placeholder="Asunto del correo">
-                </div>
-                <div class="form-group text-start mt-3">
-                    <label for="emailMessage">Mensaje:</label>
-                    <textarea id="emailMessage" class="form-control" rows="4" 
-                              placeholder="Escribe tu mensaje aquí..."></textarea>
-                </div>
-            `,
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonColor: '#17a2b8',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Enviar',
-            cancelButtonText: 'Cancelar',
-            preConfirm: () => {
-                const subject = document.getElementById('emailSubject').value;
-                const message = document.getElementById('emailMessage').value;
-                
-                if (!subject || !message) {
-                    Swal.showValidationMessage('Por favor completa todos los campos');
-                    return false;
-                }
-                
-                return { subject, message };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Aquí iría la lógica para enviar el email
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Funcionalidad en desarrollo',
-                    text: 'El sistema de envío de emails será implementado próximamente'
-                });
-            }
-        });
-    });
-
-    // Ver actividad
-    $('.view-activity-btn').on('click', function() {
-        const userId = $(this).data('id');
-        
-        Swal.fire({
-            title: 'Historial de Actividad',
-            html: `
-                <div class="text-start">
-                    <p class="text-muted">Esta funcionalidad mostrará:</p>
-                    <ul class="text-start">
-                        <li>Historial de inicios de sesión</li>
-                        <li>Cambios realizados por el usuario</li>
-                        <li>Acciones en el sistema</li>
-                        <li>Registro de auditoría</li>
-                    </ul>
-                    <div class="alert alert-info mt-3">
-                        <i class="fas fa-info-circle"></i> Funcionalidad en desarrollo
-                    </div>
-                </div>
-            `,
-            icon: 'info',
-            confirmButtonText: 'Entendido',
-            confirmButtonColor: '#17a2b8',
-            width: 500
         });
     });
 

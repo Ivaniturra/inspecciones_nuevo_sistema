@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main') ?>
+ <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
 Gestión de Usuarios
@@ -96,6 +96,40 @@ Gestión de Usuarios
             </div>
         </div>
         <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0"><?= $stats['corredores'] ?></h4>
+                            <span>Corredores</span>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-car fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0"><?= $stats['inspectores'] ?></h4>
+                            <span>Inspectores</span>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-search fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Segunda fila de stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
@@ -111,7 +145,7 @@ Gestión de Usuarios
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning text-white">
+            <div class="card bg-secondary text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -181,6 +215,16 @@ Gestión de Usuarios
                             </button>
                         </div>
                         <div class="col-auto">
+                            <button class="btn btn-outline-warning" data-filter="corredor">
+                                Corredores <span class="badge bg-warning ms-1" id="count-corredor">0</span>
+                            </button>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-outline-success" data-filter="inspector">
+                                Inspectores <span class="badge bg-success ms-1" id="count-inspector">0</span>
+                            </button>
+                        </div>
+                        <div class="col-auto">
                             <button class="btn btn-outline-success" data-filter="activo">
                                 Activos <span class="badge bg-success ms-1" id="count-activo">0</span>
                             </button>
@@ -233,7 +277,7 @@ Gestión de Usuarios
                                 <th>Usuario</th>
                                 <th>Email</th>
                                 <th>Perfil</th>
-                                <th>Compañía</th>
+                                <th>Organización</th>
                                 <th>Último Acceso</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
@@ -244,7 +288,7 @@ Gestión de Usuarios
                                 <tr data-id="<?= (int)$usuario['user_id'] ?>"
                                     data-tipo="<?= $usuario['perfil_tipo'] ?>" 
                                     data-estado="<?= $usuario['user_habil'] ? 'activo' : 'inactivo' ?>"
-                                    data-search="<?= strtolower($usuario['user_nombre'] . ' ' . $usuario['user_email'] . ' ' . ($usuario['cia_nombre'] ?? '')) ?>"
+                                    data-search="<?= strtolower($usuario['user_nombre'] . ' ' . $usuario['user_email'] . ' ' . ($usuario['cia_nombre'] ?? '') . ' ' . ($usuario['corredor_nombre'] ?? '')) ?>"
                                     class="<?= !$usuario['user_habil'] ? 'user-disabled' : '' ?>">
                                     <td>
                                         <div class="d-flex align-items-center">
@@ -293,12 +337,20 @@ Gestión de Usuarios
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <?php if ($usuario['perfil_tipo'] === 'interno'): ?>
-                                                <span class="badge bg-warning me-2">
+                                                <span class="badge bg-secondary me-2">
                                                     <i class="fas fa-shield-alt"></i>
                                                 </span>
-                                            <?php else: ?>
+                                            <?php elseif ($usuario['perfil_tipo'] === 'corredor'): ?>
+                                                <span class="badge bg-warning me-2">
+                                                    <i class="fas fa-car"></i>
+                                                </span>
+                                            <?php elseif ($usuario['perfil_tipo'] === 'compania'): ?>
                                                 <span class="badge bg-info me-2">
                                                     <i class="fas fa-building"></i>
+                                                </span>
+                                            <?php elseif ($usuario['perfil_tipo'] === 'inspector'): ?>
+                                                <span class="badge bg-success me-2">
+                                                    <i class="fas fa-search"></i>
                                                 </span>
                                             <?php endif; ?>
                                             
@@ -316,14 +368,26 @@ Gestión de Usuarios
                                         </div>
                                     </td>
                                     <td>
-                                        <?php if (!empty($usuario['cia_nombre'])): ?>
+                                        <?php 
+                                        // Mostrar organización según el tipo de perfil
+                                        if (!empty($usuario['corredor_nombre'])): ?>
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-car me-1"></i>
+                                                <?= esc($usuario['corredor_nombre']) ?>
+                                            </span>
+                                        <?php elseif (!empty($usuario['cia_nombre'])): ?>
                                             <span class="badge bg-light text-dark">
+                                                <i class="fas fa-building me-1"></i>
                                                 <?= esc($usuario['cia_nombre']) ?>
                                             </span>
                                         <?php else: ?>
                                             <span class="badge bg-secondary">
                                                 <i class="fas fa-shield-alt me-1"></i>
-                                                Interno
+                                                <?php if ($usuario['perfil_tipo'] === 'inspector'): ?>
+                                                    Inspector
+                                                <?php else: ?>
+                                                    Interno
+                                                <?php endif; ?>
                                             </span>
                                         <?php endif; ?>
                                     </td>
@@ -437,6 +501,8 @@ $(document).ready(function() {
     let counts = {
         interno: 0,
         compania: 0,
+        corredor: 0,
+        inspector: 0,
         activo: 0,
         inactivo: 0
     };
@@ -447,12 +513,16 @@ $(document).ready(function() {
         
         if (tipo === 'interno') counts.interno++;
         if (tipo === 'compania') counts.compania++;
+        if (tipo === 'corredor') counts.corredor++;
+        if (tipo === 'inspector') counts.inspector++;
         if (estado === 'activo') counts.activo++;
         if (estado === 'inactivo') counts.inactivo++;
     });
     
     $('#count-interno').text(counts.interno);
     $('#count-compania').text(counts.compania);
+    $('#count-corredor').text(counts.corredor);
+    $('#count-inspector').text(counts.inspector);
     $('#count-activo').text(counts.activo);
     $('#count-inactivo').text(counts.inactivo);
 
@@ -466,7 +536,7 @@ $(document).ready(function() {
         $('tr[data-tipo]').show();
         
         if (filter !== 'todos') {
-            if (filter === 'interno' || filter === 'compania') {
+            if (['interno', 'compania', 'corredor', 'inspector'].includes(filter)) {
                 $('tr[data-tipo]').not(`[data-tipo="${filter}"]`).hide();
             } else if (filter === 'activo' || filter === 'inactivo') {
                 $('tr[data-estado]').not(`[data-estado="${filter}"]`).hide();
@@ -638,7 +708,7 @@ $(document).ready(function() {
     
     // ✅ FUNCIÓN PARA ACTUALIZAR CONTADORES
     function updateCounters() {
-        let counts = { interno: 0, compania: 0, activo: 0, inactivo: 0 };
+        let counts = { interno: 0, compania: 0, corredor: 0, inspector: 0, activo: 0, inactivo: 0 };
         
         $('tr[data-tipo]').each(function() {
             const tipo = $(this).data('tipo');
@@ -646,12 +716,16 @@ $(document).ready(function() {
             
             if (tipo === 'interno') counts.interno++;
             if (tipo === 'compania') counts.compania++;
+            if (tipo === 'corredor') counts.corredor++;
+            if (tipo === 'inspector') counts.inspector++;
             if (estado === 'activo') counts.activo++;
             if (estado === 'inactivo') counts.inactivo++;
         });
         
         $('#count-interno').text(counts.interno);
         $('#count-compania').text(counts.compania);
+        $('#count-corredor').text(counts.corredor);
+        $('#count-inspector').text(counts.inspector);
         $('#count-activo').text(counts.activo);
         $('#count-inactivo').text(counts.inactivo);
     }

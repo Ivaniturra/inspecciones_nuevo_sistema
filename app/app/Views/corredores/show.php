@@ -58,7 +58,7 @@
                 <div class="btn-group">
                     <a href="<?= base_url('corredores/edit/' . $corredor['corredor_id']) ?>" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Editar
-                    </a> 
+                    </a>    
                     <a href="<?= base_url('corredores') ?>" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Volver
                     </a>

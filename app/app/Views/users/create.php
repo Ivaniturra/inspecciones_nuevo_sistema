@@ -64,23 +64,76 @@
         <label class="form-label">Perfil *</label>
         <select name="user_perfil" id="user_perfil" class="form-select <?= session('errors.user_perfil') ? 'is-invalid' : '' ?>" required>
           <option value="">Seleccione…</option>
-          <?php foreach ($perfiles as $p): ?>
-            <option
-              value="<?= (int)$p['perfil_id'] ?>"
-              data-tipo="<?= esc($p['perfil_tipo'] ?? '') ?>"
-              <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
-              <?= esc($p['perfil_nombre']) ?>
-              <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
+          
+          <optgroup label="🛡️ Perfiles Internos">
+            <?php foreach ($perfilesInternos as $p): ?>
+              <option
+                value="<?= (int)$p['perfil_id'] ?>"
+                data-tipo="interno"
+                <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
+                <?= esc($p['perfil_nombre']) ?>
+                <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
+              </option>
+            <?php endforeach; ?>
+          </optgroup>
+          
+          <optgroup label="🏢 Perfiles de Compañía">
+            <?php foreach ($perfilesCompania as $p): ?>
+              <option
+                value="<?= (int)$p['perfil_id'] ?>"
+                data-tipo="compania"
+                <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
+                <?= esc($p['perfil_nombre']) ?>
+                <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
+              </option>
+            <?php endforeach; ?>
+          </optgroup>
+          
+          <optgroup label="🚗 Perfiles de Corredor">
+            <?php foreach ($perfilesCorredores as $p): ?>
+              <option
+                value="<?= (int)$p['perfil_id'] ?>"
+                data-tipo="corredor"
+                <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
+                <?= esc($p['perfil_nombre']) ?>
+                <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
+              </option>
+            <?php endforeach; ?>
+          </optgroup>
+          
+          <optgroup label="🔍 Perfiles de Inspector">
+            <?php foreach ($perfilesInspectores as $p): ?>
+              <option
+                value="<?= (int)$p['perfil_id'] ?>"
+                data-tipo="inspector"
+                <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
+                <?= esc($p['perfil_nombre']) ?>
+                <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
+              </option>
+            <?php endforeach; ?>
+          </optgroup>
+        </select>
+        <div class="invalid-feedback"><?= session('errors.user_perfil') ?></div>
+      </div>
+
+      <div class="mb-3" id="corredor-container" style="display:none;">
+        <label class="form-label">Corredor *</label>
+        <select name="corredor_id" id="corredor_id" class="form-select <?= session('errors.corredor_id') ? 'is-invalid' : '' ?>">
+          <option value="">Seleccione un corredor…</option>
+          <?php foreach ($corredores as $c): ?>
+            <option value="<?= (int)$c['corredor_id'] ?>" <?= set_select('corredor_id', (string)$c['corredor_id']) ?>>
+              <?= esc($c['corredor_nombre']) ?>
             </option>
           <?php endforeach; ?>
         </select>
-        <div class="invalid-feedback"><?= session('errors.user_perfil') ?></div>
+        <div class="invalid-feedback"><?= session('errors.corredor_id') ?></div>
+        <div class="form-text">Corredor al que pertenece el usuario</div>
       </div>
 
       <div class="mb-3" id="cia-container" style="display:none;">
         <label class="form-label">Compañía *</label>
         <select name="cia_id" id="cia_id" class="form-select <?= session('errors.cia_id') ? 'is-invalid' : '' ?>">
-          <option value="">—</option>
+          <option value="">Seleccione una compañía…</option>
           <?php foreach ($cias as $c): ?>
             <option value="<?= (int)$c['cia_id'] ?>" <?= set_select('cia_id', (string)$c['cia_id']) ?>>
               <?= esc($c['cia_nombre']) ?>
@@ -88,6 +141,22 @@
           <?php endforeach; ?>
         </select>
         <div class="invalid-feedback"><?= session('errors.cia_id') ?></div>
+        <div class="form-text">Compañía a la que pertenece el usuario</div>
+      </div>
+
+      <!-- Info adicional según tipo de perfil -->
+      <div class="mb-3" id="interno-info" style="display:none;">
+        <div class="alert alert-info">
+          <i class="fas fa-shield-alt me-2"></i>
+          <strong>Usuario Interno:</strong> Este usuario pertenece a la organización y no requiere compañía ni corredor.
+        </div>
+      </div>
+
+      <div class="mb-3" id="inspector-info" style="display:none;">
+        <div class="alert alert-success">
+          <i class="fas fa-search me-2"></i>
+          <strong>Inspector:</strong> Este usuario podrá realizar inspecciones asignadas específicamente, sin depender de compañía o corredor.
+        </div>
       </div>
 
       <div class="mb-3">
@@ -140,19 +209,37 @@
 <?= $this->section('scripts') ?>
 <script>
 $(function () {
-  // ===== Mostrar/ocultar compañía según perfil =====
-  function refreshCiaReq() {
+  // ===== Mostrar/ocultar campos según perfil =====
+  function refreshProfileRequirements() {
     const tipo = $('#user_perfil').find('option:selected').data('tipo');
-    if (tipo === 'compania') {
-      $('#cia-container').show();
-      $('#cia_id').prop('required', true);
-    } else {
-      $('#cia-container').hide();
-      $('#cia_id').prop('required', false).val('');
+    
+    // Ocultar todos los contenedores primero
+    $('#cia-container, #corredor-container, #interno-info, #inspector-info').hide();
+    $('#cia_id, #corredor_id').prop('required', false).val('');
+    
+    switch(tipo) {
+      case 'compania':
+        $('#cia-container').show();
+        $('#cia_id').prop('required', true);
+        break;
+        
+      case 'corredor':
+        $('#corredor-container').show();
+        $('#corredor_id').prop('required', true);
+        break;
+        
+      case 'interno':
+        $('#interno-info').show();
+        break;
+        
+      case 'inspector':
+        $('#inspector-info').show();
+        break;
     }
   }
-  $('#user_perfil').on('change', refreshCiaReq);
-  refreshCiaReq();
+  
+  $('#user_perfil').on('change', refreshProfileRequirements);
+  refreshProfileRequirements(); // Ejecutar al cargar
 
   // ===== Password fuerte (igual al backend) =====
   const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])(?=\S+$).{8,}$/;
@@ -204,9 +291,16 @@ $(function () {
     }
 
     const tipo = $('#user_perfil').find('option:selected').data('tipo');
+    
+    // Validaciones específicas por tipo de perfil
     if (tipo === 'compania' && !$('#cia_id').val()) {
       e.preventDefault();
       return Swal.fire({icon:'error',title:'Falta compañía',text:'Selecciona una compañía para este perfil.'});
+    }
+    
+    if (tipo === 'corredor' && !$('#corredor_id').val()) {
+      e.preventDefault();
+      return Swal.fire({icon:'error',title:'Falta corredor',text:'Selecciona un corredor para este perfil.'});
     }
   });
 });

@@ -213,11 +213,54 @@ Editar Usuario
                                                 </option>
                                             <?php endforeach; ?>
                                         </optgroup>
+                                        <optgroup label="🚗 Perfiles de Corredor">
+                                            <?php foreach ($perfilesCorredores as $perfil): ?>
+                                                <option value="<?= $perfil['perfil_id'] ?>" 
+                                                        data-tipo="corredor"
+                                                        <?= old('user_perfil', $usuario['user_perfil']) == $perfil['perfil_id'] ? 'selected' : '' ?>>
+                                                    <?= esc($perfil['perfil_nombre']) ?> 
+                                                    (Nivel <?= $perfil['perfil_nivel'] ?>)
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </optgroup>
+                                        <optgroup label="🔍 Perfiles de Inspector">
+                                            <?php foreach ($perfilesInspectores as $perfil): ?>
+                                                <option value="<?= $perfil['perfil_id'] ?>" 
+                                                        data-tipo="inspector"
+                                                        <?= old('user_perfil', $usuario['user_perfil']) == $perfil['perfil_id'] ? 'selected' : '' ?>>
+                                                    <?= esc($perfil['perfil_nombre']) ?> 
+                                                    (Nivel <?= $perfil['perfil_nivel'] ?>)
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </optgroup>
                                     </select>
                                     <div class="invalid-feedback">
                                         <?= session('errors.user_perfil') ?>
                                     </div>
                                     <div class="form-text">El perfil determina los permisos del usuario</div>
+                                </div>
+
+                                <!-- Corredor -->
+                                <div class="mb-3" id="corredor-container" style="display: none;">
+                                    <label for="corredor_id" class="form-label">
+                                        <i class="fas fa-car text-warning me-1"></i>
+                                        Corredor *
+                                    </label>
+                                    <select class="form-select <?= (session('errors.corredor_id')) ? 'is-invalid' : '' ?>" 
+                                            id="corredor_id" 
+                                            name="corredor_id">
+                                        <option value="">Seleccionar corredor...</option>
+                                        <?php foreach ($corredores as $corredor): ?>
+                                            <option value="<?= $corredor['corredor_id'] ?>" 
+                                                    <?= old('corredor_id', $usuario['corredor_id']) == $corredor['corredor_id'] ? 'selected' : '' ?>>
+                                                <?= esc($corredor['corredor_nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        <?= session('errors.corredor_id') ?>
+                                    </div>
+                                    <div class="form-text">Corredor al que pertenece el usuario</div>
                                 </div>
 
                                 <!-- Compañía -->
@@ -247,7 +290,15 @@ Editar Usuario
                                 <div class="mb-3" id="interno-info" style="display: none;">
                                     <div class="alert alert-info">
                                         <i class="fas fa-shield-alt me-2"></i>
-                                        <strong>Usuario Interno:</strong> Este usuario pertenece a la organización y no requiere compañía.
+                                        <strong>Usuario Interno:</strong> Este usuario pertenece a la organización y no requiere compañía ni corredor.
+                                    </div>
+                                </div>
+
+                                <!-- Info perfil inspector -->
+                                <div class="mb-3" id="inspector-info" style="display: none;">
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-search me-2"></i>
+                                        <strong>Inspector:</strong> Este usuario podrá realizar inspecciones asignadas específicamente, sin depender de compañía o corredor.
                                     </div>
                                 </div>
 
@@ -365,29 +416,41 @@ Editar Usuario
 <script>
 $(document).ready(function() {
     const originalData = {
-        nombre:   $('#user_nombre').val(),
-        email:    $('#user_email').val(),
-        telefono: $('#user_telefono').val(),
-        perfil:   $('#user_perfil').val(),
-        cia:      $('#cia_id').val(),
-        estado:   $('#user_habil').val()
+        nombre:      $('#user_nombre').val(),
+        email:       $('#user_email').val(),
+        telefono:    $('#user_telefono').val(),
+        perfil:      $('#user_perfil').val(),
+        cia:         $('#cia_id').val(),
+        corredor:    $('#corredor_id').val(),
+        estado:      $('#user_habil').val()
     };
 
-    // ===== Perfil: mostrar/ocultar compañía según tipo =====
+    // ===== Perfil: mostrar/ocultar campos según tipo =====
     function applyPerfilUI() {
         const tipo = $('#user_perfil').find('option:selected').data('tipo');
-        if (tipo === 'compania') {
-            $('#cia-container').show();
-            $('#cia_id').prop('required', true);
-            $('#interno-info').hide();
-        } else if (tipo === 'interno') {
-            $('#cia-container').hide();
-            $('#cia_id').prop('required', false).val('');
-            $('#interno-info').show();
-        } else {
-            $('#cia-container').hide();
-            $('#cia_id').prop('required', false).val('');
-            $('#interno-info').hide();
+        
+        // Ocultar todos los contenedores primero
+        $('#cia-container, #corredor-container, #interno-info, #inspector-info').hide();
+        $('#cia_id, #corredor_id').prop('required', false);
+        
+        switch(tipo) {
+            case 'compania':
+                $('#cia-container').show();
+                $('#cia_id').prop('required', true);
+                break;
+                
+            case 'corredor':
+                $('#corredor-container').show();
+                $('#corredor_id').prop('required', true);
+                break;
+                
+            case 'interno':
+                $('#interno-info').show();
+                break;
+                
+            case 'inspector':
+                $('#inspector-info').show();
+                break;
         }
     }
     $('#user_perfil').on('change', applyPerfilUI);
@@ -395,7 +458,6 @@ $(document).ready(function() {
 
     // ===== Password fuerte (igual al backend) =====
     const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-
 
     // Mostrar/ocultar confirmar contraseña
     $('#user_clave').on('input', function() {
@@ -452,6 +514,7 @@ $(document).ready(function() {
             $('#user_telefono').val() !== originalData.telefono ||
             $('#user_perfil').val()   !== originalData.perfil ||
             $('#cia_id').val()        !== originalData.cia    ||
+            $('#corredor_id').val()   !== originalData.corredor ||
             $('#user_habil').val()    !== originalData.estado ||
             $('#user_clave').val().length > 0 ||
             ($('#user_avatar')[0].files && $('#user_avatar')[0].files.length > 0)
@@ -484,7 +547,7 @@ $(document).ready(function() {
             $('#user_email').focus(); return;
         }
 
-        // Perfil
+        // Perfil y validaciones según tipo
         const perfil = $('#user_perfil').val();
         if (!perfil) {
             e.preventDefault();
@@ -492,12 +555,18 @@ $(document).ready(function() {
             $('#user_perfil').focus(); return;
         }
 
-        // Compañía si aplica
+        // Validaciones específicas por tipo
         const tipo = $('#user_perfil').find('option:selected').data('tipo');
         if (tipo === 'compania' && !$('#cia_id').val()) {
             e.preventDefault();
             Swal.fire({ icon:'error', title:'Error de validación', text:'Debe seleccionar una compañía' });
             $('#cia_id').focus(); return;
+        }
+        
+        if (tipo === 'corredor' && !$('#corredor_id').val()) {
+            e.preventDefault();
+            Swal.fire({ icon:'error', title:'Error de validación', text:'Debe seleccionar un corredor' });
+            $('#corredor_id').focus(); return;
         }
 
         // Password (opcional en edición, pero si viene debe ser fuerte)
@@ -538,6 +607,7 @@ $(document).ready(function() {
                 $('#user_telefono').val(originalData.telefono);
                 $('#user_perfil').val(originalData.perfil).trigger('change');
                 $('#cia_id').val(originalData.cia);
+                $('#corredor_id').val(originalData.corredor);
                 $('#user_habil').val(originalData.estado);
                 $('#user_clave').val('').removeClass('is-invalid is-valid');
                 $('#confirmar_clave').val('').removeClass('is-invalid is-valid');

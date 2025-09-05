@@ -205,15 +205,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
   <div class="rail-header">
     <button class="pin-btn" id="btnPinHeader" title="Expandir/Colapsar"><i class="fa-solid fa-thumbtack"></i></button>
   </div>
-
-  <nav class="nav flex-column">
-    <nav class="nav flex-column">
-    <div class="rail-section">General</div>
-    <a class="nav-link <?= url_is('/corredor') ? 'active' : '' ?>" href="<?= base_url('/corredor') ?>" data-bs-toggle="tooltip" data-bs-title="corredor">
-      <i class="icon fa-solid fa-chart-simple"></i><span class="label">Dashboard</span>
-    </a>
-    
-     <div class="rail-section">General</div>
+ 
     
     <!-- Dashboard -->
     <a class="nav-link <?= url_is('corredor') || url_is('corredor/') ? 'active' : '' ?>" 

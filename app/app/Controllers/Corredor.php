@@ -1,7 +1,6 @@
 <?php
-namespace App\Controllers\Corredor;
-
-use App\Controllers\BaseController;
+namespace App\Controllers;
+class Corredor extends BaseController
 
 class Dashboard extends BaseController
 {

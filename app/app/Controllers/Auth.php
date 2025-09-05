@@ -95,63 +95,47 @@ class Auth extends BaseController
         // 9) Redirección según tipo de usuario
         return $this->redirectByUserType($user);
     }
-
-    /**
-     * Obtener branding específico según tipo de usuario
-     */
-    private function getBrandingForUser(array $user): array
+ 
+    private function redirectByUserType(array $user): \CodeIgniter\HTTP\RedirectResponse
     {
+        // Verificar redirección intencionada
+        $intended = session('intended');
+        if (!empty($intended)) {
+            session()->remove('intended');
+            return redirect()->to($intended);
+        }
+
+        $perfil_id = (int) ($user['user_perfil'] ?? 0);
         $perfil_tipo = $user['perfil_tipo'] ?? 'interno';
         
-        switch ($perfil_tipo) {
-            case 'compania':
-                // Branding de la compañía
-                return [
-                    'title'        => $user['cia_nombre'] ?? 'Sistema',
-                    'logo'         => $this->getLogoPath($user['user_avatar']),
-                    'nav_bg'       => $user['cia_brand_nav_bg'] ?? '#0D6EFD',
-                    'nav_text'     => $user['cia_brand_nav_text'] ?? '#FFFFFF',
-                    'sidebar_start'=> $user['cia_brand_side_start'] ?? '#667EEA',
-                    'sidebar_end'  => $user['cia_brand_side_end'] ?? '#764BA2',
-                    'app_title'    => $user['cia_nombre'] ?? env('app.title'),
-                ];
+        // Super Admin → CIAs
+        if ($perfil_id === 7) {
+            return redirect()->to(base_url('cias'));
+        }
 
+        // Redirección según tipo de perfil
+        switch ($perfil_tipo) {
             case 'corredor':
-                // Branding del corredor
-                return [
-                    'title'        => $user['corredor_nombre'] ?? 'Corredor',
-                    'logo'         => $this->getCorredorLogo($user),
-                    'nav_bg'       => $user['corredor_brand_nav_bg'] ?? '#FF6B35',
-                    'nav_text'     => $user['corredor_brand_nav_text'] ?? '#FFFFFF',
-                    'sidebar_start'=> $user['corredor_brand_side_start'] ?? '#FF6B35',
-                    'sidebar_end'  => $user['corredor_brand_side_end'] ?? '#F7931E',
-                    'app_title'    => $user['corredor_nombre'] ?? env('app.title'),
-                ];
+                // ✅ CORREGIDO: Debe coincidir con la ruta definida
+                return redirect()->to(base_url('corredor')); // o 'Corredor' si mantienes mayúscula
+
+            case 'compania':
+                return redirect()->to(base_url('compania'));
 
             case 'inspector':
-                // Branding para inspectores
-                return [
-                    'title'        => 'Inspector - ' . $user['user_nombre'],
-                    'logo'         => $this->getLogoPath($user['user_avatar']),
-                    'nav_bg'       => '#28A745',
-                    'nav_text'     => '#FFFFFF',
-                    'sidebar_start'=> '#28A745',
-                    'sidebar_end'  => '#20C997',
-                    'app_title'    => 'Sistema de Inspecciones',
-                ];
+                return redirect()->to(base_url('inspector'));
 
             case 'interno':
             default:
-                // Branding por defecto del sistema
-                return [
-                    'title'        => env('app.title', 'Sistema'),
-                    'logo'         => env('app.ubicacion_logo_pagina') . env('imagen_nomb_logo'),
-                    'nav_bg'       => '#0D6EFD',
-                    'nav_text'     => '#FFFFFF',
-                    'sidebar_start'=> '#667EEA',
-                    'sidebar_end'  => '#764BA2',
-                    'app_title'    => env('app.title', 'Sistema'),
-                ];
+                // Para usuarios internos, verificar por perfil_id específico
+                switch ($perfil_id) {
+                    case 2: // Supervisor
+                    case 5: // Coordinador
+                    case 6: // Control de Calidad
+                        return redirect()->to(base_url('dashboard/admin'));
+                    default:
+                        return redirect()->to(base_url('dashboard'));
+                }
         }
     }
 
@@ -170,7 +154,7 @@ class Auth extends BaseController
         $perfil_id = (int) ($user['user_perfil'] ?? 0);
         $perfil_tipo = $user['perfil_tipo'] ?? 'interno';
         
-        // Super Admin → CIAs
+        // Super Admin (perfil_id = 7) → CIAs
         if ($perfil_id === 7) {
             return redirect()->to(base_url('cias'));
         }

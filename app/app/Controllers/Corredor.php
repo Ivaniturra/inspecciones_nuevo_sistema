@@ -12,12 +12,7 @@ class Corredor extends BaseController
         // Verificar que sea corredor
         $perfilTipo = session('perfil_tipo');
         $perfilId = session('user_perfil_id');
-        
-        if ($perfilTipo !== 'corredor' && !in_array($perfilId, [8, 9, 10])) {
-            session()->setFlashdata('error', 'No tienes permisos para acceder a esta sección.');
-            header('Location: ' . base_url('dashboard'));
-            exit;
-        }
+         
     }
 
     public function index()

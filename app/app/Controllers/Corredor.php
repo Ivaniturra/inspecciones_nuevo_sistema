@@ -1,8 +1,6 @@
 <?php
 namespace App\Controllers;
-class Corredor extends BaseController
-
-class Dashboard extends BaseController
+class Corredor extends BaseController 
 {
     public function __construct()
     {
@@ -25,7 +23,7 @@ class Dashboard extends BaseController
     public function index()
     {
         // Obtener información del corredor
-        /*$corredorId = session('corredor_id');
+        $corredorId = session('corredor_id');
         
         $data = [
             'title' => 'Dashboard Corredor',
@@ -45,8 +43,6 @@ class Dashboard extends BaseController
             'nav_bg' => session('nav_bg'),
         ];
 
-        return view('pagina_corredor/index', $data);*/
-
-        echo "aadd";
+        return view('pagina_corredor/index', $data); 
     }
 } // ← ASEGÚRATE DE QUE ESTÉ ESTA LLAVE DE CIERRE

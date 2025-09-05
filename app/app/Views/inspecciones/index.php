@@ -40,12 +40,7 @@
                         <?= esc($title) ?>
                     </h1>
                     <p class="text-muted mb-0">Gestión de inspecciones vehiculares</p>
-                </div>
-                <div>
-                    <a href="<?= base_url('inspecciones/create') ?>" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Nueva Inspección
-                    </a>
-                </div>
+                </div> 
             </div>
         </div>
     </div>

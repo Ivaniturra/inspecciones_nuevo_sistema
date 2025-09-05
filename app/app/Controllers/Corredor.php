@@ -27,7 +27,7 @@ class Dashboard extends BaseController
 
     public function index()
     {
-        // Obtener información del corredor
+        /*// Obtener información del corredor
         $corredorId = session('corredor_id');
         
         // Puedes cargar modelos específicos aquí
@@ -52,7 +52,8 @@ class Dashboard extends BaseController
             'nav_bg' => session('nav_bg'),
         ];
 
-        return view('pagina_corredor', $data);
+        return view('pagina_corredor', $data);*/
+        echo "aassa";
     }
     
     /**

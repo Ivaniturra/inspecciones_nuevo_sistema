@@ -201,16 +201,11 @@ if ($user) {
      * SOLUCIÓN ROBUSTA: Verificar múltiples condiciones
      */
     private function redirectByUserType(array $user): \CodeIgniter\HTTP\RedirectResponse
-    {
-        // Debug temporal
-        $this->debugPerfilTipo($user);
-        
-        $perfil_id = (int) ($user['user_perfil'] ?? 0);
-        $perfil_tipo = trim(strtolower($user['perfil_tipo'] ?? '')); // ← NORMALIZAR
-        $corredor_id = $user['corredor_id'] ?? null;
-        
-        // Verificar redirección intencionada
-        // ✅ LOGS DETALLADOS
+{
+    $perfil_id = (int) ($user['user_perfil'] ?? 0);
+    $perfil_tipo = $user['perfil_tipo'] ?? 'interno';
+    
+    // ✅ LOGS DETALLADOS
     file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
         date('Y-m-d H:i:s') . " - === REDIRECT DEBUG ===\n", 
         FILE_APPEND | LOCK_EX
@@ -232,45 +227,68 @@ if ($user) {
         session()->remove('intended');
         return redirect()->to($intended);
     }
-        
-        // ✅ VERIFICACIÓN MÚLTIPLE PARA CORREDORES
-        $esCorrector = (
-            $perfil_tipo === 'corredor' ||           // Por tipo
-            in_array($perfil_id, [8, 10]) ||        // Por ID específico (según tu imagen)
-            !empty($corredor_id)                     // Tiene corredor_id asignado
+    
+    // Super Admin → CIAs
+    if ($perfil_id === 7) {
+        file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+            date('Y-m-d H:i:s') . " - REDIRECTING TO: cias (Super Admin)\n", 
+            FILE_APPEND | LOCK_EX
         );
-        
-        if ($esCorrector) {
-            log_message('debug', 'CORREDOR DETECTADO - Redirigiendo a /corredor');
-            return redirect()->to(base_url('corredor'));
-        }
-        
-        // Super Admin
-        if ($perfil_id === 7) {
-            return redirect()->to(base_url('cias'));
-        }
-        
-        // Otros tipos
-        switch ($perfil_tipo) {
-            case 'compania':
-                return redirect()->to(base_url('compania'));
-                
-            case 'inspector':
-                return redirect()->to(base_url('inspector'));
-                
-            case 'interno':
-            default:
-                switch ($perfil_id) {
-                    case 2: // Supervisor
-                    case 5: // Coordinador  
-                    case 6: // Control de Calidad
-                        return redirect()->to(base_url('dashboard/admin'));
-                    default:
-                        log_message('debug', 'DEFAULT CASE - Redirigiendo a /dashboard');
-                        return redirect()->to(base_url('dashboard'));
-                }
-        }
+        return redirect()->to(base_url('cias'));
     }
+
+    // Redirección según tipo de perfil
+    switch ($perfil_tipo) {
+        case 'corredor':
+            file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+                date('Y-m-d H:i:s') . " - CASE 'corredor' MATCHED - REDIRECTING TO: corredor\n", 
+                FILE_APPEND | LOCK_EX
+            );
+            return redirect()->to(base_url('corredor'));
+
+        case 'compania':
+            file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+                date('Y-m-d H:i:s') . " - REDIRECTING TO: compania\n", 
+                FILE_APPEND | LOCK_EX
+            );
+            return redirect()->to(base_url('compania'));
+
+        case 'inspector':
+            file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+                date('Y-m-d H:i:s') . " - REDIRECTING TO: inspector\n", 
+                FILE_APPEND | LOCK_EX
+            );
+            return redirect()->to(base_url('inspector'));
+
+        case 'interno':
+        default:
+            file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+                date('Y-m-d H:i:s') . " - CASE 'interno/default' - Checking perfil_id: " . $perfil_id . "\n", 
+                FILE_APPEND | LOCK_EX
+            );
+            
+            switch ($perfil_id) {
+                case 2: case 5: case 6:
+                    file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+                        date('Y-m-d H:i:s') . " - REDIRECTING TO: dashboard/admin\n", 
+                        FILE_APPEND | LOCK_EX
+                    );
+                    return redirect()->to(base_url('dashboard/admin'));
+                case 8: case 9: case 10: // Agregué 9 que es el ID que tienes
+                    file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+                        date('Y-m-d H:i:s') . " - PERFIL_ID " . $perfil_id . " - REDIRECTING TO: corredor\n", 
+                        FILE_APPEND | LOCK_EX
+                    );
+                    return redirect()->to(base_url('corredor'));
+                default:
+                    file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+                        date('Y-m-d H:i:s') . " - DEFAULT CASE - REDIRECTING TO: dashboard\n", 
+                        FILE_APPEND | LOCK_EX
+                    );
+                    return redirect()->to(base_url('dashboard'));
+            }
+    }
+}
 
     /**
      * Helper para obtener ruta del logo del usuario

@@ -275,25 +275,47 @@ class UserModel extends Model
             ->where('users.user_habil', 1)
             ->orderBy('users.user_nombre', 'ASC')
             ->findAll();
-    }
-
+    } 
     public function findByEmail(string $email): ?array
     {
-        $email = strtolower(trim($email));
-        $row = $this->select(
-                'users.*,' .
-                'cias.*,' .
-                'perfiles.perfil_nombre,' .
-                'perfiles.perfil_tipo,' .
-                'perfiles.perfil_permisos'
-            )
-            ->join('cias', 'cias.cia_id = users.cia_id', 'left')
-            ->join('perfiles', 'perfiles.perfil_id = users.user_perfil', 'left')
-            ->where('users.user_email', $email)
-            ->where('users.user_habil', 1)
-            ->first();
-
-        return $row ?: null;
+        $query = $this->db->table('users u')
+            ->select('
+                u.*,
+                p.perfil_nombre,
+                p.perfil_tipo,
+                p.perfil_nivel,
+                c.cia_id,
+                c.cia_nombre,
+                c.cia_brand_nav_bg,
+                c.cia_brand_nav_text,
+                c.cia_brand_side_start,
+                c.cia_brand_side_end,
+                cor.corredor_id,
+                cor.corredor_nombre,
+                cor.corredor_brand_nav_bg,
+                cor.corredor_brand_nav_text,
+                cor.corredor_brand_side_start,
+                cor.corredor_brand_side_end,
+                cor.corredor_logo_path
+            ')
+            ->join('perfiles p', 'p.perfil_id = u.user_perfil', 'left')
+            ->join('cias c', 'c.cia_id = u.user_cia_id', 'left')
+            ->join('corredores cor', 'cor.corredor_id = u.user_corredor_id', 'left') // ← VERIFICAR ESTA LÍNEA
+            ->where('u.user_email', $email)
+            ->where('u.user_habil', 1);
+        
+        $result = $query->get()->getRowArray();
+        
+        // ✅ DEBUG TEMPORAL
+        if ($result) {
+            log_message('debug', '=== USER DATA FROM DB ===');
+            log_message('debug', 'user_perfil: ' . ($result['user_perfil'] ?? 'NULL'));
+            log_message('debug', 'perfil_tipo: ' . ($result['perfil_tipo'] ?? 'NULL'));
+            log_message('debug', 'corredor_id: ' . ($result['corredor_id'] ?? 'NULL'));
+            log_message('debug', 'user_corredor_id: ' . ($result['user_corredor_id'] ?? 'NULL'));
+        }
+        
+        return $result ?: null;
     }
 
     public function verifyPassword(string $password, string $hash): bool

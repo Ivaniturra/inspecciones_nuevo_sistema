@@ -171,52 +171,71 @@ class Auth extends BaseController
     /**
      * Redirección según tipo de usuario
      */
+    private function debugPerfilTipo(array $user): void
+    {
+        $perfil_tipo = $user['perfil_tipo'] ?? 'NO_DEFINIDO';
+        
+        log_message('debug', "=== DEBUG CORREDOR ===");
+        log_message('debug', "perfil_tipo RAW: '" . $perfil_tipo . "'");
+        log_message('debug', "perfil_tipo length: " . strlen($perfil_tipo));
+        log_message('debug', "perfil_tipo === 'corredor': " . ($perfil_tipo === 'corredor' ? 'true' : 'false'));
+        log_message('debug', "user_perfil: " . ($user['user_perfil'] ?? 'NO_DEFINIDO'));
+        log_message('debug', "corredor_id: " . ($user['corredor_id'] ?? 'NO_DEFINIDO'));
+    }
+
+    /**
+     * SOLUCIÓN ROBUSTA: Verificar múltiples condiciones
+     */
     private function redirectByUserType(array $user): \CodeIgniter\HTTP\RedirectResponse
     {
+        // Debug temporal
+        $this->debugPerfilTipo($user);
+        
+        $perfil_id = (int) ($user['user_perfil'] ?? 0);
+        $perfil_tipo = trim(strtolower($user['perfil_tipo'] ?? '')); // ← NORMALIZAR
+        $corredor_id = $user['corredor_id'] ?? null;
+        
         // Verificar redirección intencionada
         $intended = session('intended');
         if (!empty($intended)) {
             session()->remove('intended');
             return redirect()->to($intended);
         }
-
-        $perfil_id = (int) ($user['user_perfil'] ?? 0);
-        $perfil_tipo = $user['perfil_tipo'] ?? 'interno';
         
-        // ✅ AGREGAR DEBUG TEMPORAL
-        log_message('debug', 'redirectByUserType - perfil_id: ' . $perfil_id);
-        log_message('debug', 'redirectByUserType - perfil_tipo: ' . $perfil_tipo);
+        // ✅ VERIFICACIÓN MÚLTIPLE PARA CORREDORES
+        $esCorrector = (
+            $perfil_tipo === 'corredor' ||           // Por tipo
+            in_array($perfil_id, [8, 10]) ||        // Por ID específico (según tu imagen)
+            !empty($corredor_id)                     // Tiene corredor_id asignado
+        );
         
-        // Super Admin → CIAs
+        if ($esCorrector) {
+            log_message('debug', 'CORREDOR DETECTADO - Redirigiendo a /corredor');
+            return redirect()->to(base_url('corredor'));
+        }
+        
+        // Super Admin
         if ($perfil_id === 7) {
             return redirect()->to(base_url('cias'));
         }
-
-        // Redirección según tipo de perfil
+        
+        // Otros tipos
         switch ($perfil_tipo) {
-            case 'corredor':
-                // ✅ ASEGURAR QUE ESTA LÍNEA SE EJECUTE
-                log_message('debug', 'Redirigiendo a corredor dashboard');
-                return redirect()->to(base_url('corredor'));
-
             case 'compania':
                 return redirect()->to(base_url('compania'));
-
+                
             case 'inspector':
                 return redirect()->to(base_url('inspector'));
-
+                
             case 'interno':
             default:
-                // Para usuarios internos, verificar por perfil_id específico
                 switch ($perfil_id) {
                     case 2: // Supervisor
-                    case 5: // Coordinador
+                    case 5: // Coordinador  
                     case 6: // Control de Calidad
                         return redirect()->to(base_url('dashboard/admin'));
-                    case 8: // ✅ AGREGAR CASO ESPECÍFICO PARA PERFIL_ID 8
-                        log_message('debug', 'Perfil ID 8 detectado, redirigiendo a corredor');
-                        return redirect()->to(base_url('corredor'));
                     default:
+                        log_message('debug', 'DEFAULT CASE - Redirigiendo a /dashboard');
                         return redirect()->to(base_url('dashboard'));
                 }
         }

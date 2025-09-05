@@ -47,6 +47,20 @@ class Auth extends BaseController
         $users = new \App\Models\UserModel();
         $user  = $users->findByEmail($email);
 
+        file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+    date('Y-m-d H:i:s') . " - Login attempt for: " . $email . "\n", 
+    FILE_APPEND | LOCK_EX
+);
+
+if ($user) {
+    file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+        date('Y-m-d H:i:s') . " - User found - Perfil: " . ($user['user_perfil'] ?? 'NULL') . 
+        " - Tipo: " . ($user['perfil_tipo'] ?? 'NULL') . 
+        " - Corredor ID: " . ($user['corredor_id'] ?? 'NULL') . "\n", 
+        FILE_APPEND | LOCK_EX
+    );
+}
+
         if (!$user || empty($user['user_habil'])) {
             return redirect()->back()
                             ->withInput()

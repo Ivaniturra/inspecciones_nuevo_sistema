@@ -63,54 +63,60 @@
       <div class="mb-3">
         <label class="form-label">Perfil *</label>
         <select name="user_perfil" id="user_perfil" class="form-select <?= session('errors.user_perfil') ? 'is-invalid' : '' ?>" required>
-          <option value="">Seleccione…</option>
-          
-          <optgroup label="🛡️ Perfiles Internos">
-            <?php foreach ($perfilesInternos as $p): ?>
-              <option
-                value="<?= (int)$p['perfil_id'] ?>"
-                data-tipo="interno"
-                <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
-                <?= esc($p['perfil_nombre']) ?>
-                <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
-              </option>
-            <?php endforeach; ?>
-          </optgroup>
-          
-          <optgroup label="🏢 Perfiles de Compañía">
-            <?php foreach ($perfilesCompania as $p): ?>
-              <option
-                value="<?= (int)$p['perfil_id'] ?>"
-                data-tipo="compania"
-                <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
-                <?= esc($p['perfil_nombre']) ?>
-                <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
-              </option>
-            <?php endforeach; ?>
-          </optgroup>
-          
-          <optgroup label="🚗 Perfiles de Corredor">
-            <?php if (isset($perfilesCorredores) && !empty($perfilesCorredores)): ?>
-            <optgroup label="🚗 Perfiles de Corredor">
-                <?php foreach ($perfilesCorredores as $p): ?>
-                    <!-- contenido del optgroup -->
-                <?php endforeach; ?>
-            </optgroup>
-            <?php endif; ?>
-          </optgroup>
-          
-          <optgroup label="🔍 Perfiles de Inspector">
-            <?php foreach ($perfilesInspectores as $p): ?>
-              <option
-                value="<?= (int)$p['perfil_id'] ?>"
-                data-tipo="inspector"
-                <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
-                <?= esc($p['perfil_nombre']) ?>
-                <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
-              </option>
-            <?php endforeach; ?>
-          </optgroup>
-        </select>
+  <option value="">Seleccione…</option>
+  
+  <optgroup label="🛡️ Perfiles Internos">
+    <?php foreach ($perfilesInternos as $p): ?>
+      <option
+        value="<?= (int)$p['perfil_id'] ?>"
+        data-tipo="interno"
+        <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
+        <?= esc($p['perfil_nombre']) ?>
+        <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
+      </option>
+    <?php endforeach; ?>
+  </optgroup>
+  
+  <optgroup label="🏢 Perfiles de Compañía">
+    <?php foreach ($perfilesCompania as $p): ?>
+      <option
+        value="<?= (int)$p['perfil_id'] ?>"
+        data-tipo="compania"
+        <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
+        <?= esc($p['perfil_nombre']) ?>
+        <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
+      </option>
+    <?php endforeach; ?>
+  </optgroup>
+  
+  <optgroup label="🚗 Perfiles de Corredor">
+    <?php if (isset($perfilesCorredores)): ?>
+      <?php foreach ($perfilesCorredores as $p): ?>
+        <option
+          value="<?= (int)$p['perfil_id'] ?>"
+          data-tipo="corredor"
+          <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
+          <?= esc($p['perfil_nombre']) ?>
+          <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
+        </option>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </optgroup>
+  
+  <optgroup label="🔍 Perfiles de Inspector">
+    <?php if (isset($perfilesInspectores)): ?>
+      <?php foreach ($perfilesInspectores as $p): ?>
+        <option
+          value="<?= (int)$p['perfil_id'] ?>"
+          data-tipo="inspector"
+          <?= set_select('user_perfil', (string)$p['perfil_id']) ?>>
+          <?= esc($p['perfil_nombre']) ?>
+          <?php if (isset($p['perfil_nivel'])): ?>(Nivel <?= (int)$p['perfil_nivel'] ?>)<?php endif; ?>
+        </option>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </optgroup>
+</select>
         <div class="invalid-feedback"><?= session('errors.user_perfil') ?></div>
       </div>
 

@@ -369,12 +369,14 @@ class UserModel extends Model
 
     public function getEnhancedStats(): array
     {
-        $stats    = $this->getStats();
+        $stats = $this->getStats();
         $allUsers = $this->findAll();
 
         $stats['need_password_change'] = 0;
         $stats['recent_logins_24h']    = 0;
         $stats['locked_accounts']      = 0;
+        $stats['corredores']           = 0;
+        $stats['inspectores']          = 0;
 
         foreach ($allUsers as $u) {
             if ($this->needsPasswordChange($u['user_id'])) $stats['need_password_change']++;
@@ -385,7 +387,16 @@ class UserModel extends Model
             }
 
             if ((int)($u['user_intentos_login'] ?? 0) >= 5) $stats['locked_accounts']++;
+            
+            // Contar por tipo usando corredor_id
+            if (!empty($u['corredor_id'])) $stats['corredores']++;
         }
+        
+        // Contar inspectores por perfil
+        $stats['inspectores'] = $this->join('perfiles', 'perfiles.perfil_id = users.user_perfil', 'left')
+                                    ->where('perfiles.perfil_tipo', 'inspector')
+                                    ->countAllResults(true);
+        
         return $stats;
     }
 

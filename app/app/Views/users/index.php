@@ -100,7 +100,7 @@ Gestión de Usuarios
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-0"><?= $stats['corredores'] ?></h4>
+                            <h4 class="mb-0"><?= $stats['corredores'] ?? 0 ?></h4> 
                             <span>Corredores</span>
                         </div>
                         <div class="align-self-center">
@@ -115,7 +115,7 @@ Gestión de Usuarios
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-0"><?= $stats['inspectores'] ?></h4>
+                            <h4 class="mb-0"><?= $stats['inspectores'] ?? 0 ?></h4> 
                             <span>Inspectores</span>
                         </div>
                         <div class="align-self-center">

@@ -111,10 +111,10 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->delete('delete/(:num)', 'TipoVehiculos::delete/$1');
         $routes->post('delete/(:num)', 'TipoVehiculos::delete/$1');
         $routes->post('toggleStatus/(:num)', 'TipoVehiculos::toggleStatus/$1');
-        $routes->get('getSelect', 'TipoVehiculos::getSelect');
+        $routes->get('getSelCorredorect', 'TipoVehiculos::getSelect');
         
     });
-    $routes->group('PagCorredor', ['filter' => 'role:8'], static function($routes) {
-        $routes->get('/', 'PagCorredor\Dashboard::index'); 
+    $routes->group('Corredor', ['filter' => 'role:8'], static function($routes) {
+        $routes->get('/', 'Corredor\Dashboard::index'); 
     }); 
 });

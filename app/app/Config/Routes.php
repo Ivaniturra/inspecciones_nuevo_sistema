@@ -16,7 +16,9 @@ $routes->post('reset',        'Auth::processReset'); // procesa nueva clave
 // === PROTEGIDAS ===
 $routes->group('', ['filter' => 'auth'], static function($routes) {
 
+    $routes->group('cias', ['filter' => 'role:7'], static function($routes) {
     $routes->get('dashboard', 'Dashboard::index', ['as' => 'dashboard']);
+    });
 
     // CIAS (solo super admin = 7)
     $routes->group('cias', ['filter' => 'role:7'], static function($routes) {

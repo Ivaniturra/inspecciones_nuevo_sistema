@@ -300,7 +300,7 @@ class UserModel extends Model
             ')
             ->join('perfiles p', 'p.perfil_id = u.user_perfil', 'left')
             ->join('cias c', 'c.cia_id = u.cia_id', 'left')
-            ->join('corredores cor', 'cor.corredor_id = u.user_corredor_id', 'left') // ← VERIFICAR ESTA LÍNEA
+            ->join('corredores cor', 'cor.corredor_id = u.corredor_id', 'left') // ← VERIFICAR ESTA LÍNEA
             ->where('u.user_email', $email)
             ->where('u.user_habil', 1);
         

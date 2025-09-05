@@ -15,12 +15,7 @@ $routes->post('reset',        'Auth::processReset'); // procesa nueva clave
 
 // === PROTEGIDAS ===
 $routes->group('', ['filter' => 'auth'], static function($routes) {
-
-    // Inspecciones - acceso según roles 
-     $routes->get('/', 'Inspecciones::index');
-    $routes->get('create', 'Inspecciones::create');
-    $routes->post('store', 'Inspecciones::store');
-    $routes->get('show/(:num)', 'Inspecciones::show/$1');
+ 
 
     $routes->group('cias', ['filter' => 'role:7'], static function($routes) {
     $routes->get('dashboard', 'Dashboard::index', ['as' => 'dashboard']);
@@ -124,7 +119,10 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     });
     $routes->group('corredor', ['filter' => 'role:9,10'], static function($routes) {
         $routes->get('/', 'Corredor::index');
-
+            $routes->get('inspecciones', 'Inspecciones::index');
+    $routes->get('inspecciones/create', 'Inspecciones::create');
+    $routes->post('inspecciones/store', 'Inspecciones::store');
+    $routes->get('inspecciones/show/(:num)', 'Inspecciones::show/$1');
      
     // etc.
     });

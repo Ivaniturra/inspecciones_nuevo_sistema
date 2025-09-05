@@ -52,7 +52,7 @@ class Dashboard extends BaseController
             'nav_bg' => session('nav_bg'),
         ];
 
-        return view('corredor/dashboard', $data);
+        return view('pagina_corredor', $data);
     }
     
     /**

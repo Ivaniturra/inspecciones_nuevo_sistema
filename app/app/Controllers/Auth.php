@@ -138,53 +138,7 @@ class Auth extends BaseController
                 }
         }
     }
-
-    /**
-     * Redirección según tipo de usuario
-     */
-    private function redirectByUserType(array $user): \CodeIgniter\HTTP\RedirectResponse
-    {
-        // Verificar redirección intencionada
-        $intended = session('intended');
-        if (!empty($intended)) {
-            session()->remove('intended');
-            return redirect()->to($intended);
-        }
-
-        $perfil_id = (int) ($user['user_perfil'] ?? 0);
-        $perfil_tipo = $user['perfil_tipo'] ?? 'interno';
-        
-        // Super Admin (perfil_id = 7) → CIAs
-        if ($perfil_id === 7) {
-            return redirect()->to(base_url('cias'));
-        }
-
-        // Redirección según tipo de perfil
-        switch ($perfil_tipo) {
-            case 'corredor':
-                // Cambiar la ruta a algo más simple
-                return redirect()->to(base_url('corredor'));
-
-            case 'compania':
-                return redirect()->to(base_url('compania'));
-
-            case 'inspector':
-                return redirect()->to(base_url('inspector'));
-
-            case 'interno':
-            default:
-                // Para usuarios internos, verificar por perfil_id específico
-                switch ($perfil_id) {
-                    case 2: // Supervisor
-                    case 5: // Coordinador
-                    case 6: // Control de Calidad
-                        return redirect()->to(base_url('dashboard/admin'));
-                    default:
-                        return redirect()->to(base_url('dashboard'));
-                }
-        }
-    }
-
+ 
     /**
      * Helper para obtener ruta del logo del usuario
      */

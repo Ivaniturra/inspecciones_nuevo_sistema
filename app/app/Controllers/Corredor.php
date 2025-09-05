@@ -16,9 +16,9 @@ class Dashboard extends BaseController
         $perfilTipo = session('perfil_tipo');
         $perfilId = session('user_perfil_id');
         
-        if ($perfilTipo !== 'corredor' && !in_array($perfilId, [ 9, 10])) {
+        if ($perfilTipo !== 'corredor' && !in_array($perfilId, [8, 9, 10])) {
             session()->setFlashdata('error', 'No tienes permisos para acceder a esta sección.');
-            return view('pagina_corredor/index', $data);
+            header('Location: ' . base_url('dashboard'));
             exit;
         }
     }
@@ -48,4 +48,4 @@ class Dashboard extends BaseController
 
         return view('pagina_corredor/index', $data);
     }
-}
+} // ← ASEGÚRATE DE QUE ESTÉ ESTA LLAVE DE CIERRE

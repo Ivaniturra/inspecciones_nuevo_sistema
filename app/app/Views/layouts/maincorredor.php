@@ -213,6 +213,12 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
       <i class="icon fa-solid fa-chart-simple"></i><span class="label">Dashboard</span>
     </a>
     
+     <nav class="nav flex-column">
+    <div class="rail-section">General</div>
+    <a class="nav-link <?= url_is('/inspecciones') ? 'active' : '' ?>" href="<?= base_url('/inspecciones') ?>" data-bs-toggle="tooltip" data-bs-title="corredor">
+      <i class="icon fa-solid fa-chart-simple"></i><span class="label">Inspecciones</span>
+    </a>
+    
     <!-- MENÚ ESPECÍFICO PARA CORREDORES -->
     <div class="rail-section">Gestión</div>
     

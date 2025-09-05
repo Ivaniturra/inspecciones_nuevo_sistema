@@ -95,7 +95,69 @@ class Auth extends BaseController
         // 9) Redirección según tipo de usuario
         return $this->redirectByUserType($user);
     }
- 
+
+    /**
+     * Obtener branding específico según tipo de usuario
+     */
+    private function getBrandingForUser(array $user): array
+    {
+        $perfil_tipo = $user['perfil_tipo'] ?? 'interno';
+        
+        switch ($perfil_tipo) {
+            case 'compania':
+                // Branding de la compañía
+                return [
+                    'title'        => $user['cia_nombre'] ?? 'Sistema',
+                    'logo'         => $this->getLogoPath($user['user_avatar']),
+                    'nav_bg'       => $user['cia_brand_nav_bg'] ?? '#0D6EFD',
+                    'nav_text'     => $user['cia_brand_nav_text'] ?? '#FFFFFF',
+                    'sidebar_start'=> $user['cia_brand_side_start'] ?? '#667EEA',
+                    'sidebar_end'  => $user['cia_brand_side_end'] ?? '#764BA2',
+                    'app_title'    => $user['cia_nombre'] ?? env('app.title'),
+                ];
+
+            case 'corredor':
+                // Branding del corredor
+                return [
+                    'title'        => $user['corredor_nombre'] ?? 'Corredor',
+                    'logo'         => $this->getCorredorLogo($user),
+                    'nav_bg'       => $user['corredor_brand_nav_bg'] ?? '#FF6B35',
+                    'nav_text'     => $user['corredor_brand_nav_text'] ?? '#FFFFFF',
+                    'sidebar_start'=> $user['corredor_brand_side_start'] ?? '#FF6B35',
+                    'sidebar_end'  => $user['corredor_brand_side_end'] ?? '#F7931E',
+                    'app_title'    => $user['corredor_nombre'] ?? env('app.title'),
+                ];
+
+            case 'inspector':
+                // Branding para inspectores
+                return [
+                    'title'        => 'Inspector - ' . $user['user_nombre'],
+                    'logo'         => $this->getLogoPath($user['user_avatar']),
+                    'nav_bg'       => '#28A745',
+                    'nav_text'     => '#FFFFFF',
+                    'sidebar_start'=> '#28A745',
+                    'sidebar_end'  => '#20C997',
+                    'app_title'    => 'Sistema de Inspecciones',
+                ];
+
+            case 'interno':
+            default:
+                // Branding por defecto del sistema
+                return [
+                    'title'        => env('app.title', 'Sistema'),
+                    'logo'         => env('app.ubicacion_logo_pagina') . env('imagen_nomb_logo'),
+                    'nav_bg'       => '#0D6EFD',
+                    'nav_text'     => '#FFFFFF',
+                    'sidebar_start'=> '#667EEA',
+                    'sidebar_end'  => '#764BA2',
+                    'app_title'    => env('app.title', 'Sistema'),
+                ];
+        }
+    }
+
+    /**
+     * Redirección según tipo de usuario
+     */
     private function redirectByUserType(array $user): \CodeIgniter\HTTP\RedirectResponse
     {
         // Verificar redirección intencionada
@@ -138,7 +200,7 @@ class Auth extends BaseController
                 }
         }
     }
- 
+
     /**
      * Helper para obtener ruta del logo del usuario
      */

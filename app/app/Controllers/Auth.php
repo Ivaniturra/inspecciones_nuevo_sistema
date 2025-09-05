@@ -21,33 +21,46 @@ class Auth extends BaseController
         ]);
     } 
     public function attempt()
-    {
-        // 1) Validación básica
+    { 
+        if (!$this->request->is('post')) {
+            return redirect()->to(base_url('/'))->with('error', 'Método no permitido.');
+        }
+
+        // 1) Validación básica (CSRF se valida automáticamente si está habilitado)
         $rules = [
             'email'    => 'required|valid_email',
             'password' => 'required|min_length[6]',
         ];
-        if (! $this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        
+        if (!$this->validate($rules)) {
+            return redirect()->back()
+                            ->withInput()
+                            ->with('errors', $this->validator->getErrors());
         }
 
-        $email    = strtolower(trim((string) $this->request->getPost('email')));
-        $pass     = (string) $this->request->getPost('password');
-        $remember = (bool)  $this->request->getPost('remember');
+        // 2) Obtener datos del POST
+        $email    = strtolower(trim($this->request->getPost('email')));
+        $pass     = $this->request->getPost('password');
+        $remember = (bool) $this->request->getPost('remember');
 
-        // 2) Usuario con JOIN actualizado para corredores
+        // Resto del código permanece igual...
         $users = new \App\Models\UserModel();
-        $user  = $users->findByEmail($email); // ya hace JOIN con cias, corredores y perfiles
+        $user  = $users->findByEmail($email);
 
-        if (! $user || empty($user['user_habil'])) {
-            return redirect()->back()->withInput()->with('error', 'Credenciales inválidas.');
+        if (!$user || empty($user['user_habil'])) {
+            return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Credenciales inválidas.');
         }
 
-        // 3) Password
-        if (! password_verify($pass, (string) $user['user_clave'])) {
+        // Verificar contraseña
+        if (!password_verify($pass, $user['user_clave'])) {
             $users->logLoginAttempt((int) $user['user_id'], false);
-            return redirect()->back()->withInput()->with('error', 'Credenciales inválidas.');
+            return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Credenciales inválidas.');
         }
+
 
         // 4) Verificar si necesita cambiar contraseña
         if (!empty($user['user_debe_cambiar_clave'])) {

@@ -3,7 +3,7 @@
 
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
-    <h1 class="h3 mb-1">Panel Principal</h1>
+    <h1 class="h3 mb-1">Panel Principsssal</h1>
     <div class="text-body-secondary">Resumen general del sistema</div>
   </div>
 </div>

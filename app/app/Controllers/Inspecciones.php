@@ -4,7 +4,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\InspeccionesModel;
 use App\Models\BitacoraModel;
-use App\Models\CiasModel;
+use App\Models\CiaModel;
 
 class Inspecciones extends BaseController
 {
@@ -16,7 +16,7 @@ class Inspecciones extends BaseController
     {
         $this->inspeccionesModel = new InspeccionesModel();
         $this->bitacoraModel = new BitacoraModel();
-        $this->ciasModel = new CiasModel();
+        $this->ciasModel = new CiaModel();
     }
 
     /**

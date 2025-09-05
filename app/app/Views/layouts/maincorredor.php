@@ -207,10 +207,57 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
   </div>
 
   <nav class="nav flex-column">
+    <nav class="nav flex-column">
     <div class="rail-section">General</div>
     <a class="nav-link <?= url_is('/dashboard') ? 'active' : '' ?>" href="<?= base_url('/dashboard') ?>" data-bs-toggle="tooltip" data-bs-title="Dashboard">
       <i class="icon fa-solid fa-chart-simple"></i><span class="label">Dashboard</span>
     </a>
+    
+    <!-- MENÚ ESPECÍFICO PARA CORREDORES -->
+    <div class="rail-section">Gestión</div>
+    
+    <!-- Clientes/Asegurados -->
+    <a class="nav-link <?= url_is('corredor/clientes*') ? 'active' : '' ?>" href="<?= base_url('corredor/clientes') ?>" data-bs-toggle="tooltip" data-bs-title="Clientes">
+      <i class="icon fa-solid fa-users"></i><span class="label">Clientes</span>
+    </a>
+    
+    <!-- Pólizas -->
+    <a class="nav-link <?= url_is('corredor/polizas*') ? 'active' : '' ?>" href="<?= base_url('corredor/polizas') ?>" data-bs-toggle="tooltip" data-bs-title="Pólizas">
+      <i class="icon fa-solid fa-file-contract"></i><span class="label">Pólizas</span>
+    </a>
+    
+    <!-- Siniestros -->
+    <a class="nav-link <?= url_is('corredor/siniestros*') ? 'active' : '' ?>" href="<?= base_url('corredor/siniestros') ?>" data-bs-toggle="tooltip" data-bs-title="Siniestros">
+      <i class="icon fa-solid fa-car-burst"></i><span class="label">Siniestros</span>
+    </a>
+    
+    <!-- Cotizaciones -->
+    <a class="nav-link <?= url_is('corredor/cotizaciones*') ? 'active' : '' ?>" href="<?= base_url('corredor/cotizaciones') ?>" data-bs-toggle="tooltip" data-bs-title="Cotizaciones">
+      <i class="icon fa-solid fa-calculator"></i><span class="label">Cotizaciones</span>
+    </a>
+    
+    <!-- Renovaciones -->
+    <a class="nav-link <?= url_is('corredor/renovaciones*') ? 'active' : '' ?>" href="<?= base_url('corredor/renovaciones') ?>" data-bs-toggle="tooltip" data-bs-title="Renovaciones">
+      <i class="icon fa-solid fa-rotate"></i><span class="label">Renovaciones</span>
+    </a>
+    
+    <div class="rail-section">Reportes</div>
+    
+    <!-- Comisiones -->
+    <a class="nav-link <?= url_is('corredor/comisiones*') ? 'active' : '' ?>" href="<?= base_url('corredor/comisiones') ?>" data-bs-toggle="tooltip" data-bs-title="Comisiones">
+      <i class="icon fa-solid fa-percent"></i><span class="label">Comisiones</span>
+    </a>
+    
+    <!-- Reportes -->
+    <a class="nav-link <?= url_is('corredor/reportes*') ? 'active' : '' ?>" href="<?= base_url('corredor/reportes') ?>" data-bs-toggle="tooltip" data-bs-title="Reportes">
+      <i class="icon fa-solid fa-chart-line"></i><span class="label">Reportes</span>
+    </a>
+    
+    <!-- Documentos -->
+    <a class="nav-link <?= url_is('corredor/documentos*') ? 'active' : '' ?>" href="<?= base_url('corredor/documentos') ?>" data-bs-toggle="tooltip" data-bs-title="Documentos">
+      <i class="icon fa-solid fa-folder-open"></i><span class="label">Documentos</span>
+    </a>
+</nav>
  
 </aside>
 

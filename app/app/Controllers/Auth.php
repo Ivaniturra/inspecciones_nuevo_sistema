@@ -167,34 +167,37 @@ class Auth extends BaseController
             return redirect()->to($intended);
         }
 
+        $perfil_id = (int) ($user['user_perfil'] ?? 0);
         $perfil_tipo = $user['perfil_tipo'] ?? 'interno';
-        $perfil_nivel = (int) ($user['perfil_nivel'] ?? 0);
         
         // Super Admin → CIAs
-        $perfilNombre = strtolower(trim((string) ($user['perfil_nombre'] ?? '')));
-        $isSuperAdmin = ($perfilNombre === 'super administrador') || ($perfil_nivel >= 4);
-        if ($isSuperAdmin) {
+        if ($perfil_id === 7) {
             return redirect()->to(base_url('cias'));
         }
 
         // Redirección según tipo de perfil
         switch ($perfil_tipo) {
             case 'corredor':
-                // Corredores van a su dashboard específico
-                return redirect()->to(base_url('pagina_corredor/corredor'));
+                // Cambiar la ruta a algo más simple
+                return redirect()->to(base_url('corredor'));
 
             case 'compania':
-                // Usuarios de compañía van a su dashboard
-                return redirect()->to(base_url('dashboard/compania'));
+                return redirect()->to(base_url('compania'));
 
             case 'inspector':
-                // Inspectores van a sus inspecciones asignadas
-                return redirect()->to(base_url('inspecciones/mis-asignaciones'));
+                return redirect()->to(base_url('inspector'));
 
             case 'interno':
             default:
-                // Usuarios internos al dashboard general o CIAs
-                return redirect()->to(base_url('dashboard'));
+                // Para usuarios internos, verificar por perfil_id específico
+                switch ($perfil_id) {
+                    case 2: // Supervisor
+                    case 5: // Coordinador
+                    case 6: // Control de Calidad
+                        return redirect()->to(base_url('dashboard/admin'));
+                    default:
+                        return redirect()->to(base_url('dashboard'));
+                }
         }
     }
 

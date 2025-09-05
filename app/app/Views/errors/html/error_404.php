@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? '404 - P·gina no encontrada' ?></title>
+    <title><?= $title ?? '404 - P√°gina no encontrada' ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -114,27 +114,24 @@
             
             <div class="error-code">404</div>
             
-            <h1 class="error-title">P·gina no encontrada</h1>
+            <h1 class="error-title">P√°gina no encontrada</h1>
             
             <p class="error-message">
-                Lo sentimos, la p·gina que est·s buscando no existe o ha sido movida.
-                Puede que hayas escrito mal la direcciÛn o que el enlace estÈ desactualizado.
+                Lo sentimos, la p√°gina que est√°s buscando no existe o ha sido movida.
+                Puede que hayas escrito mal la direcci√≥n o que el enlace est√© desactualizado.
             </p>
             
             <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
                 <button onclick="history.back()" class="btn btn-back">
-                    <i class="fas fa-arrow-left me-2"></i>Volver atr·s
-                </button>
-                <a href="<?= base_url('/') ?>" class="btn btn-primary btn-home">
-                    <i class="fas fa-home me-2"></i>Ir al inicio
-                </a>
+                    <i class="fas fa-arrow-left me-2"></i>Volver atr√°s
+                </button> 
             </div>
             
             <div class="suggestions">
                 <h6><i class="fas fa-lightbulb me-2"></i>Sugerencias:</h6>
                 <ul>
-                    <li>Verifica que la URL estÈ escrita correctamente</li>
-                    <li>Intenta buscar desde la p·gina principal</li>
+                    <li>Verifica que la URL est√© escrita correctamente</li>
+                    <li>Intenta buscar desde la p√°gina principal</li>
                     <li>Contacta al administrador si crees que esto es un error</li>
                 </ul>
             </div>

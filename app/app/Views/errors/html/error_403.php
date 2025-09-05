@@ -117,24 +117,22 @@
             <h1 class="error-title">Acceso denegado</h1>
             
             <p class="error-message">
-                No tienes permisos para acceder a esta sección del sistema.
-                Si crees que deberías tener acceso, contacta al administrador.
+                No tienes permisos para acceder a esta secciÃ³n del sistema.
+                Si crees que deberÃ­as tener acceso, contacta al administrador.
             </p>
             
             <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
-                <a href="<?= base_url('/') ?>" class="btn btn-success btn-home">
-                    <i class="fas fa-home me-2"></i>Ir al inicio
-                </a>
+              
                 <a href="<?= base_url('logout') ?>" class="btn btn-primary btn-login">
                     <i class="fas fa-sign-in-alt me-2"></i>Cambiar usuario
                 </a>
             </div>
             
             <div class="access-info">
-                <h6><i class="fas fa-info-circle me-2"></i>Información sobre acceso:</h6>
+                <h6><i class="fas fa-info-circle me-2"></i>InformaciÃ³n sobre acceso:</h6>
                 <p>
-                    Cada usuario tiene permisos específicos según su rol en el sistema. 
-                    Si necesitas acceso adicional, solicítalo al administrador del sistema.
+                    Cada usuario tiene permisos especÃ­ficos segÃºn su rol en el sistema. 
+                    Si necesitas acceso adicional, solicÃ­talo al administrador del sistema.
                 </p>
             </div>
         </div>

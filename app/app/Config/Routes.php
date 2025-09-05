@@ -115,7 +115,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         
     });
     $routes->group('corredor', ['filter' => 'role:9,10'], static function($routes) {
-    $routes->get('/', 'Corredor::index', ['as' => 'corredor.dashboard']);
+        $routes->get('/', 'Corredor::index', ['as' => 'corredor.dashboard']);
      
     // etc.
     });

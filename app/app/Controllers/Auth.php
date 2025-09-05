@@ -187,7 +187,7 @@ class Auth extends BaseController
         if ($perfil_id === 7) {
             return redirect()->to(base_url('cias'));
         }
-
+        /*
         // Redirección según tipo de perfil
         switch ($perfil_tipo) {
             case 'corredor':
@@ -211,7 +211,8 @@ class Auth extends BaseController
                     default:
                         return redirect()->to(base_url('dashboard'));
                 }
-        }
+        }*/
+                echo $perfil_tipo;
     }
 
     /**

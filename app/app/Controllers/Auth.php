@@ -183,16 +183,21 @@ class Auth extends BaseController
         $perfil_id = (int) ($user['user_perfil'] ?? 0);
         $perfil_tipo = $user['perfil_tipo'] ?? 'interno';
         
+        // ✅ AGREGAR DEBUG TEMPORAL
+        log_message('debug', 'redirectByUserType - perfil_id: ' . $perfil_id);
+        log_message('debug', 'redirectByUserType - perfil_tipo: ' . $perfil_tipo);
+        
         // Super Admin → CIAs
         if ($perfil_id === 7) {
             return redirect()->to(base_url('cias'));
         }
-        /*
+
         // Redirección según tipo de perfil
         switch ($perfil_tipo) {
             case 'corredor':
-                // ✅ CORREGIDO: Debe coincidir con la ruta definida
-                return redirect()->to(base_url('corredor')); // o 'Corredor' si mantienes mayúscula
+                // ✅ ASEGURAR QUE ESTA LÍNEA SE EJECUTE
+                log_message('debug', 'Redirigiendo a corredor dashboard');
+                return redirect()->to(base_url('corredor'));
 
             case 'compania':
                 return redirect()->to(base_url('compania'));
@@ -208,11 +213,13 @@ class Auth extends BaseController
                     case 5: // Coordinador
                     case 6: // Control de Calidad
                         return redirect()->to(base_url('dashboard/admin'));
+                    case 8: // ✅ AGREGAR CASO ESPECÍFICO PARA PERFIL_ID 8
+                        log_message('debug', 'Perfil ID 8 detectado, redirigiendo a corredor');
+                        return redirect()->to(base_url('corredor'));
                     default:
                         return redirect()->to(base_url('dashboard'));
                 }
-        }*/
-                return $perfil_tipo;
+        }
     }
 
     /**

@@ -1,5 +1,4 @@
 <?php
-// app/Controllers/Corredor/Dashboard.php
 namespace App\Controllers\Corredor;
 
 use App\Controllers\BaseController;
@@ -13,37 +12,32 @@ class Dashboard extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Acceso denegado');
         }
 
-        // Verificar que sea corredor - mejorar la validación
+        // Verificar que sea corredor
         $perfilTipo = session('perfil_tipo');
         $perfilId = session('user_perfil_id');
         
-        if ($perfilTipo !== 'corredor' && $perfilId != 8) {
-            // Mejor manejo de errores
+        if ($perfilTipo !== 'corredor' && !in_array($perfilId, [ 9, 10])) {
             session()->setFlashdata('error', 'No tienes permisos para acceder a esta sección.');
-            header('Location: ' . base_url('dashboard'));
+            return view('pagina_corredor/index', $data);
             exit;
         }
     }
 
     public function index()
     {
-        /*// Obtener información del corredor
+        // Obtener información del corredor
         $corredorId = session('corredor_id');
-        
-        // Puedes cargar modelos específicos aquí
-        // $solicitudesModel = new \App\Models\SolicitudesModel();
-        // $clientesModel = new \App\Models\ClientesModel();
         
         $data = [
             'title' => 'Dashboard Corredor',
             'corredor_id' => $corredorId,
             'corredor_nombre' => session('brand_title'),
             
-            // Datos específicos del dashboard
+            // Estadísticas del dashboard
             'stats' => [
-                'solicitudes_pendientes' => 0, // Implementar
-                'clientes_activos' => 0,       // Implementar  
-                'comisiones_mes' => 0,         // Implementar
+                'solicitudes_pendientes' => 5,
+                'clientes_activos' => 23,
+                'comisiones_mes' => 850000,
             ],
             
             // Branding personalizado
@@ -52,15 +46,6 @@ class Dashboard extends BaseController
             'nav_bg' => session('nav_bg'),
         ];
 
-        return view('pagina_corredor', $data);*/
-        echo "aassa";
-    }
-    
-    /**
-     * Verificar si el usuario actual es corredor
-     */
-    protected function isCorrector(): bool
-    {
-        return session('perfil_tipo') === 'corredor' || session('user_perfil_id') == 8;
+        return view('pagina_corredor/index', $data);
     }
 }

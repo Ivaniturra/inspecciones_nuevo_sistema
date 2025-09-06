@@ -287,7 +287,7 @@
                     <div class="section-divider">
                         <div class="d-flex justify-content-between">
                             <a href="<?= base_url('inspecciones') ?>" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-2"></i>Cancelar
+                                <i class="fas fa-times me-2"></i>Cancelarss
                             </a>
                             <button type="submit" class="btn btn-primary btn-submit">
                                 <i class="fas fa-save me-2"></i>Crear Inspección

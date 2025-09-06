@@ -283,43 +283,6 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="celular">Celular <span class="required">*</span></label>
-                                <input type="tel" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('celular') ? 'is-invalid' : '' ?>" 
-                                       id="celular" 
-                                       name="celular" 
-                                       value="<?= old('celular') ?>" 
-                                       placeholder="+56 9 1234 5678"
-                                       required>
-                                <?php if (isset($validation) && $validation->hasError('celular')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('celular') ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="telefono">Teléfono (Opcional)</label>
-                                <input type="tel" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('telefono') ? 'is-invalid' : '' ?>" 
-                                       id="telefono" 
-                                       name="telefono" 
-                                       value="<?= old('telefono') ?>" 
-                                       placeholder="+56 2 1234 5678">
-                                <?php if (isset($validation) && $validation->hasError('telefono')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('telefono') ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Botones -->
                     <div class="section-divider">
                         <div class="d-flex justify-content-between">
@@ -346,7 +309,7 @@
 <script>
 // Inicializar Select2 para el campo de comunas
 $(document).ready(function() {
-    $('#comunas_id').select2({
+    $('.select2-comunas').select2({
         theme: 'bootstrap-5',
         placeholder: 'Seleccionar comuna...',
         allowClear: true,  // Permite limpiar la selección

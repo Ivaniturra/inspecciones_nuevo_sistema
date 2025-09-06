@@ -283,11 +283,49 @@
                         </div>
                     </div>
 
+                    <!-- Campos de Celular y Teléfono -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="celular">Celular <span class="required">*</span></label>
+                                <input type="tel" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('celular') ? 'is-invalid' : '' ?>" 
+                                       id="celular" 
+                                       name="celular" 
+                                       value="<?= old('celular') ?>" 
+                                       placeholder="+56 9 1234 5678"
+                                       required>
+                                <?php if (isset($validation) && $validation->hasError('celular')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('celular') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="telefono">Teléfono (Opcional)</label>
+                                <input type="tel" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('telefono') ? 'is-invalid' : '' ?>" 
+                                       id="telefono" 
+                                       name="telefono" 
+                                       value="<?= old('telefono') ?>" 
+                                       placeholder="+56 2 1234 5678">
+                                <?php if (isset($validation) && $validation->hasError('telefono')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('telefono') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Botones -->
                     <div class="section-divider">
                         <div class="d-flex justify-content-between">
                             <a href="<?= base_url('inspecciones') ?>" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-2"></i>Cancelarss
+                                <i class="fas fa-times me-2"></i>Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary btn-submit">
                                 <i class="fas fa-save me-2"></i>Crear Inspección

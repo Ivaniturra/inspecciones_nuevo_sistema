@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/maincorredor') ?>  
+ <?= $this->extend('layouts/maincorredor') ?>  
 
 <?= $this->section('title') ?>
 <?= $title ?>
@@ -47,14 +47,7 @@
         max-height: 200px;
         overflow-y: auto;
     }
-    #comuna-seleccionada {
-        display: none;
-        background-color: #e3f2fd;
-        border: 2px solid #2196f3;
-        border-radius: 5px;
-        padding: 8px 12px;
-        margin-top: 10px;
-    }
+
     .info-badge {
         font-size: 0.8rem;
         color: #6c757d;
@@ -128,123 +121,6 @@
                         </div>
                     </div>
 
-                    <!-- Información del Vehículo -->
-                    <div class="section-divider">
-                        <div class="section-title">
-                            <i class="fas fa-car me-2"></i>Información del Vehículo
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group mb-3">
-                                <label for="patente">Patente <span class="required">*</span></label>
-                                <input type="text" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('patente') ? 'is-invalid' : '' ?>" 
-                                       id="patente" 
-                                       name="patente" 
-                                       value="<?= old('patente') ?>" 
-                                       placeholder="ABC123"
-                                       maxlength="8"
-                                       style="text-transform: uppercase"
-                                       required>
-                                <?php if (isset($validation) && $validation->hasError('patente')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('patente') ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="form-group mb-3">
-                                <label for="marca">Marca <span class="required">*</span></label>
-                                <input type="text" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('marca') ? 'is-invalid' : '' ?>" 
-                                       id="marca" 
-                                       name="marca" 
-                                       value="<?= old('marca') ?>" 
-                                       placeholder="Toyota, Chevrolet, etc."
-                                       required>
-                                <?php if (isset($validation) && $validation->hasError('marca')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('marca') ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="form-group mb-3">
-                                <label for="modelo">Modelo <span class="required">*</span></label>
-                                <input type="text" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('modelo') ? 'is-invalid' : '' ?>" 
-                                       id="modelo" 
-                                       name="modelo" 
-                                       value="<?= old('modelo') ?>" 
-                                       placeholder="Corolla, Aveo, etc."
-                                       required>
-                                <?php if (isset($validation) && $validation->hasError('modelo')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('modelo') ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Información de la Póliza -->
-                    <div class="section-divider">
-                        <div class="section-title">
-                            <i class="fas fa-file-contract me-2"></i>Información de la Póliza
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="n_poliza">Número de Póliza <span class="required">*</span></label>
-                                <input type="text" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('n_poliza') ? 'is-invalid' : '' ?>" 
-                                       id="n_poliza" 
-                                       name="n_poliza" 
-                                       value="<?= old('n_poliza') ?>" 
-                                       placeholder="Número de póliza del seguro"
-                                       required>
-                                <?php if (isset($validation) && $validation->hasError('n_poliza')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('n_poliza') ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="cia_id">Compañía de Seguros <span class="required">*</span></label>
-                                <select class="form-control <?= isset($validation) && $validation->hasError('cia_id') ? 'is-invalid' : '' ?>" 
-                                        id="cia_id" 
-                                        name="cia_id" 
-                                        required>
-                                    <option value="">Seleccione una compañía</option>
-                                    <?php if (isset($cias)): ?>
-                                        <?php foreach ($cias as $cia): ?>
-                                            <option value="<?= $cia['cia_id'] ?>" 
-                                                    <?= old('cia_id') == $cia['cia_id'] ? 'selected' : '' ?>>
-                                                <?= esc($cia['cia_nombre']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
-                                <?php if (isset($validation) && $validation->hasError('cia_id')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('cia_id') ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Información de Contacto -->
                     <div class="section-divider">
                         <div class="section-title">
@@ -276,54 +152,22 @@
                                 <label for="comunas_id">Comuna <span class="required">*</span></label>
                                 <!-- Campo para filtrar las comunas -->
                                 <input type="text" id="filtro-comuna" class="form-control" placeholder="Escriba para filtrar comunas..." autocomplete="off">
-                                <select id="comunas_id" name="comunas_id" size="8">
-    <option value="">-- Seleccionar comuna --</option>
-    <option value="1" data-nombre="comuna 1">Comuna 1</option>
-    <option value="2" data-nombre="comuna 2">Comuna 2</option>
-    ...
-</select>
+                                <select class="form-control" id="comunas_id" name="comunas_id" size="8" required>
+                                    <option value="">-- Seleccionar comuna --</option>
+                                    <?php if (isset($comunas)): ?>
+                                        <?php foreach ($comunas as $comuna): ?>
+                                            <option value="<?= $comuna['comunas_id'] ?>" 
+                                                    data-nombre="<?= strtolower($comuna['comunas_nombre']) ?>"
+                                                    <?= old('comunas_id') == $comuna['comunas_id'] ? 'selected' : '' ?>>
+                                                <?= esc($comuna['comunas_nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
                                 <div id="comuna-seleccionada" class="selected-comuna">
                                     <strong>Comuna seleccionada:</strong> <span id="nombre-comuna"></span>
                                     <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="limpiarSeleccion()">Cambiar</button>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Campos de Celular y Teléfono -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="celular">Celular <span class="required">*</span></label>
-                                <input type="tel" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('celular') ? 'is-invalid' : '' ?>" 
-                                       id="celular" 
-                                       name="celular" 
-                                       value="<?= old('celular') ?>" 
-                                       placeholder="+56 9 1234 5678"
-                                       required>
-                                <?php if (isset($validation) && $validation->hasError('celular')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('celular') ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="telefono">Teléfono (Opcional)</label>
-                                <input type="tel" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('telefono') ? 'is-invalid' : '' ?>" 
-                                       id="telefono" 
-                                       name="telefono" 
-                                       value="<?= old('telefono') ?>" 
-                                       placeholder="+56 2 1234 5678">
-                                <?php if (isset($validation) && $validation->hasError('telefono')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('telefono') ?>
-                                    </div>
-                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

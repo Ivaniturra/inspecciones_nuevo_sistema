@@ -1,10 +1,14 @@
-<?= $this->extend('layouts/maincorredor') ?> 
+<?= $this->extend('layouts/maincorredor') ?>  
 
 <?= $this->section('title') ?>
 <?= $title ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('css') ?>
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+
 <style>
     .form-container {
         background: #fff;
@@ -18,30 +22,7 @@
         padding-bottom: 1rem;
         margin-bottom: 2rem;
     }
-    .required {
-        color: #dc3545;
-    }
-    .form-group label {
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 0.5rem;
-    }
-    .form-control:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    }
-    .btn-submit {
-        background: linear-gradient(45deg, #007bff, #0056b3);
-        border: none;
-        padding: 12px 30px;
-        font-weight: 600;
-        border-radius: 50px;
-        transition: all 0.3s ease;
-    }
-    .btn-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
-    }
+    .required { color: #dc3545; }
     .section-divider {
         border-top: 1px solid #dee2e6;
         margin: 2rem 0 1.5rem 0;
@@ -53,32 +34,28 @@
         font-weight: 600;
         margin-bottom: 1rem;
     }
+    .btn-submit {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        border: none;
+        padding: 12px 30px;
+        font-weight: 600;
+        border-radius: 50px;
+    }
 </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <div class="container-fluid">
-    <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-0">
-                        <i class="fas fa-plus-circle me-2 text-primary"></i>
-                        <?= esc($title) ?>
-                    </h1>
-                    <p class="text-muted mb-0">Complete todos los campos para crear una nueva inspección</p>
-                </div>
-                <div>
-                    <a href="<?= base_url('inspecciones') ?>" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Volver al listado
-                    </a>
-                </div>
-            </div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-plus-circle me-2 text-primary"></i>
+                <?= esc($title) ?>
+            </h1>
+            <p class="text-muted mb-0">Complete todos los campos para crear una nueva inspección</p>
         </div>
     </div>
 
-    <!-- Formulario -->
     <div class="row">
         <div class="col-12">
             <div class="form-container">
@@ -129,7 +106,6 @@
                                         <?= $validation->getError('rut') ?>
                                     </div>
                                 <?php endif; ?>
-                                <small class="form-text text-muted">Formato: 12.345.678-9</small>
                             </div>
                         </div>
                     </div>
@@ -233,12 +209,14 @@
                                         name="cia_id" 
                                         required>
                                     <option value="">Seleccione una compañía</option>
-                                    <?php foreach ($cias as $cia): ?>
-                                        <option value="<?= $cia['cia_id'] ?>" 
-                                                <?= old('cia_id') == $cia['cia_id'] ? 'selected' : '' ?>>
-                                            <?= esc($cia['cia_nombre']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
+                                    <?php if (isset($cias)): ?>
+                                        <?php foreach ($cias as $cia): ?>
+                                            <option value="<?= $cia['cia_id'] ?>" 
+                                                    <?= old('cia_id') == $cia['cia_id'] ? 'selected' : '' ?>>
+                                                <?= esc($cia['cia_nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </select>
                                 <?php if (isset($validation) && $validation->hasError('cia_id')): ?>
                                     <div class="invalid-feedback">
@@ -277,17 +255,24 @@
                         
                         <div class="col-md-6">
                             <div class="form-group mb-3">
-                                <label for="comuna">Comuna <span class="required">*</span></label>
-                                <input type="text" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('comuna') ? 'is-invalid' : '' ?>" 
-                                       id="comuna" 
-                                       name="comuna" 
-                                       value="<?= old('comuna') ?>" 
-                                       placeholder="Comuna de residencia"
-                                       required>
-                                <?php if (isset($validation) && $validation->hasError('comuna')): ?>
+                                <label for="comunas_id">Comuna <span class="required">*</span></label>
+                                <select class="form-control select2-comunas <?= isset($validation) && $validation->hasError('comunas_id') ? 'is-invalid' : '' ?>" 
+                                        id="comunas_id" 
+                                        name="comunas_id" 
+                                        required>
+                                    <option value="">Seleccionar comuna</option>
+                                    <?php if (isset($comunas)): ?>
+                                        <?php foreach ($comunas as $comuna): ?>
+                                            <option value="<?= $comuna['comunas_id'] ?>" 
+                                                    <?= old('comunas_id') == $comuna['comunas_id'] ? 'selected' : '' ?>>
+                                                <?= esc($comuna['comunas_nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <?php if (isset($validation) && $validation->hasError('comunas_id')): ?>
                                     <div class="invalid-feedback">
-                                        <?= $validation->getError('comuna') ?>
+                                        <?= $validation->getError('comunas_id') ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -327,7 +312,6 @@
                                         <?= $validation->getError('telefono') ?>
                                     </div>
                                 <?php endif; ?>
-                                <small class="form-text text-muted">Teléfono fijo (opcional)</small>
                             </div>
                         </div>
                     </div>
@@ -367,7 +351,6 @@ document.getElementById('rut').addEventListener('input', function(e) {
             let numbers = rut.slice(0, -2);
             let dv = rut.slice(-2);
             
-            // Agregar puntos cada 3 dígitos
             numbers = numbers.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             rut = numbers + dv;
         }
@@ -381,51 +364,13 @@ document.getElementById('patente').addEventListener('input', function(e) {
     e.target.value = e.target.value.toUpperCase();
 });
 
-// Inicializar Select2 para comunas
+// Inicializar Select2 simple para comunas
 $(document).ready(function() {
     $('.select2-comunas').select2({
         theme: 'bootstrap-5',
         placeholder: 'Buscar y seleccionar comuna...',
         allowClear: true,
-        ajax: {
-            url: '<?= base_url('api/comunas/search') ?>',
-            dataType: 'json',
-            delay: 250,
-            data: function (params) {
-                return {
-                    q: params.term, // término de búsqueda
-                    page: params.page || 1
-                };
-            },
-            processResults: function (data, params) {
-                params.page = params.page || 1;
-                
-                return {
-                    results: data.items.map(function(item) {
-                        return {
-                            id: item.comunas_id,
-                            text: item.comunas_nombre + ' (' + (item.provincias_nombre || 'Provincia') + ')'
-                        };
-                    }),
-                    pagination: {
-                        more: data.has_more
-                    }
-                };
-            },
-            cache: true
-        },
-        minimumInputLength: 2, // Mínimo 2 caracteres para buscar
-        language: {
-            inputTooShort: function() {
-                return 'Escribe al menos 2 caracteres para buscar';
-            },
-            searching: function() {
-                return 'Buscando comunas...';
-            },
-            noResults: function() {
-                return 'No se encontraron comunas';
-            }
-        }
+        width: '100%'
     });
 });
 

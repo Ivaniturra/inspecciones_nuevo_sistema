@@ -4,7 +4,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\InspeccionesModel;
 use App\Models\BitacoraModel;
-use App\Models\CiaModel;
+use App\Models\CiasModel;
 
 class Inspecciones extends BaseController
 {
@@ -16,54 +16,40 @@ class Inspecciones extends BaseController
     {
         $this->inspeccionesModel = new InspeccionesModel();
         $this->bitacoraModel = new BitacoraModel();
-        $this->ciasModel = new CiaModel();
+        $this->ciasModel = new CiasModel();
     }
 
-    /**
-     * Mostrar listado de inspecciones
-     */
-    public function index()
-    {
-        $inspecciones = $this->inspeccionesModel->getInspeccionesWithDetails();
-
-        $data = [
-            'title' => 'Inspecciones',
-            'inspecciones' => $inspecciones
-        ];
-
-        return view('inspecciones/index', $data);
-    }
-
-    /**
-     * Mostrar formulario para crear nueva inspección
-     */
     public function create()
     {
+        // Filtrar CIAs por corredor
         $corredor_id = session('corredor_id');
-    
+        
         if ($corredor_id) {
-            // Si es corredor, solo sus compañías asignadas
             $cias = $this->ciasModel
                 ->where('cia_habil', 1)
-                ->where('corredor_id', $corredor_id) // Filtro por corredor
+                ->where('corredor_id', $corredor_id)
                 ->findAll();
         } else {
-            // Si es admin/inspector, todas las compañías
             $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
         }
+
+        // Cargar TODAS las comunas (select simple)
+        $db = \Config\Database::connect();
+        $comunas = $db->table('comunas')
+            ->select('comunas_id, comunas_nombre')
+            ->orderBy('comunas_nombre', 'ASC')
+            ->get()
+            ->getResultArray();
 
         $data = [
             'title' => 'Nueva Inspección',
             'cias' => $cias,
+            'comunas' => $comunas, // ← Agregar
             'validation' => null
         ];
 
         return view('inspecciones/create', $data);
-    }  
-
-    /**
-     * Procesar creación de nueva inspección
-     */
+    } 
     public function store()
     {
         $rules = [
@@ -74,28 +60,35 @@ class Inspecciones extends BaseController
             'modelo' => 'required|min_length[2]|max_length[50]',
             'n_poliza' => 'required|min_length[3]|max_length[20]',
             'direccion' => 'required|min_length[5]|max_length[200]',
-            'comunas_id' => 'required|is_natural_no_zero', // ← Actualizado
+            'comunas_id' => 'required|is_natural_no_zero', // ← Cambio
             'celular' => 'required|min_length[8]|max_length[15]',
             'telefono' => 'permit_empty|min_length[8]|max_length[15]',
             'cia_id' => 'required|is_natural_no_zero'
         ];
 
- 
-
         if (!$this->validate($rules)) {
-            $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
+            // Recargar datos en caso de error
+            $corredor_id = session('corredor_id');
+            if ($corredor_id) {
+                $cias = $this->ciasModel->where('cia_habil', 1)->where('corredor_id', $corredor_id)->findAll();
+            } else {
+                $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
+            }
+
+            $db = \Config\Database::connect();
+            $comunas = $db->table('comunas')->select('comunas_id, comunas_nombre')->orderBy('comunas_nombre', 'ASC')->get()->getResultArray();
             
             $data = [
                 'title' => 'Nueva Inspección',
                 'cias' => $cias,
+                'comunas' => $comunas,
                 'validation' => $this->validator
             ];
 
             return view('inspecciones/create', $data);
         }
 
-        // Preparar datos para insertar
-           // En la preparación de datos:
+        // Preparar datos
         $data = [
             'inspecciones_asegurado' => $this->request->getPost('asegurado'),
             'inspecciones_rut' => $this->formatRut($this->request->getPost('rut')),
@@ -104,7 +97,7 @@ class Inspecciones extends BaseController
             'inspecciones_modelo' => $this->request->getPost('modelo'),
             'inspecciones_n_poliza' => $this->request->getPost('n_poliza'),
             'inspecciones_direccion' => $this->request->getPost('direccion'),
-            'comunas_id' => $this->request->getPost('comunas_id'), // ← Actualizado
+            'comunas_id' => $this->request->getPost('comunas_id'), // ← Cambio
             'inspecciones_celular' => $this->request->getPost('celular'),
             'inspecciones_telefono' => $this->request->getPost('telefono'),
             'cia_id' => $this->request->getPost('cia_id'),
@@ -112,31 +105,17 @@ class Inspecciones extends BaseController
             'inspecciones_estado' => 'pendiente'
         ];
 
-        // Insertar en base de datos
-        $inspeccion_id = $this->inspeccionesModel->insert($data);
+        // Crear inspección
+        $inspecciones_id = $this->inspeccionesModel->crearInspeccionConBitacora($data);
         
-        if ($inspeccion_id) {
-            // Crear comentario inicial en la bitácora
-            $this->bitacoraModel->agregarComentario([
-                'inspeccion_id' => $inspeccion_id,
-                'user_id' => session('user_id'),
-                'comentario' => 'Inspección creada. Estado inicial: Pendiente',
-                'tipo_comentario' => 'estado_cambio',
-                'estado_nuevo' => 'pendiente',
-                'es_privado' => 0
-            ]);
-
+        if ($inspecciones_id) {
             session()->setFlashdata('success', 'Inspección creada exitosamente');
-            return redirect()->to(base_url('inspecciones/show/' . $inspeccion_id));
+            return redirect()->to(base_url('inspecciones'));
         } else {
             session()->setFlashdata('error', 'Error al crear la inspección');
             return redirect()->back()->withInput();
         }
-    }
-
-    /**
-     * Mostrar detalles de una inspección con bitácora
-     */
+    } 
     public function show($id)
     {
         $inspeccion = $this->inspeccionesModel

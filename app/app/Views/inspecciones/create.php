@@ -276,18 +276,12 @@
                                 <label for="comunas_id">Comuna <span class="required">*</span></label>
                                 <!-- Campo para filtrar las comunas -->
                                 <input type="text" id="filtro-comuna" class="form-control" placeholder="Escriba para filtrar comunas..." autocomplete="off">
-                                <select class="form-control" id="comunas_id" name="comunas_id" size="8" required>
-                                    <option value="">-- Seleccionar comuna --</option>
-                                    <?php if (isset($comunas)): ?>
-                                        <?php foreach ($comunas as $comuna): ?>
-                                            <option value="<?= $comuna['comunas_id'] ?>" 
-                                                    data-nombre="<?= strtolower($comuna['comunas_nombre']) ?>"
-                                                    <?= old('comunas_id') == $comuna['comunas_id'] ? 'selected' : '' ?>>
-                                                <?= esc($comuna['comunas_nombre']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
+                                <select id="comunas_id" name="comunas_id" size="8">
+    <option value="">-- Seleccionar comuna --</option>
+    <option value="1" data-nombre="comuna 1">Comuna 1</option>
+    <option value="2" data-nombre="comuna 2">Comuna 2</option>
+    ...
+</select>
                                 <div id="comuna-seleccionada" class="selected-comuna">
                                     <strong>Comuna seleccionada:</strong> <span id="nombre-comuna"></span>
                                     <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="limpiarSeleccion()">Cambiar</button>

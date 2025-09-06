@@ -1,4 +1,4 @@
- <?= $this->extend('layouts/maincorredor') ?>  
+<?= $this->extend('layouts/maincorredor') ?>  
 
 <?= $this->section('title') ?>
 <?= $title ?>
@@ -274,7 +274,6 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label for="comunas_id">Comuna <span class="required">*</span></label>
-                                <!-- Campo para filtrar las comunas -->
                                 <input type="text" id="filtro-comuna" class="form-control" placeholder="Escriba para filtrar comunas..." autocomplete="off">
                                 <select class="form-control" id="comunas_id" name="comunas_id" size="8" required>
                                     <option value="">-- Seleccionar comuna --</option>

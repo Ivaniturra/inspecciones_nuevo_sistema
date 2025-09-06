@@ -126,5 +126,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
      
     // etc.
     });
-    
+    $routes->group('api', static function($routes) {
+        $routes->get('comunas/search', 'Api\ComunasController::search');
+    });
 });

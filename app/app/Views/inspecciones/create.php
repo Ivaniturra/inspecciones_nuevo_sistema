@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/maincorredor') ?>
+<?= $this->extend('layouts/maincorredor') ?> 
 
 <?= $this->section('title') ?>
 <?= $title ?>
@@ -277,22 +277,17 @@
                         
                         <div class="col-md-6">
                             <div class="form-group mb-3">
-                                <label for="comunas_id">Comuna <span class="required">*</span></label>
-                                <select class="form-control <?= isset($validation) && $validation->hasError('comunas_id') ? 'is-invalid' : '' ?>" 
-                                        id="comunas_id" 
-                                        name="comunas_id" 
-                                        required>
-                                    <option value="">Seleccione una comuna</option>
-                                    <?php foreach ($comunas as $comuna): ?>
-                                        <option value="<?= $comuna['comunas_id'] ?>" 
-                                                <?= old('comunas_id') == $comuna['comunas_id'] ? 'selected' : '' ?>>
-                                            <?= esc($comuna['comunas_nombre']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <?php if (isset($validation) && $validation->hasError('comunas_id')): ?>
+                                <label for="comuna">Comuna <span class="required">*</span></label>
+                                <input type="text" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('comuna') ? 'is-invalid' : '' ?>" 
+                                       id="comuna" 
+                                       name="comuna" 
+                                       value="<?= old('comuna') ?>" 
+                                       placeholder="Comuna de residencia"
+                                       required>
+                                <?php if (isset($validation) && $validation->hasError('comuna')): ?>
                                     <div class="invalid-feedback">
-                                        <?= $validation->getError('comunas_id') ?>
+                                        <?= $validation->getError('comuna') ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -357,6 +352,9 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('js') ?>
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
 // Formateo automático del RUT
 document.getElementById('rut').addEventListener('input', function(e) {
@@ -381,6 +379,54 @@ document.getElementById('rut').addEventListener('input', function(e) {
 // Convertir patente a mayúsculas
 document.getElementById('patente').addEventListener('input', function(e) {
     e.target.value = e.target.value.toUpperCase();
+});
+
+// Inicializar Select2 para comunas
+$(document).ready(function() {
+    $('.select2-comunas').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Buscar y seleccionar comuna...',
+        allowClear: true,
+        ajax: {
+            url: '<?= base_url('api/comunas/search') ?>',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term, // término de búsqueda
+                    page: params.page || 1
+                };
+            },
+            processResults: function (data, params) {
+                params.page = params.page || 1;
+                
+                return {
+                    results: data.items.map(function(item) {
+                        return {
+                            id: item.comunas_id,
+                            text: item.comunas_nombre + ' (' + (item.provincias_nombre || 'Provincia') + ')'
+                        };
+                    }),
+                    pagination: {
+                        more: data.has_more
+                    }
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 2, // Mínimo 2 caracteres para buscar
+        language: {
+            inputTooShort: function() {
+                return 'Escribe al menos 2 caracteres para buscar';
+            },
+            searching: function() {
+                return 'Buscando comunas...';
+            },
+            noResults: function() {
+                return 'No se encontraron comunas';
+            }
+        }
+    });
 });
 
 // Validación del formulario

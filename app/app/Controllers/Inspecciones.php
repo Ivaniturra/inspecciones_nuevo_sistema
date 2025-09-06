@@ -39,16 +39,22 @@ class Inspecciones extends BaseController
      */
     public function create()
     {
-          $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
+        $corredor_id = session('corredor_id');
     
-        // ✅ Agregar comunas
-        $comunasModel = new \App\Models\ComunasModel(); // Crear este modelo
-        $comunas = $comunasModel->orderBy('comunas_nombre', 'ASC')->findAll();
+        if ($corredor_id) {
+            // Si es corredor, solo sus compañías asignadas
+            $cias = $this->ciasModel
+                ->where('cia_habil', 1)
+                ->where('corredor_id', $corredor_id) // Filtro por corredor
+                ->findAll();
+        } else {
+            // Si es admin/inspector, todas las compañías
+            $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
+        }
 
         $data = [
             'title' => 'Nueva Inspección',
             'cias' => $cias,
-            'comunas' => $comunas, // ← Agregar
             'validation' => null
         ];
 
@@ -68,13 +74,13 @@ class Inspecciones extends BaseController
             'modelo' => 'required|min_length[2]|max_length[50]',
             'n_poliza' => 'required|min_length[3]|max_length[20]',
             'direccion' => 'required|min_length[5]|max_length[200]',
-            'comuna' => 'required|min_length[3]|max_length[50]',
+            'comunas_id' => 'required|is_natural_no_zero', // ← Actualizado
             'celular' => 'required|min_length[8]|max_length[15]',
             'telefono' => 'permit_empty|min_length[8]|max_length[15]',
-            'cia_id' => 'required|is_natural_no_zero',
-            'comunas_id' => 'required|is_natural_no_zero', 
-
+            'cia_id' => 'required|is_natural_no_zero'
         ];
+
+ 
 
         if (!$this->validate($rules)) {
             $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
@@ -89,22 +95,21 @@ class Inspecciones extends BaseController
         }
 
         // Preparar datos para insertar
+           // En la preparación de datos:
         $data = [
-            'asegurado' => $this->request->getPost('asegurado'),
-            'rut' => $this->formatRut($this->request->getPost('rut')),
-            'patente' => strtoupper($this->request->getPost('patente')),
-            'marca' => $this->request->getPost('marca'),
-            'modelo' => $this->request->getPost('modelo'),
-            'n_poliza' => $this->request->getPost('n_poliza'),
-            'direccion' => $this->request->getPost('direccion'),
-            'comuna' => $this->request->getPost('comuna'),
-            'celular' => $this->request->getPost('celular'),
-            'telefono' => $this->request->getPost('telefono'),
+            'inspecciones_asegurado' => $this->request->getPost('asegurado'),
+            'inspecciones_rut' => $this->formatRut($this->request->getPost('rut')),
+            'inspecciones_patente' => strtoupper($this->request->getPost('patente')),
+            'inspecciones_marca' => $this->request->getPost('marca'),
+            'inspecciones_modelo' => $this->request->getPost('modelo'),
+            'inspecciones_n_poliza' => $this->request->getPost('n_poliza'),
+            'inspecciones_direccion' => $this->request->getPost('direccion'),
+            'comunas_id' => $this->request->getPost('comunas_id'), // ← Actualizado
+            'inspecciones_celular' => $this->request->getPost('celular'),
+            'inspecciones_telefono' => $this->request->getPost('telefono'),
             'cia_id' => $this->request->getPost('cia_id'),
             'user_id' => session('user_id'),
-            'estado' => 'pendiente',
-            'comunas_id' => $this->request->getPost('comunas_id'), // ← Cambio aquí
-
+            'inspecciones_estado' => 'pendiente'
         ];
 
         // Insertar en base de datos

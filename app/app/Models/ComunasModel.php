@@ -9,14 +9,10 @@ class ComunasModel extends Model
     protected $primaryKey = 'comunas_id';
     protected $allowedFields = ['comunas_nombre', 'provincias_id'];
     
-    /**
-     * Obtener comunas con provincia
-     */
-    public function getComunasWithProvincia()
+    public function getComunaById($id)
     {
         return $this->select('comunas.*, provincias.provincias_nombre')
             ->join('provincias', 'provincias.provincias_id = comunas.provincias_id', 'left')
-            ->orderBy('comunas.comunas_nombre', 'ASC')
-            ->findAll();
+            ->find($id);
     }
 }

@@ -1,10 +1,9 @@
- <?= $this->extend('layouts/maincorredor') ?> 
+<?= $this->extend('layouts/maincorredor') ?> 
 
 <?= $this->section('title') ?>
 <?= $title ?>
 <?= $this->endSection() ?>
-
-<?= $this->section('css') ?>
+ 
 <style>
     .form-container {
         background: #fff;
@@ -36,40 +35,6 @@
         padding: 12px 30px;
         font-weight: 600;
         border-radius: 50px;
-    }
-    
-    /* Estilos para el filtro de comunas */
-    .filtro-container {
-        position: relative;
-    }
-    
-    #filtro-comuna {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-        border-bottom: none;
-    }
-    
-    #comunas_id {
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
-        border-top: 1px solid #dee2e6;
-        max-height: 200px;
-        overflow-y: auto;
-    }
-    
-    .selected-comuna {
-        background-color: #e3f2fd;
-        border: 2px solid #2196f3;
-        border-radius: 5px;
-        padding: 8px 12px;
-        margin-top: 10px;
-        display: none;
-    }
-    
-    .info-badge {
-        font-size: 0.8rem;
-        color: #6c757d;
-        margin-top: 0.5rem;
     }
 </style>
 <?= $this->endSection() ?>
@@ -287,54 +252,31 @@
                             <div class="form-group mb-3">
                                 <label for="comunas_id">Comuna <span class="required">*</span></label>
                                 
-                                <div class="filtro-container">
-                                    <!-- Input para filtrar -->
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="filtro-comuna" 
-                                           placeholder="Escriba para filtrar comunas..."
-                                           autocomplete="off">
-                                    
-                                    <!-- Select normal -->
-                                    <select class="form-control <?= isset($validation) && $validation->hasError('comunas_id') ? 'is-invalid' : '' ?>" 
-                                            id="comunas_id" 
-                                            name="comunas_id" 
-                                            size="8"
-                                            required>
-                                        <option value="">-- Seleccionar comuna --</option>
-                                        <?php if (isset($comunas)): ?>
-                                            <?php foreach ($comunas as $comuna): ?>
-                                                <option value="<?= $comuna['comunas_id'] ?>" 
-                                                        data-nombre="<?= strtolower($comuna['comunas_nombre']) ?>"
-                                                        <?= old('comunas_id') == $comuna['comunas_id'] ? 'selected' : '' ?>>
-                                                    <?= esc($comuna['comunas_nombre']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </select>
-                                </div>
+                                <!-- Input para filtrar -->
+                                <input type="text" 
+                                    class="form-control mb-2" 
+                                    id="filtro-comuna" 
+                                    placeholder="Escriba para filtrar comunas...">
                                 
-                                <!-- Comuna seleccionada -->
-                                <div id="comuna-seleccionada" class="selected-comuna">
-                                    <strong>Comuna seleccionada:</strong> <span id="nombre-comuna"></span>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="limpiarSeleccion()">
-                                        Cambiar
-                                    </button>
-                                </div>
-                                
-                                <div class="info-badge">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Escribe para filtrar. Click en una comuna para seleccionar.
-                                </div>
-                                
-                                <?php if (isset($validation) && $validation->hasError('comunas_id')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('comunas_id') ?>
-                                    </div>
-                                <?php endif; ?>
+                                <!-- Select normal -->
+                                <select class="form-control" 
+                                        id="comunas_id" 
+                                        name="comunas_id" 
+                                        size="8"
+                                        required>
+                                    <option value="">Seleccionar comuna</option>
+                                    <?php if (isset($comunas)): ?>
+                                        <?php foreach ($comunas as $comuna): ?>
+                                            <option value="<?= $comuna['comunas_id'] ?>" 
+                                                    data-nombre="<?= strtolower($comuna['comunas_nombre']) ?>"
+                                                    <?= old('comunas_id') == $comuna['comunas_id'] ? 'selected' : '' ?>>
+                                                <?= esc($comuna['comunas_nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
                             </div>
                         </div>
-                    </div>
                     
                     <div class="row">
                         <div class="col-md-6">
@@ -376,7 +318,7 @@
                     <!-- Botones -->
                     <div class="section-divider">
                         <div class="d-flex justify-content-between">
-                            <a href="<?= base_url('corredor/inspecciones') ?>" class="btn btn-outline-secondary">
+                            <a href="<?= base_url('inspecciones') ?>" class="btn btn-outline-secondary">
                                 <i class="fas fa-times me-2"></i>Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary btn-submit">
@@ -391,8 +333,8 @@
     </div>
 </div>
 <?= $this->endSection() ?>
+ 
 
-<?= $this->section('js') ?>
 <script>
 // Formateo automático del RUT
 document.getElementById('rut').addEventListener('input', function(e) {
@@ -418,70 +360,28 @@ document.getElementById('patente').addEventListener('input', function(e) {
     e.target.value = e.target.value.toUpperCase();
 });
 
+// Inicializar Select2 simple para comunas
 // Filtro de comunas sin librerías externas
 document.getElementById('filtro-comuna').addEventListener('input', function() {
     const filtro = this.value.toLowerCase();
     const select = document.getElementById('comunas_id');
     const opciones = select.getElementsByTagName('option');
-    let visibles = 0;
     
-    // Mostrar el select si está escribiendo
-    if (filtro.length > 0) {
-        select.style.display = 'block';
-        select.size = 8;
-    } else {
-        select.style.display = 'block';
-        select.size = 8;
-    }
-    
-    // Filtrar opciones
-    for (let i = 1; i < opciones.length; i++) { // Empezar en 1 para saltar el placeholder
+    for (let i = 1; i < opciones.length; i++) { // Empezar en 1 para saltar "Seleccionar comuna"
         const nombre = opciones[i].getAttribute('data-nombre');
-        if (nombre.includes(filtro) || filtro.length === 0) {
+        if (nombre.includes(filtro)) {
             opciones[i].style.display = '';
-            visibles++;
         } else {
             opciones[i].style.display = 'none';
         }
     }
-    
-    // Ajustar el tamaño del select según resultados
-    select.size = Math.min(Math.max(visibles, 3), 8);
 });
 
-// Al seleccionar una comuna
+// Al seleccionar, ocultar el select grande
 document.getElementById('comunas_id').addEventListener('change', function() {
     if (this.value) {
-        const textoSeleccionado = this.options[this.selectedIndex].text;
-        
-        // Ocultar el select grande
-        this.style.display = 'none';
-        
-        // Mostrar la comuna seleccionada
-        document.getElementById('nombre-comuna').textContent = textoSeleccionado;
-        document.getElementById('comuna-seleccionada').style.display = 'block';
-        
-        // Actualizar el input con el nombre seleccionado
-        document.getElementById('filtro-comuna').value = textoSeleccionado;
-        document.getElementById('filtro-comuna').readOnly = true;
-    }
-});
-
-// Función para limpiar la selección
-function limpiarSeleccion() {
-    document.getElementById('comunas_id').value = '';
-    document.getElementById('comunas_id').style.display = 'block';
-    document.getElementById('comunas_id').size = 8;
-    document.getElementById('comuna-seleccionada').style.display = 'none';
-    document.getElementById('filtro-comuna').value = '';
-    document.getElementById('filtro-comuna').readOnly = false;
-    document.getElementById('filtro-comuna').focus();
-}
-
-// Al hacer click en el input cuando está readonly, permitir cambiar
-document.getElementById('filtro-comuna').addEventListener('click', function() {
-    if (this.readOnly) {
-        limpiarSeleccion();
+        this.size = 1; // Hacer el select pequeño de nuevo
+        document.getElementById('filtro-comuna').value = this.options[this.selectedIndex].text;
     }
 });
 
@@ -502,4 +402,5 @@ document.getElementById('filtro-comuna').addEventListener('click', function() {
     }, false);
 })();
 </script>
-<?= $this->endSection()
+<?= $this->endSection() ?>
+ 

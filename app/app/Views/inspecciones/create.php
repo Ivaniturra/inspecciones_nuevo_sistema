@@ -5,6 +5,10 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('css') ?>
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+
 <style>
     .form-container {
         background: #fff;
@@ -37,22 +41,6 @@
         font-weight: 600;
         border-radius: 50px;
     }
-
-    .form-control {
-        width: 100%;
-    }
-
-    /* Estilos para el filtro de comunas */
-    #comunas_id {
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
-    .info-badge {
-        font-size: 0.8rem;
-        color: #6c757d;
-        margin-top: 0.5rem;
-    }
 </style>
 <?= $this->endSection() ?>
 
@@ -77,50 +65,6 @@
                 </div>
 
                 <?= form_open('inspecciones/store', ['class' => 'needs-validation', 'novalidate' => true]) ?>
-                    <!-- Información del Asegurado -->
-                    <div class="section-title">
-                        <i class="fas fa-user me-2"></i>Información del Asegurado
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="asegurado">Nombre del Asegurado <span class="required">*</span></label>
-                                <input type="text" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('asegurado') ? 'is-invalid' : '' ?>" 
-                                       id="asegurado" 
-                                       name="asegurado" 
-                                       value="<?= old('asegurado') ?>" 
-                                       placeholder="Nombre completo del asegurado"
-                                       required>
-                                <?php if (isset($validation) && $validation->hasError('asegurado')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('asegurado') ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="rut">RUT <span class="required">*</span></label>
-                                <input type="text" 
-                                       class="form-control <?= isset($validation) && $validation->hasError('rut') ? 'is-invalid' : '' ?>" 
-                                       id="rut" 
-                                       name="rut" 
-                                       value="<?= old('rut') ?>" 
-                                       placeholder="12.345.678-9"
-                                       maxlength="12"
-                                       required>
-                                <?php if (isset($validation) && $validation->hasError('rut')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('rut') ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Información de Contacto -->
                     <div class="section-divider">
                         <div class="section-title">
@@ -150,24 +94,62 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label for="comunas_id">Comuna <span class="required">*</span></label>
-                                <!-- Campo para filtrar las comunas -->
-                                <input type="text" id="filtro-comuna" class="form-control" placeholder="Escriba para filtrar comunas..." autocomplete="off">
-                                <select class="form-control" id="comunas_id" name="comunas_id" size="8" required>
-                                    <option value="">-- Seleccionar comuna --</option>
+                                <select class="form-control select2-comunas <?= isset($validation) && $validation->hasError('comunas_id') ? 'is-invalid' : '' ?>" 
+                                        id="comunas_id" 
+                                        name="comunas_id" 
+                                        required>
+                                    <option value="">Seleccionar comuna</option>
                                     <?php if (isset($comunas)): ?>
                                         <?php foreach ($comunas as $comuna): ?>
                                             <option value="<?= $comuna['comunas_id'] ?>" 
-                                                    data-nombre="<?= strtolower($comuna['comunas_nombre']) ?>"
                                                     <?= old('comunas_id') == $comuna['comunas_id'] ? 'selected' : '' ?>>
                                                 <?= esc($comuna['comunas_nombre']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </select>
-                                <div id="comuna-seleccionada" class="selected-comuna">
-                                    <strong>Comuna seleccionada:</strong> <span id="nombre-comuna"></span>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="limpiarSeleccion()">Cambiar</button>
-                                </div>
+                                <?php if (isset($validation) && $validation->hasError('comunas_id')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('comunas_id') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="celular">Celular <span class="required">*</span></label>
+                                <input type="tel" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('celular') ? 'is-invalid' : '' ?>" 
+                                       id="celular" 
+                                       name="celular" 
+                                       value="<?= old('celular') ?>" 
+                                       placeholder="+56 9 1234 5678"
+                                       required>
+                                <?php if (isset($validation) && $validation->hasError('celular')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('celular') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="telefono">Teléfono (Opcional)</label>
+                                <input type="tel" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('telefono') ? 'is-invalid' : '' ?>" 
+                                       id="telefono" 
+                                       name="telefono" 
+                                       value="<?= old('telefono') ?>" 
+                                       placeholder="+56 2 1234 5678">
+                                <?php if (isset($validation) && $validation->hasError('telefono')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('telefono') ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -192,56 +174,59 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('js') ?>
-<script>
-// Filtrar las comunas
-document.getElementById('filtro-comuna').addEventListener('input', function() {
-    const filtro = this.value.toLowerCase();
-    const select = document.getElementById('comunas_id');
-    const opciones = select.getElementsByTagName('option');
-    let visibles = 0;
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    // Filtrar las opciones
-    for (let i = 1; i < opciones.length; i++) { // Saltar el placeholder
-        const nombre = opciones[i].getAttribute('data-nombre');
-        if (nombre.includes(filtro) || filtro.length === 0) {
-            opciones[i].style.display = '';  // Mostrar la opción
-            visibles++;
-        } else {
-            opciones[i].style.display = 'none';  // Ocultar la opción
+<script>
+// Inicializar Select2 para el campo de comunas
+$(document).ready(function() {
+    $('#comunas_id').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Seleccionar comuna...',
+        allowClear: true,  // Permite limpiar la selección
+        width: '100%'  // Ajuste para el tamaño del campo
+    });
+});
+
+// Formateo automático del RUT
+document.getElementById('rut').addEventListener('input', function(e) {
+    let rut = e.target.value.replace(/[^0-9kK]/g, '');
+    
+    if (rut.length > 1) {
+        rut = rut.slice(0, -1) + '-' + rut.slice(-1);
+        
+        if (rut.length > 4) {
+            let numbers = rut.slice(0, -2);
+            let dv = rut.slice(-2);
+            
+            numbers = numbers.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            rut = numbers + dv;
         }
     }
-
-    // Si no hay coincidencias, ocultar el select
-    select.size = visibles > 0 ? Math.min(visibles, 8) : 0;
+    
+    e.target.value = rut;
 });
 
-// Seleccionar una comuna
-document.getElementById('comunas_id').addEventListener('change', function() {
-    if (this.value) {
-        const textoSeleccionado = this.options[this.selectedIndex].text;
-
-        // Ocultar el select grande
-        this.style.display = 'none';
-
-        // Mostrar la comuna seleccionada
-        document.getElementById('nombre-comuna').textContent = textoSeleccionado;
-        document.getElementById('comuna-seleccionada').style.display = 'block';
-
-        // Actualizar el input con el nombre seleccionado
-        document.getElementById('filtro-comuna').value = textoSeleccionado;
-        document.getElementById('filtro-comuna').readOnly = true;
-    }
+// Convertir patente a mayúsculas
+document.getElementById('patente').addEventListener('input', function(e) {
+    e.target.value = e.target.value.toUpperCase();
 });
 
-// Función para limpiar la selección
-function limpiarSeleccion() {
-    document.getElementById('comunas_id').value = '';
-    document.getElementById('comunas_id').style.display = 'block';
-    document.getElementById('comunas_id').size = 8;
-    document.getElementById('comuna-seleccionada').style.display = 'none';
-    document.getElementById('filtro-comuna').value = '';
-    document.getElementById('filtro-comuna').readOnly = false;
-    document.getElementById('filtro-comuna').focus();
-}
+// Validación del formulario
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
 </script>
 <?= $this->endSection() ?>

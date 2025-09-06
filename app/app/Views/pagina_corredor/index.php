@@ -229,25 +229,25 @@ document.getElementById('filtro-comuna').addEventListener('input', function() {
     // Mostrar el select si está escribiendo
     if (filtro.length > 0) {
         select.style.display = 'block';
-        select.size = 8;
     } else {
-        select.style.display = 'block';
-        select.size = 8;
+        select.style.display = 'none';  // Ocultar select si el campo está vacío
     }
     
     // Filtrar opciones
     for (let i = 1; i < opciones.length; i++) { // Empezar en 1 para saltar el placeholder
         const nombre = opciones[i].getAttribute('data-nombre');
-        if (nombre.includes(filtro) || filtro.length === 0) {
-            opciones[i].style.display = '';
+        if (nombre.includes(filtro)) {
+            opciones[i].style.display = '';  // Mostrar la opción
             visibles++;
         } else {
-            opciones[i].style.display = 'none';
+            opciones[i].style.display = 'none';  // Ocultar la opción
         }
     }
     
-    // Ajustar el tamaño del select según resultados
-    select.size = Math.min(Math.max(visibles, 3), 8);
+    // Si no hay coincidencias, ocultar el select
+    if (visibles === 0) {
+        select.style.display = 'none';
+    }
 });
 
 // Al seleccionar una comuna

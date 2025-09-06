@@ -207,14 +207,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
   </div>
  
     
-    <!-- Dashboard -->
-    <a class="nav-link <?= url_is('corredor') || url_is('corredor/') ? 'active' : '' ?>" 
-       href="<?= base_url('corredor') ?>" 
-       data-bs-toggle="tooltip" 
-       data-bs-title="Dashboard">
-        <i class="icon fa-solid fa-tachometer-alt"></i>
-        <span class="label">Dashboard</span>
-    </a>
+  
 
     <!-- Inspecciones -->
     <a class="nav-link <?= url_is('corredor/inspecciones*') ? 'active' : '' ?>" 

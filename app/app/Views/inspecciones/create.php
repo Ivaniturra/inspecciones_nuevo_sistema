@@ -42,6 +42,24 @@
         width: 100%;
     }
 
+    /* Estilos para el filtro de comunas */
+    #comunas_id {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    #comuna-seleccionada {
+        display: none;
+        background-color: #e3f2fd;
+        border: 2px solid #2196f3;
+        border-radius: 5px;
+        padding: 8px 12px;
+        margin-top: 10px;
+    }
+    .info-badge {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -256,6 +274,7 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label for="comunas_id">Comuna <span class="required">*</span></label>
+                                <!-- Campo para filtrar las comunas -->
                                 <input type="text" id="filtro-comuna" class="form-control" placeholder="Escriba para filtrar comunas..." autocomplete="off">
                                 <select class="form-control" id="comunas_id" name="comunas_id" size="8" required>
                                     <option value="">-- Seleccionar comuna --</option>
@@ -336,13 +355,13 @@
 
 <?= $this->section('js') ?>
 <script>
-// Filtrar comunas
+// Filtrar las comunas
 document.getElementById('filtro-comuna').addEventListener('input', function() {
     const filtro = this.value.toLowerCase();
     const select = document.getElementById('comunas_id');
     const opciones = select.getElementsByTagName('option');
     let visibles = 0;
-    
+
     // Filtrar las opciones
     for (let i = 1; i < opciones.length; i++) { // Saltar el placeholder
         const nombre = opciones[i].getAttribute('data-nombre');
@@ -362,14 +381,14 @@ document.getElementById('filtro-comuna').addEventListener('input', function() {
 document.getElementById('comunas_id').addEventListener('change', function() {
     if (this.value) {
         const textoSeleccionado = this.options[this.selectedIndex].text;
-        
+
         // Ocultar el select grande
         this.style.display = 'none';
-        
+
         // Mostrar la comuna seleccionada
         document.getElementById('nombre-comuna').textContent = textoSeleccionado;
         document.getElementById('comuna-seleccionada').style.display = 'block';
-        
+
         // Actualizar el input con el nombre seleccionado
         document.getElementById('filtro-comuna').value = textoSeleccionado;
         document.getElementById('filtro-comuna').readOnly = true;

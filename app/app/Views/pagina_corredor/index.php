@@ -3,12 +3,7 @@
 <?= $this->section('title') ?>
 <?= $title ?>
 <?= $this->endSection() ?>
-
-<?= $this->section('css') ?>
-<!-- Select2 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
-
+ 
 <style>
     .form-container {
         background: #fff;
@@ -256,28 +251,32 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label for="comunas_id">Comuna <span class="required">*</span></label>
-                                <select class="form-control select2-comunas <?= isset($validation) && $validation->hasError('comunas_id') ? 'is-invalid' : '' ?>" 
+                                
+                                <!-- Input para filtrar -->
+                                <input type="text" 
+                                    class="form-control mb-2" 
+                                    id="filtro-comuna" 
+                                    placeholder="Escriba para filtrar comunas...">
+                                
+                                <!-- Select normal -->
+                                <select class="form-control" 
                                         id="comunas_id" 
                                         name="comunas_id" 
+                                        size="8"
                                         required>
                                     <option value="">Seleccionar comuna</option>
                                     <?php if (isset($comunas)): ?>
                                         <?php foreach ($comunas as $comuna): ?>
                                             <option value="<?= $comuna['comunas_id'] ?>" 
+                                                    data-nombre="<?= strtolower($comuna['comunas_nombre']) ?>"
                                                     <?= old('comunas_id') == $comuna['comunas_id'] ? 'selected' : '' ?>>
                                                 <?= esc($comuna['comunas_nombre']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </select>
-                                <?php if (isset($validation) && $validation->hasError('comunas_id')): ?>
-                                    <div class="invalid-feedback">
-                                        <?= $validation->getError('comunas_id') ?>
-                                    </div>
-                                <?php endif; ?>
                             </div>
                         </div>
-                    </div>
                     
                     <div class="row">
                         <div class="col-md-6">
@@ -334,10 +333,7 @@
     </div>
 </div>
 <?= $this->endSection() ?>
-
-<?= $this->section('js') ?>
-<!-- Select2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+ 
 
 <script>
 // Formateo automático del RUT
@@ -365,13 +361,28 @@ document.getElementById('patente').addEventListener('input', function(e) {
 });
 
 // Inicializar Select2 simple para comunas
-$(document).ready(function() {
-    $('.select2-comunas').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Buscar y seleccionar comuna...',
-        allowClear: true,
-        width: '100%'
-    });
+// Filtro de comunas sin librerías externas
+document.getElementById('filtro-comuna').addEventListener('input', function() {
+    const filtro = this.value.toLowerCase();
+    const select = document.getElementById('comunas_id');
+    const opciones = select.getElementsByTagName('option');
+    
+    for (let i = 1; i < opciones.length; i++) { // Empezar en 1 para saltar "Seleccionar comuna"
+        const nombre = opciones[i].getAttribute('data-nombre');
+        if (nombre.includes(filtro)) {
+            opciones[i].style.display = '';
+        } else {
+            opciones[i].style.display = 'none';
+        }
+    }
+});
+
+// Al seleccionar, ocultar el select grande
+document.getElementById('comunas_id').addEventListener('change', function() {
+    if (this.value) {
+        this.size = 1; // Hacer el select pequeño de nuevo
+        document.getElementById('filtro-comuna').value = this.options[this.selectedIndex].text;
+    }
 });
 
 // Validación del formulario

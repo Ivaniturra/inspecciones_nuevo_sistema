@@ -280,11 +280,75 @@ function limpiarSeleccion() {
 }
 
 // Al hacer click en el input cuando está readonly, permitir cambiar
+// Filtro de comunas sin librerías externas
+document.getElementById('filtro-comuna').addEventListener('input', function() {
+    const filtro = this.value.toLowerCase(); // Filtro en minúsculas
+    const select = document.getElementById('comunas_id');
+    const opciones = select.getElementsByTagName('option');
+    let visibles = 0;
+    
+    // Mostrar el select si está escribiendo
+    if (filtro.length > 0) {
+        select.style.display = 'block';
+    } else {
+        select.style.display = 'none';  // Ocultar select si el campo está vacío
+    }
+    
+    // Filtrar opciones
+    for (let i = 1; i < opciones.length; i++) { // Empezar en 1 para saltar el placeholder
+        const nombre = opciones[i].getAttribute('data-nombre'); // Usamos 'data-nombre'
+        
+        // Comprobamos si el nombre contiene el filtro
+        if (nombre.includes(filtro)) {
+            opciones[i].style.display = '';  // Mostrar la opción
+            visibles++;
+        } else {
+            opciones[i].style.display = 'none';  // Ocultar la opción
+        }
+    }
+    
+    // Si no hay coincidencias, ocultar el select
+    if (visibles === 0) {
+        select.style.display = 'none';
+    }
+});
+
+// Al seleccionar una comuna
+document.getElementById('comunas_id').addEventListener('change', function() {
+    if (this.value) {
+        const textoSeleccionado = this.options[this.selectedIndex].text;
+        
+        // Ocultar el select grande
+        this.style.display = 'none';
+        
+        // Mostrar la comuna seleccionada
+        document.getElementById('nombre-comuna').textContent = textoSeleccionado;
+        document.getElementById('comuna-seleccionada').style.display = 'block';
+        
+        // Actualizar el input con el nombre seleccionado
+        document.getElementById('filtro-comuna').value = textoSeleccionado;
+        document.getElementById('filtro-comuna').readOnly = true;
+    }
+});
+
+// Función para limpiar la selección
+function limpiarSeleccion() {
+    document.getElementById('comunas_id').value = '';
+    document.getElementById('comunas_id').style.display = 'block';
+    document.getElementById('comunas_id').size = 8;
+    document.getElementById('comuna-seleccionada').style.display = 'none';
+    document.getElementById('filtro-comuna').value = '';
+    document.getElementById('filtro-comuna').readOnly = false;
+    document.getElementById('filtro-comuna').focus();
+}
+
+// Al hacer click en el input cuando está readonly, permitir cambiar
 document.getElementById('filtro-comuna').addEventListener('click', function() {
     if (this.readOnly) {
         limpiarSeleccion();
     }
 });
+
 
 // Validación del formulario
 (function() {

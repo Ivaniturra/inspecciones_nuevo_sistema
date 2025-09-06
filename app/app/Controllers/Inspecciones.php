@@ -39,22 +39,16 @@ class Inspecciones extends BaseController
      */
     public function create()
     {
-        $corredor_id = session('corredor_id');
+          $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
     
-        if ($corredor_id) {
-            // Si es corredor, solo sus compañías asignadas
-            $cias = $this->ciasModel
-                ->where('cia_habil', 1)
-                ->where('corredor_id', $corredor_id) // Filtro por corredor
-                ->findAll();
-        } else {
-            // Si es admin/inspector, todas las compañías
-            $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
-        }
+        // ✅ Agregar comunas
+        $comunasModel = new \App\Models\ComunasModel(); // Crear este modelo
+        $comunas = $comunasModel->orderBy('comunas_nombre', 'ASC')->findAll();
 
         $data = [
             'title' => 'Nueva Inspección',
             'cias' => $cias,
+            'comunas' => $comunas, // ← Agregar
             'validation' => null
         ];
 

@@ -74,13 +74,13 @@ class Inspecciones extends BaseController
             'modelo' => 'required|min_length[2]|max_length[50]',
             'n_poliza' => 'required|min_length[3]|max_length[20]',
             'direccion' => 'required|min_length[5]|max_length[200]',
-            'comunas_id' => 'required|is_natural_no_zero', // ← Actualizado
+            'comuna' => 'required|min_length[3]|max_length[50]',
             'celular' => 'required|min_length[8]|max_length[15]',
             'telefono' => 'permit_empty|min_length[8]|max_length[15]',
-            'cia_id' => 'required|is_natural_no_zero'
-        ];
+            'cia_id' => 'required|is_natural_no_zero',
+            'comunas_id' => 'required|is_natural_no_zero', 
 
- 
+        ];
 
         if (!$this->validate($rules)) {
             $cias = $this->ciasModel->where('cia_habil', 1)->findAll();
@@ -95,21 +95,22 @@ class Inspecciones extends BaseController
         }
 
         // Preparar datos para insertar
-           // En la preparación de datos:
         $data = [
-            'inspecciones_asegurado' => $this->request->getPost('asegurado'),
-            'inspecciones_rut' => $this->formatRut($this->request->getPost('rut')),
-            'inspecciones_patente' => strtoupper($this->request->getPost('patente')),
-            'inspecciones_marca' => $this->request->getPost('marca'),
-            'inspecciones_modelo' => $this->request->getPost('modelo'),
-            'inspecciones_n_poliza' => $this->request->getPost('n_poliza'),
-            'inspecciones_direccion' => $this->request->getPost('direccion'),
-            'comunas_id' => $this->request->getPost('comunas_id'), // ← Actualizado
-            'inspecciones_celular' => $this->request->getPost('celular'),
-            'inspecciones_telefono' => $this->request->getPost('telefono'),
+            'asegurado' => $this->request->getPost('asegurado'),
+            'rut' => $this->formatRut($this->request->getPost('rut')),
+            'patente' => strtoupper($this->request->getPost('patente')),
+            'marca' => $this->request->getPost('marca'),
+            'modelo' => $this->request->getPost('modelo'),
+            'n_poliza' => $this->request->getPost('n_poliza'),
+            'direccion' => $this->request->getPost('direccion'),
+            'comuna' => $this->request->getPost('comuna'),
+            'celular' => $this->request->getPost('celular'),
+            'telefono' => $this->request->getPost('telefono'),
             'cia_id' => $this->request->getPost('cia_id'),
             'user_id' => session('user_id'),
-            'inspecciones_estado' => 'pendiente'
+            'estado' => 'pendiente',
+            'comunas_id' => $this->request->getPost('comunas_id'), // ← Cambio aquí
+
         ];
 
         // Insertar en base de datos

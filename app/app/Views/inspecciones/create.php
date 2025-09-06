@@ -41,6 +41,11 @@
         font-weight: 600;
         border-radius: 50px;
     }
+
+    .form-control {
+        width: 100%;
+    }
+
 </style>
 <?= $this->endSection() ?>
 
@@ -65,6 +70,167 @@
                 </div>
 
                 <?= form_open('inspecciones/store', ['class' => 'needs-validation', 'novalidate' => true]) ?>
+                    <!-- Información del Asegurado -->
+                    <div class="section-title">
+                        <i class="fas fa-user me-2"></i>Información del Asegurado
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="asegurado">Nombre del Asegurado <span class="required">*</span></label>
+                                <input type="text" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('asegurado') ? 'is-invalid' : '' ?>" 
+                                       id="asegurado" 
+                                       name="asegurado" 
+                                       value="<?= old('asegurado') ?>" 
+                                       placeholder="Nombre completo del asegurado"
+                                       required>
+                                <?php if (isset($validation) && $validation->hasError('asegurado')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('asegurado') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="rut">RUT <span class="required">*</span></label>
+                                <input type="text" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('rut') ? 'is-invalid' : '' ?>" 
+                                       id="rut" 
+                                       name="rut" 
+                                       value="<?= old('rut') ?>" 
+                                       placeholder="12.345.678-9"
+                                       maxlength="12"
+                                       required>
+                                <?php if (isset($validation) && $validation->hasError('rut')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('rut') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información del Vehículo -->
+                    <div class="section-divider">
+                        <div class="section-title">
+                            <i class="fas fa-car me-2"></i>Información del Vehículo
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="patente">Patente <span class="required">*</span></label>
+                                <input type="text" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('patente') ? 'is-invalid' : '' ?>" 
+                                       id="patente" 
+                                       name="patente" 
+                                       value="<?= old('patente') ?>" 
+                                       placeholder="ABC123"
+                                       maxlength="8"
+                                       style="text-transform: uppercase"
+                                       required>
+                                <?php if (isset($validation) && $validation->hasError('patente')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('patente') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="marca">Marca <span class="required">*</span></label>
+                                <input type="text" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('marca') ? 'is-invalid' : '' ?>" 
+                                       id="marca" 
+                                       name="marca" 
+                                       value="<?= old('marca') ?>" 
+                                       placeholder="Toyota, Chevrolet, etc."
+                                       required>
+                                <?php if (isset($validation) && $validation->hasError('marca')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('marca') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="modelo">Modelo <span class="required">*</span></label>
+                                <input type="text" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('modelo') ? 'is-invalid' : '' ?>" 
+                                       id="modelo" 
+                                       name="modelo" 
+                                       value="<?= old('modelo') ?>" 
+                                       placeholder="Corolla, Aveo, etc."
+                                       required>
+                                <?php if (isset($validation) && $validation->hasError('modelo')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('modelo') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de la Póliza -->
+                    <div class="section-divider">
+                        <div class="section-title">
+                            <i class="fas fa-file-contract me-2"></i>Información de la Póliza
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="n_poliza">Número de Póliza <span class="required">*</span></label>
+                                <input type="text" 
+                                       class="form-control <?= isset($validation) && $validation->hasError('n_poliza') ? 'is-invalid' : '' ?>" 
+                                       id="n_poliza" 
+                                       name="n_poliza" 
+                                       value="<?= old('n_poliza') ?>" 
+                                       placeholder="Número de póliza del seguro"
+                                       required>
+                                <?php if (isset($validation) && $validation->hasError('n_poliza')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('n_poliza') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="cia_id">Compañía de Seguros <span class="required">*</span></label>
+                                <select class="form-control <?= isset($validation) && $validation->hasError('cia_id') ? 'is-invalid' : '' ?>" 
+                                        id="cia_id" 
+                                        name="cia_id" 
+                                        required>
+                                    <option value="">Seleccione una compañía</option>
+                                    <?php if (isset($cias)): ?>
+                                        <?php foreach ($cias as $cia): ?>
+                                            <option value="<?= $cia['cia_id'] ?>" 
+                                                    <?= old('cia_id') == $cia['cia_id'] ? 'selected' : '' ?>>
+                                                <?= esc($cia['cia_nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <?php if (isset($validation) && $validation->hasError('cia_id')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('cia_id') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Información de Contacto -->
                     <div class="section-divider">
                         <div class="section-title">

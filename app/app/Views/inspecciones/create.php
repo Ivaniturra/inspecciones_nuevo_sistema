@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/maincorredor') ?>  
+ <?= $this->extend('layouts/maincorredor') ?>  
 
 <?= $this->section('title') ?>
 <?= $title ?>
@@ -40,6 +40,53 @@
         padding: 12px 30px;
         font-weight: 600;
         border-radius: 50px;
+    }
+    
+    /* Estilos mejorados para Select2 */
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: 38px;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+    }
+    
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        line-height: 36px;
+        padding-left: 12px;
+        color: #495057;
+    }
+    
+    .select2-container--bootstrap-5 .select2-selection__placeholder {
+        color: #6c757d;
+    }
+    
+    .select2-container--bootstrap-5 .select2-dropdown {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        padding: 8px 12px;
+        font-size: 0.875rem;
+    }
+    
+    .select2-container--bootstrap-5 .select2-results__option {
+        padding: 8px 12px;
+        font-size: 0.875rem;
+    }
+    
+    .select2-container--bootstrap-5 .select2-results__option--highlighted {
+        background-color: #007bff;
+        color: white;
+    }
+    
+    /* Indicador de carga */
+    .select2-container--bootstrap-5 .select2-results__option.loading-results {
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
     }
 </style>
 <?= $this->endSection() ?>
@@ -204,7 +251,7 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label for="cia_id">Compañía de Seguros <span class="required">*</span></label>
-                                <select class="form-control <?= isset($validation) && $validation->hasError('cia_id') ? 'is-invalid' : '' ?>" 
+                                <select class="form-control select2-cias <?= isset($validation) && $validation->hasError('cia_id') ? 'is-invalid' : '' ?>" 
                                         id="cia_id" 
                                         name="cia_id" 
                                         required>
@@ -260,7 +307,7 @@
                                         id="comunas_id" 
                                         name="comunas_id" 
                                         required>
-                                    <option value="">Seleccionar comuna</option>
+                                    <option value="">Buscar y seleccionar comuna...</option>
                                     <?php if (isset($comunas)): ?>
                                         <?php foreach ($comunas as $comuna): ?>
                                             <option value="<?= $comuna['comunas_id'] ?>" 
@@ -340,7 +387,30 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-// Formateo automático del RUT
+// Configuración global de Select2
+const select2Config = {
+    theme: 'bootstrap-5',
+    allowClear: true,
+    width: '100%',
+    minimumInputLength: 0,
+    escapeMarkup: function(markup) { return markup; },
+    language: {
+        noResults: function() {
+            return "No se encontraron resultados";
+        },
+        searching: function() {
+            return "Buscando...";
+        },
+        inputTooShort: function() {
+            return "Continúe escribiendo...";
+        },
+        errorLoading: function() {
+            return "No se pudieron cargar los resultados";
+        }
+    }
+};
+
+// Formateo automático del RUT con validación mejorada
 document.getElementById('rut').addEventListener('input', function(e) {
     let rut = e.target.value.replace(/[^0-9kK]/g, '');
     
@@ -351,6 +421,7 @@ document.getElementById('rut').addEventListener('input', function(e) {
             let numbers = rut.slice(0, -2);
             let dv = rut.slice(-2);
             
+            // Formatear con puntos
             numbers = numbers.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             rut = numbers + dv;
         }
@@ -359,36 +430,212 @@ document.getElementById('rut').addEventListener('input', function(e) {
     e.target.value = rut;
 });
 
-// Convertir patente a mayúsculas
-document.getElementById('patente').addEventListener('input', function(e) {
-    e.target.value = e.target.value.toUpperCase();
+// Validación en tiempo real del RUT
+document.getElementById('rut').addEventListener('blur', function(e) {
+    const rut = e.target.value;
+    if (rut && !validarRUT(rut)) {
+        e.target.classList.add('is-invalid');
+        // Mostrar mensaje de error personalizado
+        let feedback = e.target.parentNode.querySelector('.invalid-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            e.target.parentNode.appendChild(feedback);
+        }
+        feedback.textContent = 'RUT inválido';
+    } else {
+        e.target.classList.remove('is-invalid');
+    }
 });
 
-// Inicializar Select2 simple para comunas
+// Función para validar RUT chileno
+function validarRUT(rut) {
+    if (!/^[0-9]+[-|‐]{1}[0-9kK]{1}$/.test(rut)) return false;
+    
+    let tmp = rut.split('-');
+    let digv = tmp[1];
+    let rut_limpio = tmp[0].replace(/\./g, '');
+    
+    if (digv == 'K') digv = 'k';
+    return (dv(rut_limpio) == digv);
+}
+
+function dv(T) {
+    let M = 0, S = 1;
+    for (; T; T = Math.floor(T / 10)) {
+        S = (S + T % 10 * (9 - M++ % 6)) % 11;
+    }
+    return S ? S - 1 : 'k';
+}
+
+// Convertir patente a mayúsculas con validación
+document.getElementById('patente').addEventListener('input', function(e) {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+});
+
+// Formateo de teléfonos
+function formatearTelefono(input) {
+    input.addEventListener('input', function(e) {
+        let numero = e.target.value.replace(/\D/g, '');
+        
+        if (numero.startsWith('56')) {
+            numero = numero.substring(2);
+        }
+        
+        if (numero.length >= 8) {
+            if (numero.startsWith('9')) {
+                // Celular
+                e.target.value = '+56 9 ' + numero.substring(1, 5) + ' ' + numero.substring(5, 9);
+            } else if (numero.startsWith('2')) {
+                // Teléfono fijo Santiago
+                e.target.value = '+56 2 ' + numero.substring(1, 5) + ' ' + numero.substring(5, 9);
+            } else {
+                e.target.value = '+56 ' + numero;
+            }
+        } else {
+            e.target.value = numero;
+        }
+    });
+}
+
+// Aplicar formateo a teléfonos
+formatearTelefono(document.getElementById('celular'));
+formatearTelefono(document.getElementById('telefono'));
+
+// Inicializar Select2 optimizado
 $(document).ready(function() {
+    // Select2 para comunas con búsqueda optimizada
     $('.select2-comunas').select2({
-        theme: 'bootstrap-5',
+        ...select2Config,
         placeholder: 'Buscar y seleccionar comuna...',
-        allowClear: true,
-        width: '100%'
+        templateResult: function(state) {
+            if (!state.id) return state.text;
+            
+            // Resaltar el texto de búsqueda
+            let term = $('.select2-search__field').val();
+            if (term) {
+                let highlighted = state.text.replace(
+                    new RegExp(term, 'gi'), 
+                    '<mark>$&</mark>'
+                );
+                return $('<span>' + highlighted + '</span>');
+            }
+            return state.text;
+        }
+    });
+
+    // Select2 para compañías de seguros
+    $('.select2-cias').select2({
+        ...select2Config,
+        placeholder: 'Seleccionar compañía de seguros...'
+    });
+
+    // Mejorar la experiencia del usuario
+    $('.select2-comunas').on('select2:open', function() {
+        // Enfocar automáticamente el campo de búsqueda
+        setTimeout(function() {
+            $('.select2-search__field').focus();
+        }, 100);
+    });
+
+    // Limpiar validación al seleccionar
+    $('.select2-comunas, .select2-cias').on('select2:select', function() {
+        $(this).removeClass('is-invalid');
+        $(this).next('.invalid-feedback').hide();
     });
 });
 
-// Validación del formulario
+// Validación mejorada del formulario
 (function() {
     'use strict';
+    
     window.addEventListener('load', function() {
-        var forms = document.getElementsByClassName('needs-validation');
-        var validation = Array.prototype.filter.call(forms, function(form) {
+        const forms = document.getElementsByClassName('needs-validation');
+        
+        Array.prototype.filter.call(forms, function(form) {
             form.addEventListener('submit', function(event) {
-                if (form.checkValidity() === false) {
+                let isValid = true;
+
+                // Validar Select2
+                const select2Elements = form.querySelectorAll('.select2-hidden-accessible');
+                select2Elements.forEach(function(element) {
+                    if (element.hasAttribute('required') && !element.value) {
+                        element.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        element.classList.remove('is-invalid');
+                    }
+                });
+
+                // Validar RUT
+                const rutInput = form.querySelector('#rut');
+                if (rutInput && rutInput.value && !validarRUT(rutInput.value)) {
+                    rutInput.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                if (!form.checkValidity() || !isValid) {
                     event.preventDefault();
                     event.stopPropagation();
+                    
+                    // Scroll al primer error
+                    const firstError = form.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                        firstError.focus();
+                    }
                 }
+                
                 form.classList.add('was-validated');
             }, false);
         });
     }, false);
 })();
+
+// Guardar datos en localStorage para recuperación
+function guardarBorrador() {
+    const formData = new FormData(document.querySelector('form'));
+    const data = {};
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+    localStorage.setItem('inspeccion_borrador', JSON.stringify(data));
+}
+
+function cargarBorrador() {
+    const borrador = localStorage.getItem('inspeccion_borrador');
+    if (borrador) {
+        const data = JSON.parse(borrador);
+        Object.keys(data).forEach(key => {
+            const element = document.querySelector(`[name="${key}"]`);
+            if (element) {
+                element.value = data[key];
+                if (element.classList.contains('select2-hidden-accessible')) {
+                    $(element).val(data[key]).trigger('change');
+                }
+            }
+        });
+    }
+}
+
+// Guardar borrador cada 30 segundos
+setInterval(guardarBorrador, 30000);
+
+// Cargar borrador al inicializar
+$(document).ready(function() {
+    if (confirm('¿Desea recuperar los datos guardados anteriormente?')) {
+        cargarBorrador();
+    }
+});
+
+// Limpiar borrador al enviar exitosamente
+document.querySelector('form').addEventListener('submit', function() {
+    setTimeout(() => {
+        localStorage.removeItem('inspeccion_borrador');
+    }, 1000);
+});
 </script>
 <?= $this->endSection() ?>

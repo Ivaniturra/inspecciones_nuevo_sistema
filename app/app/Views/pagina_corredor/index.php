@@ -123,7 +123,7 @@
                         
                         <div class="col-md-6">
                             <div class="form-group mb-3">
-                                <label for="comunas_id">Comuna <span class="required">*</span></label>
+                                <label for="comunas_id">Comuna sss<span class="required">*</span></label>
                                 
                                 <div class="filtro-container">
                                     <!-- Input para filtrar -->

@@ -39,18 +39,18 @@
                         <i class="fas fa-clipboard-list me-2 text-primary"></i>
                         <?= esc($title) ?>
                     </h1>
-                    <p class="text-muted mb-0">Gestión de inspecciones vehiculares</p>
+                    <p class="text-muted mb-0">GestiÃ³n de inspecciones vehiculares</p>
                 </div>
                 <div>
                     <a href="<?= base_url('inspecciones/create') ?>" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Nueva Inspección
+                        <i class="fas fa-plus me-2"></i>Nueva InspecciÃ³n
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filtros rápidos -->
+    <!-- Filtros rÃ¡pidos -->
     <div class="row mb-3">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
@@ -90,10 +90,10 @@
                                     <th>Asegurado</th>
                                     <th>RUT</th>
                                     <th>Patente</th>
-                                    <th>Vehículo</th>
-                                    <th>Compañía</th>
+                                    <th>VehÃ­culo</th>
+                                    <th>CompaÃ±Ã­a</th>
                                     <th>Estado</th>
-                                    <th>Fecha Creación</th>
+                                    <th>Fecha CreaciÃ³n</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -161,7 +161,7 @@ $(document).ready(function() {
             url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
         },
         responsive: true,
-        order: [[7, 'desc']], // Ordenar por fecha de creación descendente
+        order: [[7, 'desc']], // Ordenar por fecha de creaciÃ³n descendente
         pageLength: 25,
         dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
     });
@@ -184,8 +184,8 @@ $(document).ready(function() {
 });
 
 function confirmarEliminacion(id) {
-    if (confirm('¿Estás seguro de que deseas eliminar esta inspección? Esta acción no se puede deshacer.')) {
-        // Aquí puedes implementar la eliminación via AJAX
+    if (confirm('Â¿EstÃ¡s seguro de que deseas eliminar esta inspecciÃ³n? Esta acciÃ³n no se puede deshacer.')) {
+        // AquÃ­ puedes implementar la eliminaciÃ³n via AJAX
         window.location.href = '<?= base_url('inspecciones/delete/') ?>' + id;
     }
 }

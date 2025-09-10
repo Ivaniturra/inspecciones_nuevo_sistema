@@ -1,22 +1,5 @@
 <?php
 namespace App\Controllers;
-class Corredor extends BaseController 
-{
-    public function __construct()
-    {
-        // Verificar autenticación
-        if (!session('logged_in')) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Acceso denegado');
-        }
-
-        // Verificar que sea corredor
-        $perfilTipo = session('perfil_tipo');
-        $perfilId = session('user_perfil_id');
-         
-    }
-
-   <?php
-namespace App\Controllers;
 
 use App\Models\InspeccionModel;
 use App\Models\CorredorModel;

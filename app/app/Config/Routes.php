@@ -128,12 +128,10 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     });
     $routes->group('corredor', ['filter' => 'role:9,10'], static function($routes) {
         $routes->get('/', 'Corredor::index');
-            $routes->get('inspecciones', 'Inspecciones::index');
-    $routes->get('inspecciones/create', 'Inspecciones::create');
-    $routes->post('inspecciones/store', 'Inspecciones::store');
-    $routes->get('inspecciones/show/(:num)', 'Inspecciones::show/$1');
-     
-    // etc.
+        $routes->get('inspecciones', 'Inspecciones::index');
+        $routes->get('inspecciones/create', 'Inspecciones::create');
+        $routes->post('inspecciones/store', 'Inspecciones::store');
+        $routes->get('inspecciones/show/(:num)', 'Inspecciones::show/$1'); 
     });
     $routes->group('api', static function($routes) {
         $routes->get('comunas/search', 'Api\ComunasController::search');

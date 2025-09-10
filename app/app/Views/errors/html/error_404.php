@@ -122,9 +122,10 @@
             </p>
             
             <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
-                <button onclick="history.back()" class="btn btn-back">
+                <button onclick="<?= base_url('logout') ?>" class="btn btn-back">
                     <i class="fas fa-arrow-left me-2"></i>Volver atrás
                 </button> 
+                
             </div>
             
             <div class="suggestions">

@@ -20,7 +20,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     $routes->group('dashboard', ['filter' => 'role:7'], static function($routes) {
         $routes->get('dashboard', 'Dashboard::index', ['as' => 'dashboard']);
     });
-     $routes->group('Corredores', ['filter' => 'role:7'], static function($routes) {
+     $routes->group('corredores', ['filter' => 'role:7'], static function($routes) {
         $routes->get('/',                 'Corredores::index');
         $routes->get('create',            'Corredores::create');
         $routes->post('store',            'Corredores::store');

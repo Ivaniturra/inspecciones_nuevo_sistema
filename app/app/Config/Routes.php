@@ -17,7 +17,7 @@ $routes->post('reset',        'Auth::processReset'); // procesa nueva clave
 $routes->group('', ['filter' => 'auth'], static function($routes) {
  
 
-    $routes->group('cias', ['filter' => 'role:7'], static function($routes) {
+    $routes->group('dashboard', ['filter' => 'role:7'], static function($routes) {
         $routes->get('dashboard', 'Dashboard::index', ['as' => 'dashboard']);
     });
      $routes->group('Corredores', ['filter' => 'role:7'], static function($routes) {

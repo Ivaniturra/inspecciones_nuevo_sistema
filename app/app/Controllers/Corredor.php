@@ -1,7 +1,7 @@
 <?php
 namespace App\Controllers;
 
-use App\Models\InspeccionModel;
+use App\Models\InspeccionesModel;
 use App\Models\CorredorModel;
 
 class Corredor extends BaseController 
@@ -11,7 +11,7 @@ class Corredor extends BaseController
 
     public function __construct()
     {
-        $this->inspeccionModel = new InspeccionModel();
+        $this->inspeccionModel = new InspeccionesModel();
         $this->corredorModel = new CorredorModel();
         
         // Verificar autenticación

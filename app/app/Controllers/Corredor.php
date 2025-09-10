@@ -201,5 +201,4 @@ class Corredor extends BaseController
             'data' => $inspecciones
         ]);
     }
-}
-} // ← ASEGÚRATE DE QUE ESTÉ ESTA LLAVE DE CIERRE
+} 

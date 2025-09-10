@@ -18,9 +18,18 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
  
 
     $routes->group('cias', ['filter' => 'role:7'], static function($routes) {
-    $routes->get('dashboard', 'Dashboard::index', ['as' => 'dashboard']);
+        $routes->get('dashboard', 'Dashboard::index', ['as' => 'dashboard']);
     });
-
+     $routes->group('Corredores', ['filter' => 'role:7'], static function($routes) {
+        $routes->get('/',                 'Corredores::index');
+        $routes->get('create',            'Corredores::create');
+        $routes->post('store',            'Corredores::store');
+        $routes->get('show/(:num)',       'Corredores::show/$1');
+        $routes->get('edit/(:num)',       'Corredores::edit/$1');
+        $routes->match(['POST','PUT'],    'update/(:num)', 'Corredores::update/$1');
+        $routes->match(['POST','DELETE'], 'delete/(:num)', 'Corredores::delete/$1');
+        $routes->post('toggleStatus/(:num)', 'Corredores::toggleStatus/$1');
+    });
     // CIAS (solo super admin = 7)
     $routes->group('cias', ['filter' => 'role:7'], static function($routes) {
         $routes->get('/',                 'Cias::index');

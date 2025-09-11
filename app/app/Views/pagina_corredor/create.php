@@ -299,6 +299,20 @@
 <script>
 $(function () {
   // ---------- Helpers ----------
+   $(function () {
+  console.log('Script cargado correctamente');
+  
+  // Debug: Verificar si jQuery está funcionando
+  console.log('jQuery version:', $.fn.jquery);
+  
+  // Debug: Verificar si el elemento existe
+  console.log('Elemento #inspecciones_rut encontrado:', $('#inspecciones_rut').length);
+  console.log('Elemento DOM:', document.getElementById('inspecciones_rut'));
+  
+  // Debug: Listar todos los inputs en la página
+  console.log('Todos los inputs:', $('input').map(function() { return this.id || this.name; }).get());
+
+  // ---------- Helpers ----------
   function normalizarRutInput(val) {
     return (val || '').replace(/[^0-9kK]/g, '');
   }
@@ -319,7 +333,6 @@ $(function () {
     const dv = rut.slice(-1).toUpperCase();
     const num = rut.slice(0, -1);
     
-    // Validar que el número sea válido
     if (!/^\d+$/.test(num)) return false;
     
     let suma = 0;
@@ -355,66 +368,109 @@ $(function () {
     let n = (input || '').replace(/[^0-9]/g, '');
     if (n.startsWith('56')) n = n.slice(2);
     
-    // Celular de 9 dígitos partiendo con 9 → +56 9 1234 5678
     if (n.length === 9 && n.startsWith('9')) {
       return '+56 9 ' + n.slice(1,5) + ' ' + n.slice(5);
     }
-    // Fijo Santiago 9 dígitos partiendo con 2 → +56 2 1234 5678
     if (n.length === 9 && n.startsWith('2')) {
       return '+56 2 ' + n.slice(1,5) + ' ' + n.slice(5);
     }
-    // 8 dígitos asume celular sin 9 -> antepone 9
     if (n.length === 8) {
       return '+56 9 ' + n.slice(0,4) + ' ' + n.slice(4);
     }
     return input;
   }
 
-  // ---------- Formateos en vivo ----------
+  // ---------- Múltiples formas de bindear el evento ----------
   
-  // RUT - Formateo visual mientras se escribe
-  $('#inspecciones_rut').on('input', function () {
+  // Método 1: Direct binding (solo funciona si el elemento ya existe)
+  if ($('#inspecciones_rut').length > 0) {
+    console.log('Usando direct binding para #inspecciones_rut');
+    $('#inspecciones_rut').on('input', function () {
+      console.log('Event handler ejecutado - direct binding');
+      const cursorPos = this.selectionStart;
+      const valorAnterior = $(this).val();
+      alert('Direct binding: ' + valorAnterior);
+      const valorFormateado = formatearRutVisual(valorAnterior);
+      
+      $(this).val(valorFormateado);
+      
+      const nuevaPos = Math.min(cursorPos + (valorFormateado.length - valorAnterior.length), valorFormateado.length);
+      this.setSelectionRange(nuevaPos, nuevaPos);
+    });
+  } else {
+    console.log('Elemento #inspecciones_rut no encontrado para direct binding');
+  }
+
+  // Método 2: Event delegation (funciona incluso si el elemento se carga después)
+  $(document).on('input', '#inspecciones_rut', function () {
+    console.log('Event handler ejecutado - event delegation');
     const cursorPos = this.selectionStart;
     const valorAnterior = $(this).val();
-    alert(valorAnterior)
+    console.log('Valor anterior:', valorAnterior);
     const valorFormateado = formatearRutVisual(valorAnterior);
     
     $(this).val(valorFormateado);
     
-    // Mantener posición del cursor aproximada
     const nuevaPos = Math.min(cursorPos + (valorFormateado.length - valorAnterior.length), valorFormateado.length);
     this.setSelectionRange(nuevaPos, nuevaPos);
   });
 
-  // RUT - Validación al salir del campo
-  $('#inspecciones_rut').on('blur', function () {
-    const $input = $(this);
-    const rut = $input.val();
+  // Método 3: Buscar por atributo name si el ID no funciona
+  $(document).on('input', 'input[name="inspecciones_rut"]', function () {
+    console.log('Event handler ejecutado - por name attribute');
+    const cursorPos = this.selectionStart;
+    const valorAnterior = $(this).val();
+    console.log('Valor anterior (by name):', valorAnterior);
+    const valorFormateado = formatearRutVisual(valorAnterior);
     
-    if (rut && !validarRUT(rut)) {
-      $input.addClass('is-invalid');
-      if (!$input.next('.invalid-feedback').length) {
-        $input.after('<div class="invalid-feedback">RUT inválido</div>');
-      }
-    } else {
-      $input.removeClass('is-invalid');
-      $input.next('.invalid-feedback').remove();
-    }
+    $(this).val(valorFormateado);
+    
+    const nuevaPos = Math.min(cursorPos + (valorFormateado.length - valorAnterior.length), valorFormateado.length);
+    this.setSelectionRange(nuevaPos, nuevaPos);
   });
 
-  // Patente - Formateo y validación
-  $('#patente').on('input', function () {
+  // Debug adicional: verificar cuando el DOM cambie
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.type === 'childList') {
+        const rutElement = document.getElementById('inspecciones_rut');
+        if (rutElement && !rutElement.hasAttribute('data-js-bound')) {
+          console.log('Elemento RUT detectado después de cambio en DOM');
+          rutElement.setAttribute('data-js-bound', 'true');
+          $(rutElement).on('input', function () {
+            console.log('Event handler ejecutado - post DOM change');
+            const cursorPos = this.selectionStart;
+            const valorAnterior = $(this).val();
+            alert('Post DOM change: ' + valorAnterior);
+            const valorFormateado = formatearRutVisual(valorAnterior);
+            
+            $(this).val(valorFormateado);
+            
+            const nuevaPos = Math.min(cursorPos + (valorFormateado.length - valorAnterior.length), valorFormateado.length);
+            this.setSelectionRange(nuevaPos, nuevaPos);
+          });
+        }
+      }
+    });
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  // ---------- Event handlers para otros elementos ----------
+  
+  // Patente
+  $(document).on('input', '#patente', function () {
     let valor = $(this).val().toUpperCase().replace(/[^A-Z0-9-]/g, '');
-    
-    // Limitar longitud
     if (valor.length > 7) {
       valor = valor.substring(0, 7);
     }
-    
     $(this).val(valor);
   });
 
-  $('#patente').on('blur', function () {
+  $(document).on('blur', '#patente', function () {
     const $input = $(this);
     const patente = $input.val();
     
@@ -429,15 +485,31 @@ $(function () {
     }
   });
 
+  // RUT blur validation
+  $(document).on('blur', '#inspecciones_rut, input[name="inspecciones_rut"]', function () {
+    const $input = $(this);
+    const rut = $input.val();
+    
+    if (rut && !validarRUT(rut)) {
+      $input.addClass('is-invalid');
+      if (!$input.next('.invalid-feedback').length) {
+        $input.after('<div class="invalid-feedback">RUT inválido</div>');
+      }
+    } else {
+      $input.removeClass('is-invalid');
+      $input.next('.invalid-feedback').remove();
+    }
+  });
+
   // Teléfonos
-  $('#celular, #telefono').on('blur', function () {
+  $(document).on('blur', '#celular, #telefono', function () {
     $(this).val(formatearTelefonoCL($(this).val()));
   });
 
   // ---------- Preview ----------
   function updatePreview() {
     $('#preview-asegurado').text($('#asegurado').val() || '-');
-    $('#preview-rut').text($('#inspecciones_rut').val() || '-');
+    $('#preview-rut').text($('#inspecciones_rut').val() || $('input[name="inspecciones_rut"]').val() || '-');
     $('#preview-direccion').text($('#inspecciones_direccion').val() || '-');
     $('#preview-celular').text($('#celular').val() || '-');
     $('#preview-patente').text($('#patente').val() || '-');
@@ -452,22 +524,22 @@ $(function () {
     $('#preview-poliza').text($('#n_poliza').val() || '-');
   }
   
-  $('input, select').on('input change', updatePreview);
+  $(document).on('input change', 'input, select', updatePreview);
   updatePreview();
 
   // ---------- Validación Submit ----------
-  $('#inspeccionForm').on('submit', function (e) {
+  $(document).on('submit', '#inspeccionForm', function (e) {
+    console.log('Form submit interceptado');
     const errores = [];
 
-    // Limpiar validaciones visuales previas
     $('.is-invalid').removeClass('is-invalid');
     $('.invalid-feedback').remove();
 
-    // RUT
-    const rutValue = $('#inspecciones_rut').val();
+    // RUT - buscar por ID y por name
+    const rutValue = $('#inspecciones_rut').val() || $('input[name="inspecciones_rut"]').val();
     if (!rutValue || !validarRUT(rutValue)) {
       errores.push('El RUT ingresado no es válido.');
-      $('#inspecciones_rut').addClass('is-invalid');
+      $('#inspecciones_rut, input[name="inspecciones_rut"]').addClass('is-invalid');
     }
 
     // Patente
@@ -501,42 +573,45 @@ $(function () {
     if (errores.length) {
       e.preventDefault();
       
-      // Mostrar errores de forma más elegante
       let mensajeError = 'Se encontraron los siguientes errores:\n\n';
       errores.forEach((error, index) => {
         mensajeError += `${index + 1}. ${error}\n`;
       });
       
       alert(mensajeError);
-      
-      // Enfocar el primer campo con error
       $('.is-invalid').first().focus();
       return false;
     }
 
-    // Confirmación final
     if (!confirm('¿Estás seguro de que deseas crear esta inspección con los datos ingresados?')) {
       e.preventDefault();
       return false;
     }
   });
 
-  // ---------- Funciones de utilidad adicionales ----------
-  
-  // Función para testear RUTs (útil para debugging)
-  window.testRUT = function(rut) {
-    console.log(`Testing RUT: ${rut}`);
-    console.log(`Normalized: ${normalizarRutInput(rut)}`);
-    console.log(`Valid: ${validarRUT(rut)}`);
-    console.log(`Formatted: ${formatearRutVisual(rut)}`);
-  };
-  
-  // Función para testear patentes
-  window.testPatente = function(patente) {
-    console.log(`Testing Patente: ${patente}`);
-    console.log(`Cleaned: ${limpiarPatente(patente)}`);
-    console.log(`Valid: ${validarPatente(patente)}`);
-  };
+  // ---------- Test function ----------
+    window.testElements = function() {
+        console.log('=== TEST DE ELEMENTOS ===');
+        console.log('jQuery loaded:', typeof $ !== 'undefined');
+        console.log('Document ready:', document.readyState);
+        console.log('#inspecciones_rut por ID:', $('#inspecciones_rut').length);
+        console.log('input[name="inspecciones_rut"] por name:', $('input[name="inspecciones_rut"]').length);
+        console.log('Todos los inputs con ID:', $('input[id]').map(function() { return this.id; }).get());
+        console.log('DOM element directo:', document.getElementById('inspecciones_rut'));
+        
+        // Test manual del evento
+        const elemento = document.getElementById('inspecciones_rut');
+        if (elemento) {
+        console.log('Elemento encontrado, agregando evento de prueba...');
+        elemento.addEventListener('input', function() {
+            console.log('Evento nativo funcionando');
+            alert('Evento nativo: ' + this.value);
+        });
+        }
+    };
+
+    // Ejecutar test automáticamente
+    setTimeout(testElements, 1000); 
 });
 </script>
 <?= $this->endSection() ?>

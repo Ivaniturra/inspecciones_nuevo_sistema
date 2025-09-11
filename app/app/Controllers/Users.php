@@ -317,10 +317,10 @@ class Users extends BaseController
         
         // Intentar actualizar el usuario
        if (!$this->userModel->update($id, $data)) {
-        // Mostrar la consulta SQL y el error de la base de datos
-        log_message('error', 'Consulta SQL fallida: ' . $this->userModel->getLastQuery());
-        log_message('error', 'Error en la base de datos: ' . json_encode($this->db->error())); // Captura el error de la base de datos
-
+    // Mostrar la consulta SQL y el error de la base de datos desde el modelo
+    log_message('error', 'Consulta SQL fallida: ' . $this->userModel->getLastQuery());
+    log_message('error', 'Error en la base de datos: ' . json_encode($this->userModel->db->error())); // Captura el error de la base de datos
+ 
         //return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
     }
 

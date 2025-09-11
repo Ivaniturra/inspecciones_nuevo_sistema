@@ -13,7 +13,7 @@ class UserModel extends Model
     protected $protectFields    = true;
 
     protected $allowedFields = [
-    'user_nombre','user_email','user_telefono','user_perfil','cia_id',
+    'user_nombre','user_email','user_telefono','user_perfil','cia_id','corredor_id',
     'user_clave','user_avatar','user_ultimo_acceso','user_intentos_login',
     'user_token_reset','user_habil','user_debe_cambiar_clave',
     'user_metadata','user_preferences','user_security_settings','user_login_history', 

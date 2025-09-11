@@ -61,8 +61,7 @@ Editar Usuario
                 
                 <div class="card-body">
                     <form action="<?= base_url('users/update/' . $usuario['user_id']) ?>" method="post" enctype="multipart/form-data" id="userForm">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="_method" value="PUT">
+                        <?= csrf_field() ?> 
                         
                         <div class="row">
                             <!-- Información Personal -->

@@ -227,7 +227,6 @@ class Users extends BaseController
 
     /** Actualizar */
     public function update($id)
-    {public function update($id)
 {
     $usuario = $this->userModel->find($id);
     if (!$usuario) {

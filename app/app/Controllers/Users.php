@@ -226,30 +226,35 @@ class Users extends BaseController
     }
 
     /** Actualizar */
-    public function update($id)
+     public function update($id)
     {
+        // Obtener el usuario para la actualización
         $usuario = $this->userModel->find($id);
         if (!$usuario) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Usuario no encontrado');
         }
 
-        // === Reglas de validación (controlador) ===
+        // Reglas de validación
         $rules = [
             'user_nombre' => [
                 'label' => 'Nombre',
                 'rules' => 'required|min_length[3]|max_length[100]|regex_match[/^[\p{L}\s\.\'\-]+$/u]',
             ],
-            'user_email'  => "required|valid_email|is_unique[users.user_email,user_id,{$id}]",
+            'user_email'  => [
+                'label' => 'Correo Electrónico',
+                'rules' => "required|valid_email|max_length[255]|is_unique[users.user_email,user_id,{$id}]",
+            ],
             'user_perfil' => 'required|integer',
             'user_avatar' => 'permit_empty|is_image[user_avatar]|mime_in[user_avatar,image/jpg,image/jpeg,image/png]|max_size[user_avatar,1024]',
         ];
 
         // Contraseña opcional (misma regla que usarás en el front)
         if (!empty($this->request->getPost('user_clave'))) {
-        $rules['user_clave'] = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]'; 
+            $rules['user_clave'] = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]'; 
             $rules['confirmar_clave'] = 'matches[user_clave]';
         }
 
+        // Validar los datos
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()
                 ->with('errors', $this->validator->getErrors());
@@ -261,7 +266,7 @@ class Users extends BaseController
             return redirect()->back()->withInput()->with('errors', $customErrors);
         }
 
-        // === Avatar a carpeta PÚBLICA ===
+        // Avatar a carpeta pública
         $avatarName = $usuario['user_avatar'];
         $file = $this->request->getFile('user_avatar');
         if ($file && $file->isValid() && $file->getError() === UPLOAD_ERR_OK) {
@@ -269,12 +274,12 @@ class Users extends BaseController
             if (!is_dir($publicDir)) {
                 @mkdir($publicDir, 0755, true);
             }
-            // eliminar anterior si existe
+            // Eliminar anterior si existe
             if (!empty($avatarName)) {
                 $oldPath = $publicDir . DIRECTORY_SEPARATOR . $avatarName;
                 if (is_file($oldPath)) { @unlink($oldPath); }
             }
-            // mover nuevo
+            // Mover nuevo
             $newName = $file->getRandomName();
             $file->move($publicDir, $newName);
             $avatarName = $newName;
@@ -283,9 +288,8 @@ class Users extends BaseController
         // cia_id null si viene vacío
         $ciaId = $this->request->getPost('cia_id');
         $ciaId = ($ciaId === '' || $ciaId === null) ? null : (int) $ciaId;
-        
 
-        // === Datos a actualizar ===
+        // Datos a actualizar
         $data = [
             'user_nombre'   => $this->sanitizeInput($this->request->getPost('user_nombre')),
             'user_email'    => strtolower(trim((string) $this->request->getPost('user_email'))),
@@ -296,6 +300,7 @@ class Users extends BaseController
             'user_avatar'   => $avatarName,
             'user_habil'    => (int) $this->request->getPost('user_habil'),
         ];  
+
         // Contraseña solo si viene; el modelo la hashea en beforeUpdate
         if (!empty($this->request->getPost('user_clave'))) {
             $data['user_clave']               = (string) $this->request->getPost('user_clave');
@@ -310,24 +315,23 @@ class Users extends BaseController
             'habil'  => $usuario['user_habil'],
         ];
 
-        // === IMPORTANTE: saltar validación del MODELO (ya validamos en el controlador) ===
+        // Intentar actualizar el usuario
         if (!$this->userModel->update($id, $data)) {
-            print_r(json_encode($this->userModel->errors()));
             log_message('error', 'Error al actualizar el usuario. Datos: ' . json_encode($data));
-            log_message('error', 'Error en la base de datos: ' . json_encode($this->userModel->errors())); // Mostrar errores si hay alguno
-            //return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
+            log_message('error', 'Error en la base de datos: ' . json_encode($this->userModel->errors()));
+            return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
         }
-    
-            $this->logAuditAction('user_updated', [
-                'user_id'    => $id,
-                'old_data'   => $oldData,
-                'new_data'   => $data,
-                'updated_by' => $this->session->get('user_id') ?? 'system',
-            ]);
 
-           // return redirect()->to('/users')->with('success', 'Usuario actualizado exitosamente'); 
- 
+        $this->logAuditAction('user_updated', [
+            'user_id'    => $id,
+            'old_data'   => $oldData,
+            'new_data'   => $data,
+            'updated_by' => $this->session->get('user_id') ?? 'system',
+        ]);
+
+        return redirect()->to('/users')->with('success', 'Usuario actualizado exitosamente');
     }
+
 
 
     /** Eliminar */

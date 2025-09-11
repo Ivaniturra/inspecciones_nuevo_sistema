@@ -316,19 +316,18 @@ class Users extends BaseController
         ];
         
         // Intentar actualizar el usuario
-       if (!$this->userModel->update($id, $data)) {
-    // Mostrar la consulta SQL y el error de la base de datos desde el modelo
-       // Si no se realizó correctamente, obtener el último error
-    $dbError = $this->userModel->db->error();
-    print_r($dbError);
-log_message('debug', 'Datos a actualizar: ' . json_encode($data));
-
-    log_message('error', 'Error de actualización en la base de datos. Código: ' . $dbError['code']);
-    log_message('error', 'Error de actualización en la base de datos. Mensaje: ' . $dbError['message']);
+  if (!$this->userModel->update($id, $data)) {
     log_message('error', 'Consulta SQL fallida: ' . $this->userModel->getLastQuery());
+    log_message('error', 'Error de base de datos: ' . json_encode($this->userModel->db->error()));
     return false;
-        //return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
+} else {
+    $affectedRows = $this->userModel->db->affectedRows();
+    log_message('debug', 'Filas afectadas: ' . $affectedRows);
+    if ($affectedRows == 0) {
+        log_message('error', 'No se actualizó ningún registro. Revisa la condición WHERE.');
+        return false;
     }
+}
 
         $this->logAuditAction('user_updated', [
             'user_id'    => $id,

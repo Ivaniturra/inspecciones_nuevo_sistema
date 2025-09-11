@@ -48,18 +48,18 @@ class Auth extends BaseController
         $user  = $users->findByEmail($email);
 
         file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
-    date('Y-m-d H:i:s') . " - Login attempt for: " . $email . "\n", 
-    FILE_APPEND | LOCK_EX
-);
+            date('Y-m-d H:i:s') . " - Login attempt for: " . $email . "\n", 
+            FILE_APPEND | LOCK_EX
+        );
 
-if ($user) {
-    file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
-        date('Y-m-d H:i:s') . " - User found - Perfil: " . ($user['user_perfil'] ?? 'NULL') . 
-        " - Tipo: " . ($user['perfil_tipo'] ?? 'NULL') . 
-        " - Corredor ID: " . ($user['corredor_id'] ?? 'NULL') . "\n", 
-        FILE_APPEND | LOCK_EX
-    );
-}
+        if ($user) {
+            file_put_contents(WRITEPATH . 'logs/debug_manual.log', 
+                date('Y-m-d H:i:s') . " - User found - Perfil: " . ($user['user_perfil'] ?? 'NULL') . 
+                " - Tipo: " . ($user['perfil_tipo'] ?? 'NULL') . 
+                " - Corredor ID: " . ($user['corredor_id'] ?? 'NULL') . "\n", 
+                FILE_APPEND | LOCK_EX
+            );
+        }
 
         if (!$user || empty($user['user_habil'])) {
             return redirect()->back()
@@ -82,9 +82,7 @@ if ($user) {
             session()->setTempdata('temp_user_id', $user['user_id'], 600); // 10 minutos
             return redirect()->to(base_url('auth/change-password'))
                 ->with('info', 'Debes cambiar tu contraseña antes de continuar.');
-        }
-print_r($user);
-/*
+        } 
         // 5) Determinar branding según tipo de usuario
         $brandingData = $this->getBrandingForUser($user);
 
@@ -121,7 +119,7 @@ print_r($user);
         }
 
         // 9) Redirección según tipo de usuario
-        return $this->redirectByUserType($user);*/
+        return $this->redirectByUserType($user);
     }
 
     /**

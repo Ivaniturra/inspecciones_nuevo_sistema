@@ -200,8 +200,7 @@ class Users extends BaseController
         $currentId = session('user_id');
         $role      = session('user_perfil'); // 7 = super admin, etc.
 
-        $usuario = $this->userModel->find($id);
-        print_r($usuario);
+        $usuario = $this->userModel->find($id); 
         if (! $usuario) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Usuario no encontrado');
         }

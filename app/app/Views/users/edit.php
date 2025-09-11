@@ -238,7 +238,14 @@ Editar Usuario
                                     </div>
                                     <div class="form-text">El perfil determina los permisos del usuario</div>
                                 </div>
-
+<!-- DEBUG TEMPORAL - ELIMINAR DESPUÉS -->
+<div class="alert alert-warning">
+    <strong>DEBUG:</strong><br>
+    Usuario ID: <?= $usuario['user_id'] ?><br>
+    Corredor ID: <?= isset($usuario['corredor_id']) ? $usuario['corredor_id'] : 'NO EXISTE EN ARRAY' ?><br>
+    Perfil ID: <?= $usuario['user_perfil'] ?><br>
+    Campos disponibles: <?= implode(', ', array_keys($usuario)) ?>
+</div>
                                 <!-- Corredor -->
                                 <div class="mb-3" id="corredor-container" style="display: none;">
                                     <label for="corredor_id" class="form-label">

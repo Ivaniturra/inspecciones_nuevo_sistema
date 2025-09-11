@@ -209,11 +209,11 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
      
     <!-- Inspecciones -->
     <a class="nav-link <?= url_is('corredor/*') ? 'active' : '' ?>" 
-       href="<?= base_url('corredor/') ?>" 
+       href="<?= base_url('corredor/*') ?>" 
        data-bs-toggle="tooltip" 
-       data-bs-title="Gestionar Inspecciones">
+       data-bs-title="Dashboard">
         <i class="icon fa-solid fa-chart-simple"></i>
-        <span class="label">Inspecciones</span>
+        <span class="label">Dashboard</span>
     </a>
 
     <!-- Nueva Inspección -->

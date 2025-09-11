@@ -206,15 +206,13 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
     <button class="pin-btn" id="btnPinHeader" title="Expandir/Colapsar"><i class="fa-solid fa-thumbtack"></i></button>
   </div>
  
-    
-  
-
+     
     <!-- Inspecciones -->
-    <a class="nav-link <?= url_is('corredor/inspecciones*') ? 'active' : '' ?>" 
+    <a class="nav-link <?= url_is('corredor/*') ? 'active' : '' ?>" 
        href="<?= base_url('corredor/') ?>" 
        data-bs-toggle="tooltip" 
        data-bs-title="Gestionar Inspecciones">
-        <i class="icon fa-solid fa-clipboard-check"></i>
+        <i class="icon fa-solid fa-chart-simple"></i>
         <span class="label">Inspecciones</span>
     </a>
 

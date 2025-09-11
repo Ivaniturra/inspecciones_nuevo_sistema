@@ -312,7 +312,7 @@ class Users extends BaseController
 
         // === IMPORTANTE: saltar validación del MODELO (ya validamos en el controlador) ===
         if (!$this->userModel->update($id, $data)) {
-            print_r(json_encode($this->userModel->errors());
+            print_r(json_encode($this->userModel->errors()));
             log_message('error', 'Error al actualizar el usuario. Datos: ' . json_encode($data));
             log_message('error', 'Error en la base de datos: ' . json_encode($this->userModel->errors())); // Mostrar errores si hay alguno
             //return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');

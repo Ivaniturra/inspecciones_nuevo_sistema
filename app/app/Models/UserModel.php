@@ -36,7 +36,7 @@ class UserModel extends Model
     ];
 
     protected $validationMessages = [
-        'user_email'  => [
+        'user_email' => [
             'label' => 'Correo Electrónico',
             'rules' => "required|valid_email|max_length[255]|is_unique[users.user_email,user_id,{$id}]",
         ],

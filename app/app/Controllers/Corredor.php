@@ -231,7 +231,7 @@ class Corredor extends BaseController
     {
         $data = $this->request->getPost();
         $data['user_id'] = session('user_id');
-        $data['estado'] = 'pendiente';
+        $data['estado'] = 'Solicitud'; // Estado inicial según tu BD
         $data['fecha_creacion'] = date('Y-m-d H:i:s');
 
         // Validar datos básicos

@@ -82,11 +82,11 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h6 class="card-title text-muted mb-1">Pendientes</h6>
+                            <h6 class="card-title text-muted mb-1">Solicitudes</h6>
                             <h3 class="mb-0 text-warning"><?= number_format($stats['solicitudes_pendientes']) ?></h3>
                         </div>
                         <div class="text-warning">
-                            <i class="fas fa-clock fa-2x"></i>
+                            <i class="fas fa-file-alt fa-2x"></i>
                         </div>
                     </div>
                 </div>
@@ -97,11 +97,11 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h6 class="card-title text-muted mb-1">En Proceso</h6>
+                            <h6 class="card-title text-muted mb-1">En Inspector</h6>
                             <h3 class="mb-0 text-info"><?= number_format($stats['en_proceso']) ?></h3>
                         </div>
                         <div class="text-info">
-                            <i class="fas fa-cog fa-2x"></i>
+                            <i class="fas fa-search fa-2x"></i>
                         </div>
                     </div>
                 </div>
@@ -112,11 +112,11 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h6 class="card-title text-muted mb-1">Completadas</h6>
+                            <h6 class="card-title text-muted mb-1">Aceptadas</h6>
                             <h3 class="mb-0 text-success"><?= number_format($stats['completadas_mes']) ?></h3>
                         </div>
                         <div class="text-success">
-                            <i class="fas fa-check-circle fa-2x"></i>
+                            <i class="fas fa-thumbs-up fa-2x"></i>
                         </div>
                     </div>
                 </div>

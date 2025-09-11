@@ -376,6 +376,7 @@ $(function () {
   $('#inspecciones_rut').on('input', function () {
     const cursorPos = this.selectionStart;
     const valorAnterior = $(this).val();
+    alert(valorAnterior)
     const valorFormateado = formatearRutVisual(valorAnterior);
     
     $(this).val(valorFormateado);

@@ -47,28 +47,48 @@ class UserModel extends Model
     protected $afterFind    = ['parseJsonFields'];
 
     /* --------------------- Helpers de normalización y defaults --------------------- */
-        public function updateUser($id, array $data)
-        {
-            // Iniciar la transacción
-            $this->db->transStart(); 
-
-            // Intentar realizar la actualización
-            $this->update($id, $data);
-
-            // Verificar si la transacción fue exitosa
-            if ($this->db->transStatus() === false) {
-                // Si falla, hacer rollback
-                $this->db->transRollback();
+    public function updateUser($id, array $data)
+    {
+        try {
+            // Log para debug
+            log_message('debug', '=== UserModel::updateUser ===');
+            log_message('debug', 'ID: ' . $id);
+            log_message('debug', 'Data: ' . json_encode($data));
+            
+            // Verificar que el usuario existe
+            $user = $this->find($id);
+            if (!$user) {
+                log_message('error', 'Usuario no encontrado con ID: ' . $id);
                 return [
                     'status' => false,
-                    'error'  => $this->db->error() // Captura el error de la base de datos
+                    'error' => 'Usuario no encontrado'
                 ];
             }
-
-            // Si la actualización es exitosa, completar la transacción
-            $this->db->transComplete();
+            
+            // Intentar actualizar - skipValidation si ya validaste en el controlador
+            $result = $this->skipValidation(true)->update($id, $data);
+            
+            log_message('debug', 'Update result: ' . ($result ? 'true' : 'false'));
+            
+            if ($result === false) {
+                $errors = $this->errors();
+                log_message('error', 'Model errors: ' . json_encode($errors));
+                return [
+                    'status' => false,
+                    'error' => $errors ?: 'Error desconocido al actualizar'
+                ];
+            }
+            
             return ['status' => true];
-        } 
+            
+        } catch (\Exception $e) {
+            log_message('critical', 'Exception en updateUser: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    } 
 
     /** Normaliza strings (espacios y casing del email) */
     protected function normalizeInput(array $data): array

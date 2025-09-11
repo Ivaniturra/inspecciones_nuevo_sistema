@@ -199,9 +199,9 @@ class Corredor extends BaseController
             return redirect()->back()->with('error', 'Inspección no encontrada');
         }
 
-        // Solo permitir eliminar si está pendiente
-        if ($inspeccion['estado'] !== 'pendiente') {
-            return redirect()->back()->with('error', 'Solo se pueden eliminar inspecciones pendientes');
+        // Solo permitir eliminar si está en Solicitud
+        if ($inspeccion['estado'] !== 'Solicitud') {
+            return redirect()->back()->with('error', 'Solo se pueden eliminar inspecciones en estado Solicitud');
         }
 
         if ($this->inspeccionesModel->delete($id)) {

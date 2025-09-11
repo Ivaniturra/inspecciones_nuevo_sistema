@@ -286,7 +286,7 @@
                         </button>
                         <a href="<?= base_url('corredor') ?>" class="btn btn-outline-secondary btn-lg">
                             <i class="fas fa-times me-2"></i>
-                            Cancelarddssd
+                            Cancelar
                         </a>
                     </div>
                 </div>
@@ -294,8 +294,7 @@
         </div>
     </form>
 </div>
-<?= $this->endSection() ?>
-<?= $this->section('js') ?>
+<?= $this->endSection() ?> 
 <script>
 $(function () {
   // ---------- Helpers ----------

@@ -228,6 +228,7 @@ class Users extends BaseController
     /** Actualizar */
     public function update($id)
     {
+        // Obtener el usuario para la actualización
         $usuario = $this->userModel->find($id);
         if (!$usuario) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Usuario no encontrado');
@@ -246,13 +247,14 @@ class Users extends BaseController
 
         // Contraseña opcional (misma regla que usarás en el front)
         if (!empty($this->request->getPost('user_clave'))) {
-        $rules['user_clave'] = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]'; 
+            $rules['user_clave'] = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]'; 
             $rules['confirmar_clave'] = 'matches[user_clave]';
         }
 
+        // Validar los datos
         if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()
-                ->with('errors', $this->validator->getErrors());
+            log_message('error', 'Errores de validación: ' . json_encode($this->validator->getErrors()));
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
         // Validaciones personalizadas según perfil/compañía
@@ -269,12 +271,12 @@ class Users extends BaseController
             if (!is_dir($publicDir)) {
                 @mkdir($publicDir, 0755, true);
             }
-            // eliminar anterior si existe
+            // Eliminar anterior si existe
             if (!empty($avatarName)) {
                 $oldPath = $publicDir . DIRECTORY_SEPARATOR . $avatarName;
                 if (is_file($oldPath)) { @unlink($oldPath); }
             }
-            // mover nuevo
+            // Mover el archivo a la carpeta
             $newName = $file->getRandomName();
             $file->move($publicDir, $newName);
             $avatarName = $newName;
@@ -283,7 +285,6 @@ class Users extends BaseController
         // cia_id null si viene vacío
         $ciaId = $this->request->getPost('cia_id');
         $ciaId = ($ciaId === '' || $ciaId === null) ? null : (int) $ciaId;
-        
 
         // === Datos a actualizar ===
         $data = [
@@ -296,13 +297,14 @@ class Users extends BaseController
             'user_avatar'   => $avatarName,
             'user_habil'    => (int) $this->request->getPost('user_habil'),
         ];  
+
         // Contraseña solo si viene; el modelo la hashea en beforeUpdate
         if (!empty($this->request->getPost('user_clave'))) {
             $data['user_clave']               = (string) $this->request->getPost('user_clave');
             $data['user_debe_cambiar_clave']  = 0;
         }
 
-        // Para auditoría
+        // Para auditoría, guardar los datos antiguos
         $oldData = [
             'nombre' => $usuario['user_nombre'],
             'email'  => $usuario['user_email'],
@@ -310,23 +312,24 @@ class Users extends BaseController
             'habil'  => $usuario['user_habil'],
         ];
 
-        // === IMPORTANTE: saltar validación del MODELO (ya validamos en el controlador) ===
-        if (!$this->userModel->updateUser($id, $data)) {
-            print_r(json_encode($this->userModel->errors()));
-            log_message('error', 'Error al actualizar el usuario. Datos: ' . json_encode($data));
-            log_message('error', 'Error en la base de datos: ' . json_encode($this->userModel->errors())); // Mostrar errores si hay alguno
-            //return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
-        }
-    
-            $this->logAuditAction('user_updated', [
-                'user_id'    => $id,
-                'old_data'   => $oldData,
-                'new_data'   => $data,
-                'updated_by' => $this->session->get('user_id') ?? 'system',
-            ]);
+        // Llamar al método de actualización del modelo
+        $updateResult = $this->userModel->updateUser($id, $data);
 
-           // return redirect()->to('/users')->with('success', 'Usuario actualizado exitosamente'); 
- 
+        // Verificar el resultado
+        if (!$updateResult['status']) {
+            log_message('error', 'Error al actualizar el usuario. Detalles: ' . json_encode($updateResult['error']));
+            return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
+        }
+
+        // Si la actualización fue exitosa, continuar con la auditoría
+        $this->logAuditAction('user_updated', [
+            'user_id'    => $id,
+            'old_data'   => $oldData,
+            'new_data'   => $data,
+            'updated_by' => $this->session->get('user_id') ?? 'system',
+        ]);
+
+        return redirect()->to('/users')->with('success', 'Usuario actualizado exitosamente');
     }
 
 

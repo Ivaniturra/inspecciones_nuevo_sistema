@@ -84,6 +84,7 @@ if ($user) {
                 ->with('info', 'Debes cambiar tu contraseña antes de continuar.');
         }
 print_r($user);
+/*
         // 5) Determinar branding según tipo de usuario
         $brandingData = $this->getBrandingForUser($user);
 
@@ -120,7 +121,7 @@ print_r($user);
         }
 
         // 9) Redirección según tipo de usuario
-        return $this->redirectByUserType($user);
+        return $this->redirectByUserType($user);*/
     }
 
     /**

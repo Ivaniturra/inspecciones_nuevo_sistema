@@ -458,8 +458,7 @@ Editar Usuario
         $('#user_perfil').on('change', applyPerfilUI);
 
         // Inicializa el perfil correcto al cargar la página
-        applyPerfilUI();
-    }); 
+        applyPerfilUI(); 
 
     // ===== Password fuerte (igual al backend) =====
     const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;

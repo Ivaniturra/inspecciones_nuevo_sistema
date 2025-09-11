@@ -295,9 +295,7 @@ class Users extends BaseController
             'corredor_id'   => (int) $this->request->getPost('corredor_id'),  
             'user_avatar'   => $avatarName,
             'user_habil'    => (int) $this->request->getPost('user_habil'),
-        ];
-        echo $id;
-        print_r($data);
+        ]; 
         return false;
         // Contraseña solo si viene; el modelo la hashea en beforeUpdate
         if (!empty($this->request->getPost('user_clave'))) {

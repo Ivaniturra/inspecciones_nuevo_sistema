@@ -127,12 +127,19 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         
     });
     $routes->group('corredor', ['filter' => 'role:9,10'], static function($routes) {
-        $routes->get('/', 'Corredor::index');
-        $routes->get('inspecciones', 'Inspecciones::index');
-        $routes->get('inspecciones/create', 'Inspecciones::create');
-        $routes->post('inspecciones/store', 'Inspecciones::store');
-        $routes->get('inspecciones/show/(:num)', 'Inspecciones::show/$1'); 
+        $routes->get('create', 'Corredor::create');
+        $routes->post('store', 'Corredor::store');
+        $routes->get('show/(:num)', 'Corredor::show/$1');
+        $routes->get('edit/(:num)', 'Corredor::edit/$1');
+        $routes->post('update/(:num)', 'Corredor::update/$1');
+        $routes->get('delete/(:num)', 'Corredor::delete/$1');
+        
+        // Rutas AJAX
+        $routes->get('filter-status', 'Corredor::filterByStatus');
+        $routes->get('stats', 'Corredor::getStats');
     });
+
+    
     $routes->group('api', static function($routes) {
         $routes->get('comunas/search', 'Api\ComunasController::search');
     });

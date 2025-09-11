@@ -428,29 +428,29 @@ Editar Usuario
         // ===== Perfil: mostrar/ocultar campos según tipo =====
          function applyPerfilUI() {
             const tipo = $('#user_perfil').find('option:selected').data('tipo');
-            
+    
             // Ocultar todos los contenedores primero
             $('#cia-container, #corredor-container, #interno-info, #inspector-info').hide();
-            $('#cia_id, #corredor_id').prop('required', false);
+            $('#cia_id, #corredor_id').prop('required', false).val('');
             
             switch(tipo) {
-                case 'compania':
-                    $('#cia-container').show();
-                    $('#cia_id').prop('required', true);
-                    break;
-                    
-                case 'corredor':
-                    $('#corredor-container').show();  // Muestra el contenedor de corredor
-                    $('#corredor_id').prop('required', true);
-                    break;
-                    
-                case 'interno':
-                    $('#interno-info').show();
-                    break;
-                    
-                case 'inspector':
-                    $('#inspector-info').show();
-                    break;
+            case 'compania':
+                $('#cia-container').show();
+                $('#cia_id').prop('required', true);
+                break;
+                
+            case 'corredor':
+                $('#corredor-container').show();
+                $('#corredor_id').prop('required', true);
+                break;
+                
+            case 'interno':
+                $('#interno-info').show();
+                break;
+                
+            case 'inspector':
+                $('#inspector-info').show();
+                break;
             }
         }
 

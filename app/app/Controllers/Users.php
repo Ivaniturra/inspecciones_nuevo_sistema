@@ -324,9 +324,8 @@ class Users extends BaseController
                 'updated_by' => $this->session->get('user_id') ?? 'system',
             ]);
 
-            return redirect()->to('/users')->with('success', 'Usuario actualizado exitosamente'); 
-
-        return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
+           // return redirect()->to('/users')->with('success', 'Usuario actualizado exitosamente'); 
+ 
     }
 
 

@@ -256,9 +256,14 @@ Editar Usuario
                                             id="corredor_id" 
                                             name="corredor_id">
                                         <option value="">Seleccionar corredor...</option>
-                                        <?php foreach ($corredores as $corredor): ?>
+                                        <?php 
+                                        $selectedCorredorId = old('corredor_id', $usuario['corredor_id'] ?? '');
+                                        foreach ($corredores as $corredor): 
+                                            // Convertir ambos a string para comparación segura
+                                            $isSelected = (string)$selectedCorredorId === (string)$corredor['corredor_id'];
+                                        ?>
                                             <option value="<?= $corredor['corredor_id'] ?>" 
-                                                    <?= old('corredor_id', $usuario['corredor_id']) == $corredor['corredor_id'] ? 'selected' : '' ?>>
+                                                    <?= $isSelected ? 'selected' : '' ?>>
                                                 <?= esc($corredor['corredor_nombre']) ?>
                                             </option>
                                         <?php endforeach; ?>

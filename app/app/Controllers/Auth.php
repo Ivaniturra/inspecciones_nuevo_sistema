@@ -83,7 +83,7 @@ if ($user) {
             return redirect()->to(base_url('auth/change-password'))
                 ->with('info', 'Debes cambiar tu contraseña antes de continuar.');
         }
-
+print_r($user);
         // 5) Determinar branding según tipo de usuario
         $brandingData = $this->getBrandingForUser($user);
 

@@ -127,6 +127,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         
     });
     $routes->group('corredor', ['filter' => 'role:9,10'], static function($routes) {
+        $routes->get('/', 'Corredor::index');
         $routes->get('create', 'Corredor::create');
         $routes->post('store', 'Corredor::store');
         $routes->get('show/(:num)', 'Corredor::show/$1');

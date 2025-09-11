@@ -426,7 +426,7 @@ Editar Usuario
         };
 
         // ===== Perfil: mostrar/ocultar campos según tipo =====
-        function applyPerfilUI() {
+         function applyPerfilUI() {
             const tipo = $('#user_perfil').find('option:selected').data('tipo');
             
             // Ocultar todos los contenedores primero
@@ -440,7 +440,7 @@ Editar Usuario
                     break;
                     
                 case 'corredor':
-                    $('#corredor-container').show();
+                    $('#corredor-container').show();  // Muestra el contenedor de corredor
                     $('#corredor_id').prop('required', true);
                     break;
                     
@@ -453,8 +453,12 @@ Editar Usuario
                     break;
             }
         }
+
+        // Al cambiar el perfil, aplica los cambios de UI
         $('#user_perfil').on('change', applyPerfilUI);
-        applyPerfilUI(); // inicial
+
+        // Inicializa el perfil correcto al cargar la página
+        applyPerfilUI();
     }); 
 
     // ===== Password fuerte (igual al backend) =====

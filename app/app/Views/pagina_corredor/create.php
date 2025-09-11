@@ -293,10 +293,11 @@
             </div>
         </div>
     </form>
-</div> 
+</div>
 <?= $this->endSection() ?> 
-<script>
-$(function () {
+<script> 
+  // ---------- Helpers ----------
+   $(function () {
   console.log('Script cargado correctamente');
   
   // Debug: Verificar si jQuery está funcionando
@@ -587,28 +588,28 @@ $(function () {
   });
 
   // ---------- Test function ----------
-  window.testElements = function() {
-    console.log('=== TEST DE ELEMENTOS ===');
-    console.log('jQuery loaded:', typeof $ !== 'undefined');
-    console.log('Document ready:', document.readyState);
-    console.log('#inspecciones_rut por ID:', $('#inspecciones_rut').length);
-    console.log('input[name="inspecciones_rut"] por name:', $('input[name="inspecciones_rut"]').length);
-    console.log('Todos los inputs con ID:', $('input[id]').map(function() { return this.id; }).get());
-    console.log('DOM element directo:', document.getElementById('inspecciones_rut'));
-    
-    // Test manual del evento
-    const elemento = document.getElementById('inspecciones_rut');
-    if (elemento) {
-      console.log('Elemento encontrado, agregando evento de prueba...');
-      elemento.addEventListener('input', function() {
-        console.log('Evento nativo funcionando');
-        alert('Evento nativo: ' + this.value);
-      });
-    }
-  };
+    window.testElements = function() {
+        console.log('=== TEST DE ELEMENTOS ===');
+        console.log('jQuery loaded:', typeof $ !== 'undefined');
+        console.log('Document ready:', document.readyState);
+        console.log('#inspecciones_rut por ID:', $('#inspecciones_rut').length);
+        console.log('input[name="inspecciones_rut"] por name:', $('input[name="inspecciones_rut"]').length);
+        console.log('Todos los inputs con ID:', $('input[id]').map(function() { return this.id; }).get());
+        console.log('DOM element directo:', document.getElementById('inspecciones_rut'));
+        
+        // Test manual del evento
+        const elemento = document.getElementById('inspecciones_rut');
+        if (elemento) {
+        console.log('Elemento encontrado, agregando evento de prueba...');
+        elemento.addEventListener('input', function() {
+            console.log('Evento nativo funcionando');
+            alert('Evento nativo: ' + this.value);
+        });
+        }
+    };
 
-  // Ejecutar test automáticamente
-  setTimeout(testElements, 1000); 
+    // Ejecutar test automáticamente
+    setTimeout(testElements, 1000); 
 });
 </script>
 <?= $this->endSection() ?>

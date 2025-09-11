@@ -33,7 +33,7 @@ class Corredor extends BaseController
         
         // Calcular estadísticas reales
         $stats = $this->calcularEstadisticas($userId);
-        
+        print_r(session);
         $data = [
             'title' => 'Dashboard Corredor',
             'corredor_id' => session('corredor_id'),

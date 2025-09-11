@@ -90,13 +90,13 @@
         <?= csrf_field() ?>
         
         <div class="row">
-            <!-- Información del Asegurado -->
+            <!-- InformaciÃ³n del Asegurado -->
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="fas fa-user me-2"></i>
-                            Información del Asegurado
+                            InformaciÃ³n del Asegurado
                         </h5>
                     </div>
                     <div class="card-body">
@@ -129,10 +129,10 @@
                                    class="form-control" 
                                    id="inspecciones_direccion" 
                                    name="inspecciones_direccion" 
-                                   placeholder="Dirección completa"
+                                   placeholder="DirecciÃ³n completa"
                                    value="<?= old('inspecciones_direccion', $inspeccion['inspecciones_direccion']) ?>"
                                    required>
-                            <label for="inspecciones_direccion" class="required">Dirección</label>
+                            <label for="inspecciones_direccion" class="required">DirecciÃ³n</label>
                         </div>
 
                         <div class="form-floating">
@@ -169,7 +169,7 @@
                                            name="inspecciones_telefono" 
                                            placeholder="+56 2 1234 5678"
                                            value="<?= old('inspecciones_telefono', $inspeccion['inspecciones_telefono'] ?? '') ?>">
-                                    <label for="inspecciones_telefono">Teléfono (Opcional)</label>
+                                    <label for="inspecciones_telefono">TelÃ©fono (Opcional)</label>
                                 </div>
                             </div>
                         </div>
@@ -177,13 +177,13 @@
                 </div>
             </div>
 
-            <!-- Información del Vehículo -->
+            <!-- InformaciÃ³n del VehÃ­culo -->
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="fas fa-car me-2"></i>
-                            Información del Vehículo
+                            InformaciÃ³n del VehÃ­culo
                         </h5>
                     </div>
                     <div class="card-body">
@@ -228,7 +228,7 @@
 
                         <div class="form-floating">
                             <select class="form-select" id="cia_id" name="cia_id" required>
-                                <option value="">Seleccione una compañía</option>
+                                <option value="">Seleccione una compaÃ±Ã­a</option>
                                 <?php foreach ($companias as $compania): ?>
                                 <option value="<?= $compania['cia_id'] ?>" 
                                         <?= (old('cia_id', $inspeccion['cia_id']) == $compania['cia_id']) ? 'selected' : '' ?>>
@@ -236,7 +236,7 @@
                                 </option>
                                 <?php endforeach; ?>
                             </select>
-                            <label for="cia_id" class="required">Compañía de Seguros</label>
+                            <label for="cia_id" class="required">CompaÃ±Ã­a de Seguros</label>
                         </div>
 
                         <div class="form-floating">
@@ -244,17 +244,17 @@
                                    class="form-control" 
                                    id="inspecciones_n_poliza" 
                                    name="inspecciones_n_poliza" 
-                                   placeholder="Número de póliza"
+                                   placeholder="NÃºmero de pÃ³liza"
                                    value="<?= old('inspecciones_n_poliza', $inspeccion['inspecciones_n_poliza']) ?>"
                                    required>
-                            <label for="inspecciones_n_poliza" class="required">Número de Póliza</label>
+                            <label for="inspecciones_n_poliza" class="required">NÃºmero de PÃ³liza</label>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Botones de acción -->
+        <!-- Botones de acciÃ³n -->
         <div class="row">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
@@ -282,7 +282,7 @@
 <?= $this->section('js') ?>
 <script>
 $(document).ready(function() {
-    // Formatear RUT automáticamente
+    // Formatear RUT automÃ¡ticamente
     $('#inspecciones_rut').on('input', function() {
         var rut = $(this).val().replace(/[^0-9kK]/g, '');
         if (rut.length > 1) {
@@ -295,13 +295,13 @@ $(document).ready(function() {
         }
     });
 
-    // Formatear patente automáticamente
+    // Formatear patente automÃ¡ticamente
     $('#inspecciones_patente').on('input', function() {
         var patente = $(this).val().toUpperCase().replace(/[^A-Z0-9]/g, '');
         $(this).val(patente);
     });
 
-    // Formatear teléfonos
+    // Formatear telÃ©fonos
     function formatearTelefono(input) {
         var numero = input.replace(/[^0-9]/g, '');
         if (numero.startsWith('56')) {
@@ -323,7 +323,7 @@ $(document).ready(function() {
         $(this).val(formatearTelefono($(this).val()));
     });
 
-    // Auto-ocultar alertas después de 5 segundos
+    // Auto-ocultar alertas despuÃ©s de 5 segundos
     setTimeout(function() {
         $('.alert').fadeOut();
     }, 5000);

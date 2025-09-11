@@ -68,14 +68,14 @@
                 </div>
                 <div>
                     <a href="<?= base_url('corredor/create') ?>" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Nueva Inspección
+                        <i class="fas fa-plus me-2"></i>Nueva InspecciÃ³n
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Estadísticas -->
+    <!-- EstadÃ­sticas -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card border-0 shadow-sm stats-card">
@@ -139,7 +139,7 @@
         </div>
     </div>
 
-    <!-- Filtros rápidos -->
+    <!-- Filtros rÃ¡pidos -->
     <div class="row mb-3">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
@@ -175,9 +175,9 @@
                     <div class="text-center py-5">
                         <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">No hay inspecciones registradas</h5>
-                        <p class="text-muted">Comienza creando tu primera inspección</p>
+                        <p class="text-muted">Comienza creando tu primera inspecciÃ³n</p>
                         <a href="<?= base_url('corredor/create') ?>" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Nueva Inspección
+                            <i class="fas fa-plus me-2"></i>Nueva InspecciÃ³n
                         </a>
                     </div>
                     <?php else: ?>
@@ -189,10 +189,10 @@
                                     <th>Asegurado</th>
                                     <th>RUT</th>
                                     <th>Patente</th>
-                                    <th>Vehículo</th>
-                                    <th>Compañía</th>
+                                    <th>VehÃ­culo</th>
+                                    <th>CompaÃ±Ã­a</th>
                                     <th>Estado</th>
-                                    <th>Fecha Creación</th>
+                                    <th>Fecha CreaciÃ³n</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -266,7 +266,7 @@ $(document).ready(function() {
             url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
         },
         responsive: true,
-        order: [[7, 'desc']], // Ordenar por fecha de creación descendente
+        order: [[7, 'desc']], // Ordenar por fecha de creaciÃ³n descendente
         pageLength: 25,
         dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
     });
@@ -288,14 +288,14 @@ $(document).ready(function() {
     });
     <?php endif; ?>
 
-    // Auto-ocultar alertas después de 5 segundos
+    // Auto-ocultar alertas despuÃ©s de 5 segundos
     setTimeout(function() {
         $('.alert').fadeOut();
     }, 5000);
 });
 
 function confirmarEliminacion(id) {
-    if (confirm('¿Estás seguro de que deseas eliminar esta inspección?\n\nEsta acción no se puede deshacer.')) {
+    if (confirm('Â¿EstÃ¡s seguro de que deseas eliminar esta inspecciÃ³n?\n\nEsta acciÃ³n no se puede deshacer.')) {
         // Mostrar loader
         $('body').append('<div id="loader" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.5); z-index: 9999;"><div class="spinner-border text-light" role="status"></div></div>');
         
@@ -303,11 +303,11 @@ function confirmarEliminacion(id) {
     }
 }
 
-// Función para recargar estadísticas (opcional)
+// FunciÃ³n para recargar estadÃ­sticas (opcional)
 function recargarEstadisticas() {
     $.get('<?= base_url('corredor/stats') ?>', function(data) {
         if (data.success) {
-            // Actualizar valores de estadísticas
+            // Actualizar valores de estadÃ­sticas
             $('.stats-card .text-warning').text(data.stats.solicitudes_pendientes);
             $('.stats-card .text-info').text(data.stats.en_proceso);
             $('.stats-card .text-success').text(data.stats.completadas_mes);

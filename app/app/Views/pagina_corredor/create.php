@@ -78,13 +78,13 @@
         <?= csrf_field() ?>
         
         <div class="row">
-            <!-- Información del Asegurado -->
+            <!-- InformaciÃ³n del Asegurado -->
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="fas fa-user me-2"></i>
-                            Información del Asegurado
+                            InformaciÃ³n del Asegurado
                         </h5>
                     </div>
                     <div class="card-body">
@@ -117,10 +117,10 @@
                                    class="form-control" 
                                    id="inspecciones_direccion" 
                                    name="inspecciones_direccion" 
-                                   placeholder="Dirección completa"
+                                   placeholder="DirecciÃ³n completa"
                                    value="<?= old('inspecciones_direccion') ?>"
                                    required>
-                            <label for="inspecciones_direccion" class="required">Dirección</label>
+                            <label for="inspecciones_direccion" class="required">DirecciÃ³n</label>
                         </div>
 
                         <div class="form-floating">
@@ -157,7 +157,7 @@
                                            name="telefono" 
                                            placeholder="+56 2 1234 5678"
                                            value="<?= old('telefono') ?>">
-                                    <label for="telefono">Teléfono (Opcional)</label>
+                                    <label for="telefono">TelÃ©fono (Opcional)</label>
                                 </div>
                             </div>
                         </div>
@@ -165,13 +165,13 @@
                 </div>
             </div>
 
-            <!-- Información del Vehículo -->
+            <!-- InformaciÃ³n del VehÃ­culo -->
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="fas fa-car me-2"></i>
-                            Información del Vehículo
+                            InformaciÃ³n del VehÃ­culo
                         </h5>
                     </div>
                     <div class="card-body">
@@ -217,7 +217,7 @@
 
                         <div class="form-floating">
                             <select class="form-select" id="cia_id" name="cia_id" required>
-                                <option value="">Seleccione una compañía</option>
+                                <option value="">Seleccione una compaÃ±Ã­a</option>
                                 <?php foreach ($companias as $compania): ?>
                                 <option value="<?= $compania['cia_id'] ?>" 
                                         <?= old('cia_id') == $compania['cia_id'] ? 'selected' : '' ?>>
@@ -225,7 +225,7 @@
                                 </option>
                                 <?php endforeach; ?>
                             </select>
-                            <label for="cia_id" class="required">Compañía de Seguros</label>
+                            <label for="cia_id" class="required">CompaÃ±Ã­a de Seguros</label>
                         </div>
 
                         <div class="form-floating">
@@ -233,10 +233,10 @@
                                    class="form-control" 
                                    id="n_poliza" 
                                    name="n_poliza" 
-                                   placeholder="Número de póliza"
+                                   placeholder="NÃºmero de pÃ³liza"
                                    value="<?= old('n_poliza') ?>"
                                    required>
-                            <label for="n_poliza" class="required">Número de Póliza</label>
+                            <label for="n_poliza" class="required">NÃºmero de PÃ³liza</label>
                         </div>
                     </div>
                 </div>
@@ -250,7 +250,7 @@
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0">
                             <i class="fas fa-eye me-2"></i>
-                            Resumen de la Inspección
+                            Resumen de la InspecciÃ³n
                         </h5>
                     </div>
                     <div class="card-body preview-section">
@@ -259,15 +259,15 @@
                                 <h6 class="text-primary">Datos del Asegurado</h6>
                                 <p class="mb-1"><strong>Nombre:</strong> <span id="preview-asegurado">-</span></p>
                                 <p class="mb-1"><strong>RUT:</strong> <span id="preview-rut">-</span></p>
-                                <p class="mb-1"><strong>Dirección:</strong> <span id="preview-direccion">-</span></p>
+                                <p class="mb-1"><strong>DirecciÃ³n:</strong> <span id="preview-direccion">-</span></p>
                                 <p class="mb-1"><strong>Celular:</strong> <span id="preview-celular">-</span></p>
                             </div>
                             <div class="col-md-6">
-                                <h6 class="text-primary">Datos del Vehículo</h6>
+                                <h6 class="text-primary">Datos del VehÃ­culo</h6>
                                 <p class="mb-1"><strong>Patente:</strong> <span id="preview-patente">-</span></p>
-                                <p class="mb-1"><strong>Vehículo:</strong> <span id="preview-vehiculo">-</span></p>
-                                <p class="mb-1"><strong>Compañía:</strong> <span id="preview-compania">-</span></p>
-                                <p class="mb-1"><strong>Póliza:</strong> <span id="preview-poliza">-</span></p>
+                                <p class="mb-1"><strong>VehÃ­culo:</strong> <span id="preview-vehiculo">-</span></p>
+                                <p class="mb-1"><strong>CompaÃ±Ã­a:</strong> <span id="preview-compania">-</span></p>
+                                <p class="mb-1"><strong>PÃ³liza:</strong> <span id="preview-poliza">-</span></p>
                             </div>
                         </div>
                     </div>
@@ -275,14 +275,14 @@
             </div>
         </div>
 
-        <!-- Botones de acción -->
+        <!-- Botones de acciÃ³n -->
         <div class="row">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center">
                         <button type="submit" class="btn btn-primary btn-lg me-3">
                             <i class="fas fa-save me-2"></i>
-                            Crear Inspección
+                            Crear InspecciÃ³n
                         </button>
                         <a href="<?= base_url('corredor') ?>" class="btn btn-outline-secondary btn-lg">
                             <i class="fas fa-times me-2"></i>
@@ -312,7 +312,7 @@ $(document).ready(function() {
         $('#preview-vehiculo').text((marca && modelo) ? `${marca} ${modelo}` : '-');
         
         var companiaText = $('#cia_id option:selected').text();
-        $('#preview-compania').text(companiaText !== 'Seleccione una compañía' ? companiaText : '-');
+        $('#preview-compania').text(companiaText !== 'Seleccione una compaÃ±Ã­a' ? companiaText : '-');
         
         $('#preview-poliza').text($('#inspecciones_n_poliza').val() || '-');
     }
@@ -320,7 +320,7 @@ $(document).ready(function() {
     // Actualizar preview en tiempo real
     $('input, select').on('input change', updatePreview);
 
-    // Formatear RUT automáticamente
+    // Formatear RUT automÃ¡ticamente
     $('#inspecciones_rut').on('input', function() {
         var rut = $(this).val().replace(/[^0-9kK]/g, '');
         if (rut.length > 1) {
@@ -333,13 +333,13 @@ $(document).ready(function() {
         }
     });
 
-    // Formatear patente automáticamente
+    // Formatear patente automÃ¡ticamente
     $('#inspecciones_patente').on('input', function() {
         var patente = $(this).val().toUpperCase().replace(/[^A-Z0-9]/g, '');
         $(this).val(patente);
     });
 
-    // Formatear teléfonos
+    // Formatear telÃ©fonos
     function formatearTelefono(input) {
         var numero = input.replace(/[^0-9]/g, '');
         if (numero.startsWith('56')) {
@@ -364,7 +364,7 @@ $(document).ready(function() {
         $(this).val(formatearTelefono($(this).val()));
     });
 
-    // Validación del formulario
+    // ValidaciÃ³n del formulario
     $('#inspeccionForm').on('submit', function(e) {
         var isValid = true;
         var errores = [];
@@ -372,7 +372,7 @@ $(document).ready(function() {
         // Validar RUT
         var rut = $('#inspecciones_rut').val().replace(/[^0-9kK]/g, '');
         if (!validarRUT(rut)) {
-            errores.push('El RUT ingresado no es válido');
+            errores.push('El RUT ingresado no es vÃ¡lido');
             isValid = false;
         }
 
@@ -389,7 +389,7 @@ $(document).ready(function() {
         }
     });
 
-    // Función para validar RUT chileno
+    // FunciÃ³n para validar RUT chileno
     function validarRUT(rut) {
         if (rut.length < 8 || rut.length > 9) return false;
         
@@ -413,11 +413,11 @@ $(document).ready(function() {
         return dv.toString() === dvCalculado.toString();
     }
 
-    // Función para validar patente chilena
+    // FunciÃ³n para validar patente chilena
     function validarPatente(patente) {
-        // Formato nuevo: 4 letras + 2 números (ABCD12)
+        // Formato nuevo: 4 letras + 2 nÃºmeros (ABCD12)
         var formatoNuevo = /^[A-Z]{4}[0-9]{2}$/.test(patente);
-        // Formato antiguo: 2 letras + 4 números (AB1234)
+        // Formato antiguo: 2 letras + 4 nÃºmeros (AB1234)
         var formatoAntiguo = /^[A-Z]{2}[0-9]{4}$/.test(patente);
         
         return formatoNuevo || formatoAntiguo;
@@ -444,7 +444,7 @@ $(document).ready(function() {
         $('#preview-vehiculo').text((marca && modelo) ? `${marca} ${modelo}` : '-');
         
         var companiaText = $('#cia_id option:selected').text();
-        $('#preview-compania').text(companiaText !== 'Seleccione una compañía' ? companiaText : '-');
+        $('#preview-compania').text(companiaText !== 'Seleccione una compaÃ±Ã­a' ? companiaText : '-');
         
         $('#preview-poliza').text($('#inspecciones_n_poliza').val() || '-');
         
@@ -461,7 +461,7 @@ $(document).ready(function() {
     // Actualizar preview en tiempo real
     $('input, select, textarea').on('input change', updatePreview);
 
-    // Formatear RUT automáticamente
+    // Formatear RUT automÃ¡ticamente
     $('#inspecciones_rut').on('input', function() {
         var rut = $(this).val().replace(/[^0-9kK]/g, '');
         if (rut.length > 1) {
@@ -474,13 +474,13 @@ $(document).ready(function() {
         }
     });
 
-    // Formatear patente automáticamente
+    // Formatear patente automÃ¡ticamente
     $('#inspecciones_patente').on('input', function() {
         var patente = $(this).val().toUpperCase().replace(/[^A-Z0-9]/g, '');
         $(this).val(patente);
     });
 
-    // Formatear teléfonos
+    // Formatear telÃ©fonos
     function formatearTelefono(input) {
         var numero = input.replace(/[^0-9]/g, '');
         if (numero.startsWith('56')) {
@@ -502,7 +502,7 @@ $(document).ready(function() {
         $(this).val(formatearTelefono($(this).val()));
     });
 
-    // Función para validar RUT chileno
+    // FunciÃ³n para validar RUT chileno
     function validarRUT(rut) {
         if (rut.length < 8 || rut.length > 9) return false;
         
@@ -526,14 +526,14 @@ $(document).ready(function() {
         return dv.toString() === dvCalculado.toString();
     }
 
-    // Función para validar patente chilena
+    // FunciÃ³n para validar patente chilena
     function validarPatente(patente) {
         var formatoNuevo = /^[A-Z]{4}[0-9]{2}$/.test(patente);
         var formatoAntiguo = /^[A-Z]{2}[0-9]{4}$/.test(patente);
         return formatoNuevo || formatoAntiguo;
     }
 
-    // Validación del formulario
+    // ValidaciÃ³n del formulario
     $('#inspeccionForm').on('submit', function(e) {
         var isValid = true;
         var errores = [];
@@ -541,7 +541,7 @@ $(document).ready(function() {
         // Validar RUT
         var rut = $('#inspecciones_rut').val().replace(/[^0-9kK]/g, '');
         if (!validarRUT(rut)) {
-            errores.push('El RUT ingresado no es válido');
+            errores.push('El RUT ingresado no es vÃ¡lido');
             isValid = false;
         }
 
@@ -555,13 +555,13 @@ $(document).ready(function() {
         // Validar campos obligatorios
         var camposObligatorios = [
             {campo: '#inspecciones_asegurado', nombre: 'Nombre del asegurado'},
-            {campo: '#inspecciones_direccion', nombre: 'Dirección'},
+            {campo: '#inspecciones_direccion', nombre: 'DirecciÃ³n'},
             {campo: '#comunas_id', nombre: 'Comuna'},
             {campo: '#inspecciones_celular', nombre: 'Celular'},
-            {campo: '#inspecciones_marca', nombre: 'Marca del vehículo'},
-            {campo: '#inspecciones_modelo', nombre: 'Modelo del vehículo'},
-            {campo: '#cia_id', nombre: 'Compañía de seguros'},
-            {campo: '#inspecciones_n_poliza', nombre: 'Número de póliza'}
+            {campo: '#inspecciones_marca', nombre: 'Marca del vehÃ­culo'},
+            {campo: '#inspecciones_modelo', nombre: 'Modelo del vehÃ­culo'},
+            {campo: '#cia_id', nombre: 'CompaÃ±Ã­a de seguros'},
+            {campo: '#inspecciones_n_poliza', nombre: 'NÃºmero de pÃ³liza'}
         ];
 
         camposObligatorios.forEach(function(item) {
@@ -575,7 +575,7 @@ $(document).ready(function() {
             e.preventDefault();
             alert('Errores encontrados:\n\n' + errores.join('\n'));
         } else {
-            if (!confirm('¿Estás seguro de que deseas crear esta inspección?')) {
+            if (!confirm('Â¿EstÃ¡s seguro de que deseas crear esta inspecciÃ³n?')) {
                 e.preventDefault();
             }
         }
@@ -583,7 +583,7 @@ $(document).ready(function() {
 
     // Manejar reset del formulario
     $('button[type="reset"]').on('click', function() {
-        if (confirm('¿Estás seguro de que deseas limpiar todo el formulario?')) {
+        if (confirm('Â¿EstÃ¡s seguro de que deseas limpiar todo el formulario?')) {
             setTimeout(updatePreview, 100);
         } else {
             return false;

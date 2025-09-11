@@ -292,6 +292,7 @@ class Users extends BaseController
             'user_telefono' => $this->sanitizeInput($this->request->getPost('user_telefono')),
             'user_perfil'   => (int) $this->request->getPost('user_perfil'),
             'cia_id'        => $ciaId,
+            'corredor_id'   => (int) $this->request->getPost('corredor_id'),  // Aquí se asegura de actualizar el corredor_id
             'user_avatar'   => $avatarName,
             'user_habil'    => (int) $this->request->getPost('user_habil'),
         ];

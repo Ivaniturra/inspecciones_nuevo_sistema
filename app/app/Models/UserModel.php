@@ -68,8 +68,7 @@ class UserModel extends Model
             // Si la actualización es exitosa, completar la transacción
             $this->db->transComplete();
             return ['status' => true];
-        }
-    }
+        } 
 
     /** Normaliza strings (espacios y casing del email) */
     protected function normalizeInput(array $data): array

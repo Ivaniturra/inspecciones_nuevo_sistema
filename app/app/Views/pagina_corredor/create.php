@@ -286,7 +286,7 @@
                         </button>
                         <a href="<?= base_url('corredor') ?>" class="btn btn-outline-secondary btn-lg">
                             <i class="fas fa-times me-2"></i>
-                            Cancelar
+                            Cancelarddssd
                         </a>
                     </div>
                 </div>

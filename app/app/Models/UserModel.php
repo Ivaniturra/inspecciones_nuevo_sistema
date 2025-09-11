@@ -47,6 +47,29 @@ class UserModel extends Model
     protected $afterFind    = ['parseJsonFields'];
 
     /* --------------------- Helpers de normalización y defaults --------------------- */
+        public function updateUser($id, array $data)
+        {
+            // Iniciar la transacción
+            $this->db->transStart(); 
+
+            // Intentar realizar la actualización
+            $this->update($id, $data);
+
+            // Verificar si la transacción fue exitosa
+            if ($this->db->transStatus() === false) {
+                // Si falla, hacer rollback
+                $this->db->transRollback();
+                return [
+                    'status' => false,
+                    'error'  => $this->db->error() // Captura el error de la base de datos
+                ];
+            }
+
+            // Si la actualización es exitosa, completar la transacción
+            $this->db->transComplete();
+            return ['status' => true];
+        }
+    }
 
     /** Normaliza strings (espacios y casing del email) */
     protected function normalizeInput(array $data): array

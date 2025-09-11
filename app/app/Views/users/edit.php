@@ -426,50 +426,82 @@ Editar Usuario
 <?= $this->section('scripts') ?>
 <script>
     $(document).ready(function() {
+         const corredorIdInicial = '<?= $usuario['corredor_id'] ?? '' ?>';
+    
+        // Guardar valores originales
         const originalData = {
             nombre:      $('#user_nombre').val(),
             email:       $('#user_email').val(),
             telefono:    $('#user_telefono').val(),
             perfil:      $('#user_perfil').val(),
             cia:         $('#cia_id').val(),
-            corredor:    $('#corredor_id').val(),
+            corredor:    corredorIdInicial, // Usar el valor del PHP
             estado:      $('#user_habil').val()
         };
 
         // ===== Perfil: mostrar/ocultar campos según tipo =====
-         function applyPerfilUI() {
+        function applyPerfilUI() {
             const tipo = $('#user_perfil').find('option:selected').data('tipo');
-    
+            
             // Ocultar todos los contenedores primero
             $('#cia-container, #corredor-container, #interno-info, #inspector-info').hide();
-            $('#cia_id, #corredor_id').prop('required', false).val('');
+            $('#cia_id, #corredor_id').prop('required', false);
             
             switch(tipo) {
-            case 'compania':
-                $('#cia-container').show();
-                $('#cia_id').prop('required', true);
-                break;
-                
-            case 'corredor':
-                $('#corredor-container').show();
-                $('#corredor_id').prop('required', true);
-                break;
-                
-            case 'interno':
-                $('#interno-info').show();
-                break;
-                
-            case 'inspector':
-                $('#inspector-info').show();
-                break;
+                case 'compania':
+                    $('#cia-container').show();
+                    $('#cia_id').prop('required', true);
+                    // Mantener el valor original si existe
+                    if (originalData.cia) {
+                        $('#cia_id').val(originalData.cia);
+                    }
+                    break;
+                    
+                case 'corredor':
+                    $('#corredor-container').show();
+                    $('#corredor_id').prop('required', true);
+                    // IMPORTANTE: Establecer el valor del corredor
+                    if (corredorIdInicial) {
+                        // Pequeño delay para asegurar que el DOM esté listo
+                        setTimeout(function() {
+                            $('#corredor_id').val(corredorIdInicial);
+                            console.log('Corredor establecido:', corredorIdInicial);
+                            console.log('Valor actual del select:', $('#corredor_id').val());
+                        }, 50);
+                    }
+                    break;
+                    
+                case 'interno':
+                    $('#interno-info').show();
+                    $('#cia_id').val('');
+                    $('#corredor_id').val('');
+                    break;
+                    
+                case 'inspector':
+                    $('#inspector-info').show();
+                    $('#cia_id').val('');
+                    $('#corredor_id').val('');
+                    break;
             }
         }
 
-        // Al cambiar el perfil, aplica los cambios de UI
-        $('#user_perfil').on('change', applyPerfilUI);
+        // Al cambiar el perfil
+        $('#user_perfil').on('change', function() {
+            const tipo = $(this).find('option:selected').data('tipo');
+            
+            // Solo limpiar si cambia a un tipo incompatible
+            if (tipo !== 'compania') {
+                $('#cia_id').val('');
+            }
+            if (tipo !== 'corredor') {
+                $('#corredor_id').val('');
+            }
+            
+            applyPerfilUI();
+        });
 
-        // Inicializa el perfil correcto al cargar la página
-        applyPerfilUI(); 
+        // Inicializar
+        applyPerfilUI();
 
     // ===== Password fuerte (igual al backend) =====
     const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;

@@ -208,83 +208,61 @@ class Corredores extends BaseController
 
     /** Actualizar */
    public function update($id)
-    {
-        $corredor = $this->corredorModel->find($id);
-        if (!$corredor) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Corredor no encontrado');
-        }
-        $ciasSeleccionadas = (array) $this->request->getPost('cias');
-        $ciasSeleccionadas = array_values(array_filter($ciasSeleccionadas, fn($v) => ctype_digit((string)$v))); // sanitiza
+{
+    // ... código anterior ...
 
-        if (count($ciasSeleccionadas) < 1) {
-            return redirect()->back()->withInput()->with('errors', [
-                'cias' => 'Selecciona al menos una compañía.'
-            ]);
-        }
-        $rules = [
-            'corredor_nombre'            => 'required|min_length[3]|max_length[255]',
-            'corredor_email'             => 'permit_empty|valid_email|max_length[255]',
-            'corredor_telefono'          => 'permit_empty|max_length[50]',
-            'corredor_direccion'         => 'permit_empty|max_length[500]',
-            'corredor_rut'               => 'permit_empty|max_length[20]',
-            'corredor_display_name'      => 'permit_empty|max_length[150]',
-            'corredor_brand_nav_bg'      => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-            'corredor_brand_nav_text'    => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-            'corredor_brand_side_start'  => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-            'corredor_brand_side_end'    => 'permit_empty|regex_match[/^#([A-Fa-f0-9]{6})$/]',
-            'cias'                       => 'required',
-        ];
+    // ===== Manejo de LOGO =====
+    $logoName = $corredor['corredor_logo'];           // nombre actual en BD
+    $logoFile = $this->request->getFile('corredor_logo');
 
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+    // Rutas destino (público) y posible origen histórico (writable)
+    $publicDir   = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
+    $oldPubCorr  = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
+    $oldPubLogos = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'logos';
+    $oldWritableDir = rtrim(WRITEPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores'; // ← Renombrar para claridad
+    
+    if (!is_dir($publicDir)) {
+        @mkdir($publicDir, 0755, true);
+    }
+
+    if ($logoFile && $logoFile->isValid() && !$logoFile->hasMoved()) {
+        // Validación tolerante (evita falsos negativos con proxies)
+        $allowed   = ['image/jpeg','image/jpg','image/png','image/svg+xml','image/svg'];
+        $clientMime = strtolower((string) $logoFile->getClientMimeType());
+
+        if (!in_array($clientMime, $allowed, true)) {
+            return redirect()->back()->withInput()->with('error', 'El logo debe ser JPG, PNG o SVG.');
+        }
+        if ($logoFile->getSize() > 2 * 1024 * 1024) {
+            return redirect()->back()->withInput()->with('error', 'El logo no puede superar los 2MB.');
         }
 
-        // ===== Manejo de LOGO =====
-        $logoName = $corredor['corredor_logo'];           // nombre actual en BD
-        $logoFile = $this->request->getFile('corredor_logo');
-
-        // Rutas destino (público) y posible origen histórico (writable)
-        $publicDir   = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
-        $oldPubCorr  = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
-        $oldPubLogos = rtrim(FCPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'logos';
-        $oldWritable = rtrim(WRITEPATH, '/\\') . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'corredores';
-        if (!is_dir($publicDir)) {
-            @mkdir($publicDir, 0755, true);
-        }
-
-        if ($logoFile && $logoFile->isValid() && !$logoFile->hasMoved()) {
-            // Validación tolerante (evita falsos negativos con proxies)
-            $allowed   = ['image/jpeg','image/jpg','image/png','image/svg+xml','image/svg'];
-            $clientMime = strtolower((string) $logoFile->getClientMimeType());
-
-            if (!in_array($clientMime, $allowed, true)) {
-                return redirect()->back()->withInput()->with('error', 'El logo debe ser JPG, PNG o SVG.');
-            }
-            if ($logoFile->getSize() > 2 * 1024 * 1024) {
-                return redirect()->back()->withInput()->with('error', 'El logo no puede superar los 2MB.');
-            }
-
-            // Borrar anterior en /public si existe
-            if (!empty($logoName)) {
-                $oldPath = $publicDir . DIRECTORY_SEPARATOR . $logoName;
-                if (is_file($oldPath)) {
-                    @unlink($oldPath);
-                }
-            }
-
-            // Guardar nuevo
-            $logoName = $logoFile->getRandomName();
-            $logoFile->move($publicDir, $logoName);
-        } else {
-            // Si no subiste archivo, pero el anterior está en writable, migrarlo a public
-            if (!empty($logoName)) {
-                $oldWritable = $writableDir . DIRECTORY_SEPARATOR . $logoName;
-                $newPublic   = $publicDir   . DIRECTORY_SEPARATOR . $logoName;
-                if (is_file($oldWritable) && !is_file($newPublic)) {
-                    @rename($oldWritable, $newPublic);
-                }
+        // Borrar anterior en /public si existe
+        if (!empty($logoName)) {
+            $oldPath = $publicDir . DIRECTORY_SEPARATOR . $logoName;
+            if (is_file($oldPath)) {
+                @unlink($oldPath);
             }
         }
+
+        // Guardar nuevo
+        $logoName = $logoFile->getRandomName();
+        $logoFile->move($publicDir, $logoName);
+    } else {
+        // Si no subiste archivo, pero el anterior está en writable, migrarlo a public
+        if (!empty($logoName)) {
+            $oldWritablePath = $oldWritableDir . DIRECTORY_SEPARATOR . $logoName; // ← CORREGIDO
+            $newPublicPath   = $publicDir . DIRECTORY_SEPARATOR . $logoName;      // ← Renombrado para consistencia
+            
+            if (is_file($oldWritablePath) && !is_file($newPublicPath)) {
+                @rename($oldWritablePath, $newPublicPath);
+            }
+        }
+    }
+    // ===== Fin manejo LOGO =====
+    
+    // ... resto del código ...
+}
         // ===== Fin manejo LOGO =====
 
         // Colores

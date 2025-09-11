@@ -6,10 +6,12 @@ use App\Models\InspeccionesModel;
 class Corredor extends BaseController 
 {
     protected $inspeccionesModel;
+    protected $db;
 
     public function __construct()
     {
         $this->inspeccionesModel = new InspeccionesModel();
+        $this->db = \Config\Database::connect();
         
         // Verificar autenticación
         if (!session('logged_in')) {

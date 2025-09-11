@@ -579,4 +579,19 @@ class UserModel extends Model
             ]);
         }
     }
+    public function find($id = null)
+    {
+        // Si no se pasa ID, comportamiento normal
+        if ($id === null) {
+            return parent::find();
+        }
+        
+        // Si es array de IDs
+        if (is_array($id)) {
+            return $this->select('users.*')->whereIn('user_id', $id)->findAll();
+        }
+        
+        // Si es un solo ID, asegurar que traiga todos los campos
+        return $this->select('users.*')->where('user_id', $id)->first();
+    }
 }

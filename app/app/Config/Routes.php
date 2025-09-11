@@ -21,9 +21,9 @@ $routes->post('reset', 'Auth::processReset');
 $routes->group('', ['filter' => 'auth'], static function($routes) {
 
     // ===================================================
-    // DASHBOARD ADMIN (solo super admin)
+    // DASHBOARD - TEMPORAL CON MÚLTIPLES ROLES PARA DEBUG
     // ===================================================
-    $routes->group('dashboard', ['filter' => 'role:7'], static function($routes) {
+    $routes->group('dashboard', ['filter' => 'role:3,7,9,10'], static function($routes) {
         $routes->get('/', 'Dashboard::index', ['as' => 'dashboard']);
     });
 

@@ -102,13 +102,13 @@
                         <div class="form-floating">
                             <input type="text" 
                                    class="form-control rut-input" 
-                                   id="rut" 
-                                   name="rut" 
+                                   id="inspecciones_rut" 
+                                   name="inspecciones_rut" 
                                    placeholder="12345678-9"
-                                   value="<?= old('rut') ?>"
+                                   value="<?= old('inspecciones_rut') ?>"
                                    maxlength="12"
                                    required>
-                            <label for="rut" class="required">RUT</label>
+                            <label for="inspecciones_rut" class="required">RUT</label>
                             <div class="form-text">Formato: 12345678-9</div>
                         </div>
 
@@ -415,7 +415,7 @@ $(document).ready(function() {
 
     // Función para validar patente chilena
     function validarPatente(patente) {
-        // Formato antiguo: 4 letras + 2 números (ABCD12)
+        // Formato nuevo: 4 letras + 2 números (ABCD12)
         var formatoNuevo = /^[A-Z]{4}[0-9]{2}$/.test(patente);
         // Formato antiguo: 2 letras + 4 números (AB1234)
         var formatoAntiguo = /^[A-Z]{2}[0-9]{4}$/.test(patente);
@@ -427,3 +427,171 @@ $(document).ready(function() {
     updatePreview();
 });
 </script>
+<?= $this->endSection() ?>
+<?= $this->section('js') ?>
+<script>
+$(document).ready(function() {
+    // Preview en tiempo real
+    function updatePreview() {
+        $('#preview-asegurado').text($('#inspecciones_asegurado').val() || '-');
+        $('#preview-rut').text($('#inspecciones_rut').val() || '-');
+        $('#preview-direccion').text($('#inspecciones_direccion').val() || '-');
+        $('#preview-celular').text($('#inspecciones_celular').val() || '-');
+        $('#preview-patente').text($('#inspecciones_patente').val() || '-');
+        
+        var marca = $('#inspecciones_marca').val();
+        var modelo = $('#inspecciones_modelo').val();
+        $('#preview-vehiculo').text((marca && modelo) ? `${marca} ${modelo}` : '-');
+        
+        var companiaText = $('#cia_id option:selected').text();
+        $('#preview-compania').text(companiaText !== 'Seleccione una compañía' ? companiaText : '-');
+        
+        $('#preview-poliza').text($('#inspecciones_n_poliza').val() || '-');
+        
+        // Observaciones
+        var observaciones = $('#inspecciones_observaciones').val();
+        if (observaciones.trim()) {
+            $('#preview-observaciones').text(observaciones);
+            $('#preview-observaciones-container').show();
+        } else {
+            $('#preview-observaciones-container').hide();
+        }
+    }
+
+    // Actualizar preview en tiempo real
+    $('input, select, textarea').on('input change', updatePreview);
+
+    // Formatear RUT automáticamente
+    $('#inspecciones_rut').on('input', function() {
+        var rut = $(this).val().replace(/[^0-9kK]/g, '');
+        if (rut.length > 1) {
+            var dv = rut.slice(-1);
+            var numero = rut.slice(0, -1);
+            if (numero.length > 0) {
+                var rutFormateado = numero.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
+                $(this).val(rutFormateado);
+            }
+        }
+    });
+
+    // Formatear patente automáticamente
+    $('#inspecciones_patente').on('input', function() {
+        var patente = $(this).val().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        $(this).val(patente);
+    });
+
+    // Formatear teléfonos
+    function formatearTelefono(input) {
+        var numero = input.replace(/[^0-9]/g, '');
+        if (numero.startsWith('56')) {
+            numero = numero.substring(2);
+        }
+        
+        if (numero.startsWith('9') && numero.length === 9) {
+            return '+56 9 ' + numero.substring(1, 5) + ' ' + numero.substring(5);
+        } else if (numero.length === 9 && numero.startsWith('2')) {
+            return '+56 2 ' + numero.substring(1, 5) + ' ' + numero.substring(5);
+        } else if (numero.length === 8) {
+            return '+56 9 ' + numero.substring(0, 4) + ' ' + numero.substring(4);
+        }
+        
+        return input;
+    }
+
+    $('#inspecciones_celular, #inspecciones_telefono').on('blur', function() {
+        $(this).val(formatearTelefono($(this).val()));
+    });
+
+    // Función para validar RUT chileno
+    function validarRUT(rut) {
+        if (rut.length < 8 || rut.length > 9) return false;
+        
+        var dv = rut.slice(-1);
+        var numero = rut.slice(0, -1);
+        
+        var suma = 0;
+        var multiplicador = 2;
+        
+        for (var i = numero.length - 1; i >= 0; i--) {
+            suma += numero[i] * multiplicador;
+            multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+        }
+        
+        var resto = suma % 11;
+        var dvCalculado = 11 - resto;
+        
+        if (dvCalculado === 11) dvCalculado = '0';
+        if (dvCalculado === 10) dvCalculado = 'K';
+        
+        return dv.toString() === dvCalculado.toString();
+    }
+
+    // Función para validar patente chilena
+    function validarPatente(patente) {
+        var formatoNuevo = /^[A-Z]{4}[0-9]{2}$/.test(patente);
+        var formatoAntiguo = /^[A-Z]{2}[0-9]{4}$/.test(patente);
+        return formatoNuevo || formatoAntiguo;
+    }
+
+    // Validación del formulario
+    $('#inspeccionForm').on('submit', function(e) {
+        var isValid = true;
+        var errores = [];
+
+        // Validar RUT
+        var rut = $('#inspecciones_rut').val().replace(/[^0-9kK]/g, '');
+        if (!validarRUT(rut)) {
+            errores.push('El RUT ingresado no es válido');
+            isValid = false;
+        }
+
+        // Validar patente
+        var patente = $('#inspecciones_patente').val();
+        if (!validarPatente(patente)) {
+            errores.push('La patente debe tener el formato ABC123 o ABCD12');
+            isValid = false;
+        }
+
+        // Validar campos obligatorios
+        var camposObligatorios = [
+            {campo: '#inspecciones_asegurado', nombre: 'Nombre del asegurado'},
+            {campo: '#inspecciones_direccion', nombre: 'Dirección'},
+            {campo: '#comunas_id', nombre: 'Comuna'},
+            {campo: '#inspecciones_celular', nombre: 'Celular'},
+            {campo: '#inspecciones_marca', nombre: 'Marca del vehículo'},
+            {campo: '#inspecciones_modelo', nombre: 'Modelo del vehículo'},
+            {campo: '#cia_id', nombre: 'Compañía de seguros'},
+            {campo: '#inspecciones_n_poliza', nombre: 'Número de póliza'}
+        ];
+
+        camposObligatorios.forEach(function(item) {
+            if (!$(item.campo).val().trim()) {
+                errores.push(item.nombre + ' es obligatorio');
+                isValid = false;
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            alert('Errores encontrados:\n\n' + errores.join('\n'));
+        } else {
+            if (!confirm('¿Estás seguro de que deseas crear esta inspección?')) {
+                e.preventDefault();
+            }
+        }
+    });
+
+    // Manejar reset del formulario
+    $('button[type="reset"]').on('click', function() {
+        if (confirm('¿Estás seguro de que deseas limpiar todo el formulario?')) {
+            setTimeout(updatePreview, 100);
+        } else {
+            return false;
+        }
+    });
+
+    // Inicializar preview
+    updatePreview();
+});
+</script>
+<?= $this->endSection() ?>

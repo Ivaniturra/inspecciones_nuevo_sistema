@@ -15,13 +15,6 @@ class Corredor extends BaseController
         if (!session('logged_in')) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Acceso denegado');
         }
-
-        // Verificar que sea corredor (puedes ajustar esta validación según tu sistema)
-        $perfilTipo = session('perfil_tipo');
-        if ($perfilTipo !== 'corredor') {
-            // Si no tienes perfil_tipo en sesión, comentar esta línea o ajustar la validación
-            // throw new \CodeIgniter\Exceptions\PageNotFoundException('Acceso denegado - Solo para corredores');
-        }
     }
 
     public function index()
@@ -57,24 +50,28 @@ class Corredor extends BaseController
 
     private function calcularEstadisticas($userId)
     {
-        // Usar métodos básicos del modelo que sí existen
+        // Obtener estadísticas usando los campos y estados correctos de tu BD
         $pendientes = $this->inspeccionesModel->where('user_id', $userId)
-                           ->where('estado', 'pendiente')
+                           ->where('inspecciones_estado', 'pendiente')
                            ->countAllResults();
         
         $enProceso = $this->inspeccionesModel->where('user_id', $userId)
-                          ->where('estado', 'en_proceso')
+                          ->where('inspecciones_estado', 'en_proceso')
                           ->countAllResults();
         
         $completadas = $this->inspeccionesModel->where('user_id', $userId)
-                            ->where('estado', 'completada')
+                            ->where('inspecciones_estado', 'completada')
+                            ->countAllResults();
+        
+        $canceladas = $this->inspeccionesModel->where('user_id', $userId)
+                            ->where('inspecciones_estado', 'cancelada')
                             ->countAllResults();
         
         // Calcular comisiones del mes actual (ejemplo: $50.000 por completada)
         $completadasMes = $this->inspeccionesModel->where('user_id', $userId)
-                               ->where('estado', 'completada')
-                               ->where('MONTH(created_at)', date('m'))
-                               ->where('YEAR(created_at)', date('Y'))
+                               ->where('inspecciones_estado', 'completada')
+                               ->where('MONTH(inspecciones_created_at)', date('m'))
+                               ->where('YEAR(inspecciones_created_at)', date('Y'))
                                ->countAllResults();
         
         $comisionesMes = $completadasMes * 50000;
@@ -83,8 +80,9 @@ class Corredor extends BaseController
             'solicitudes_pendientes' => $pendientes,
             'en_proceso' => $enProceso,
             'completadas_mes' => $completadas,
+            'canceladas' => $canceladas,
             'comisiones_mes' => $comisionesMes,
-            'total_inspecciones' => $pendientes + $enProceso + $completadas
+            'total_inspecciones' => $pendientes + $enProceso + $completadas + $canceladas
         ];
     }
 
@@ -93,7 +91,7 @@ class Corredor extends BaseController
         $userId = session('user_id');
         
         // Verificar que la inspección pertenece al usuario
-        $inspeccion = $this->inspeccionesModel->where('inspeccion_id', $id)
+        $inspeccion = $this->inspeccionesModel->where('inspecciones_id', $id)
                            ->where('user_id', $userId)
                            ->first();
         
@@ -114,7 +112,7 @@ class Corredor extends BaseController
         ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
         ->join('users', 'users.user_id = inspecciones.user_id', 'left')
         ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left')
-        ->where('inspecciones.inspeccion_id', $id)
+        ->where('inspecciones.inspecciones_id', $id)
         ->first();
 
         $data = [
@@ -131,7 +129,7 @@ class Corredor extends BaseController
         $userId = session('user_id');
         
         // Verificar que la inspección pertenece al usuario
-        $inspeccion = $this->inspeccionesModel->where('inspeccion_id', $id)
+        $inspeccion = $this->inspeccionesModel->where('inspecciones_id', $id)
                            ->where('user_id', $userId)
                            ->first();
         
@@ -140,11 +138,11 @@ class Corredor extends BaseController
         }
 
         // Solo permitir editar si está en estado pendiente o en_proceso
-        if (!in_array($inspeccion['estado'], ['pendiente', 'en_proceso'])) {
-            return redirect()->back()->with('error', 'No se puede editar una inspección ' . $inspeccion['estado']);
+        if (!in_array($inspeccion['inspecciones_estado'], ['pendiente', 'en_proceso'])) {
+            return redirect()->back()->with('error', 'No se puede editar una inspección en estado: ' . $inspeccion['inspecciones_estado']);
         }
 
-        // Obtener datos para formulario - usando modelos básicos
+        // Obtener datos para formulario usando consultas directas
         $companias = $this->db->table('cias')->get()->getResultArray();
         $comunas = $this->db->table('comunas')->get()->getResultArray();
 
@@ -164,7 +162,7 @@ class Corredor extends BaseController
         $userId = session('user_id');
         
         // Verificar que la inspección pertenece al usuario
-        $inspeccion = $this->inspeccionesModel->where('inspeccion_id', $id)
+        $inspeccion = $this->inspeccionesModel->where('inspecciones_id', $id)
                            ->where('user_id', $userId)
                            ->first();
         
@@ -174,8 +172,8 @@ class Corredor extends BaseController
 
         $data = $this->request->getPost();
         
-        // Validar datos básicos
-        if (empty($data['asegurado']) || empty($data['rut']) || empty($data['patente'])) {
+        // Validar datos básicos usando los nombres correctos de campos
+        if (empty($data['inspecciones_asegurado']) || empty($data['inspecciones_rut']) || empty($data['inspecciones_patente'])) {
             return redirect()->back()->with('error', 'Faltan campos obligatorios')->withInput();
         }
 
@@ -191,7 +189,7 @@ class Corredor extends BaseController
         $userId = session('user_id');
         
         // Verificar que la inspección pertenece al usuario
-        $inspeccion = $this->inspeccionesModel->where('inspeccion_id', $id)
+        $inspeccion = $this->inspeccionesModel->where('inspecciones_id', $id)
                            ->where('user_id', $userId)
                            ->first();
         
@@ -199,9 +197,9 @@ class Corredor extends BaseController
             return redirect()->back()->with('error', 'Inspección no encontrada');
         }
 
-        // Solo permitir eliminar si está en Solicitud
-        if ($inspeccion['estado'] !== 'Solicitud') {
-            return redirect()->back()->with('error', 'Solo se pueden eliminar inspecciones en estado Solicitud');
+        // Solo permitir eliminar si está pendiente
+        if ($inspeccion['inspecciones_estado'] !== 'pendiente') {
+            return redirect()->back()->with('error', 'Solo se pueden eliminar inspecciones pendientes');
         }
 
         if ($this->inspeccionesModel->delete($id)) {
@@ -231,11 +229,11 @@ class Corredor extends BaseController
     {
         $data = $this->request->getPost();
         $data['user_id'] = session('user_id');
-        $data['estado'] = 'Solicitud'; // Estado inicial según tu BD
-        $data['fecha_creacion'] = date('Y-m-d H:i:s');
+        $data['inspecciones_estado'] = 'pendiente'; // Estado inicial según tu BD
+        $data['inspecciones_fecha_creacion'] = date('Y-m-d H:i:s');
 
-        // Validar datos básicos
-        if (empty($data['asegurado']) || empty($data['rut']) || empty($data['patente'])) {
+        // Validar datos básicos usando los nombres correctos de campos
+        if (empty($data['inspecciones_asegurado']) || empty($data['inspecciones_rut']) || empty($data['inspecciones_patente'])) {
             return redirect()->back()->with('error', 'Faltan campos obligatorios')->withInput();
         }
 
@@ -266,10 +264,10 @@ class Corredor extends BaseController
         $query = $this->inspeccionesModel->where('user_id', $userId);
         
         if ($estado !== 'all') {
-            $query->where('estado', $estado);
+            $query->where('inspecciones_estado', $estado);
         }
         
-        $inspecciones = $query->orderBy('created_at', 'DESC')->findAll();
+        $inspecciones = $query->orderBy('inspecciones_created_at', 'DESC')->findAll();
 
         return $this->response->setJSON([
             'success' => true,

@@ -21,10 +21,22 @@ $routes->post('reset', 'Auth::processReset');
 $routes->group('', ['filter' => 'auth'], static function($routes) {
 
     // ===================================================
-    // DASHBOARD - TEMPORAL CON MÚLTIPLES ROLES PARA DEBUG
+    // DASHBOARD - REDIRECCIÓN INTELIGENTE SEGÚN ROL
     // ===================================================
-    $routes->group('dashboard', ['filter' => 'role:3,7,9,10'], static function($routes) {
-        $routes->get('/', 'Dashboard::index', ['as' => 'dashboard']);
+    $routes->get('dashboard', function() {
+        $userRole = session('user_perfil_id');
+        
+        switch($userRole) {
+            case 7: // Super admin
+                return view('dashboard/index'); // Vista administrativa
+            case 3: // Inspector/Admin
+                return redirect()->to('/inspecciones');
+            case 9:
+            case 10: // Corredores
+                return redirect()->to('/corredor');
+            default:
+                return redirect()->to('/corredor'); // Por defecto al corredor
+        }
     });
 
     // ===================================================

@@ -247,7 +247,10 @@ class Users extends BaseController
             'user_perfil' => 'required|integer',
             'user_avatar' => 'permit_empty|is_image[user_avatar]|mime_in[user_avatar,image/jpg,image/jpeg,image/png]|max_size[user_avatar,1024]',
         ];
-
+        if (!$this->validate($rules)) {
+    log_message('error', 'Errores de validación: ' . json_encode($this->validator->getErrors()));
+    return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+}
         // Contraseña opcional (misma regla que usarás en el front)
         if (!empty($this->request->getPost('user_clave'))) {
             $rules['user_clave'] = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]'; 

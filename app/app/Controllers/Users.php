@@ -247,10 +247,7 @@ class Users extends BaseController
             'user_perfil' => 'required|integer',
             'user_avatar' => 'permit_empty|is_image[user_avatar]|mime_in[user_avatar,image/jpg,image/jpeg,image/png]|max_size[user_avatar,1024]',
         ];
-        if (!$this->validate($rules)) {
-    log_message('error', 'Errores de validación: ' . json_encode($this->validator->getErrors()));
-    return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-}
+        
         // Contraseña opcional (misma regla que usarás en el front)
         if (!empty($this->request->getPost('user_clave'))) {
             $rules['user_clave'] = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]'; 
@@ -317,12 +314,13 @@ class Users extends BaseController
             'perfil' => $usuario['user_perfil'],
             'habil'  => $usuario['user_habil'],
         ];
-
+        
         // Intentar actualizar el usuario
         if (!$this->userModel->update($id, $data)) {
             log_message('error', 'Error al actualizar el usuario. Datos: ' . json_encode($data));
             log_message('error', 'Error en la base de datos: ' . json_encode($this->userModel->errors()));
-            return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
+            return false;
+            //return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
         }
 
         $this->logAuditAction('user_updated', [

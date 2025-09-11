@@ -201,6 +201,7 @@ class Users extends BaseController
         $role      = session('user_perfil'); // 7 = super admin, etc.
 
         $usuario = $this->userModel->find($id);
+        print_r($usuario);
         if (! $usuario) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Usuario no encontrado');
         }

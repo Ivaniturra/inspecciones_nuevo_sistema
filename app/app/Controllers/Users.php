@@ -316,18 +316,26 @@ class Users extends BaseController
         ];
         
         // Intentar actualizar el usuario
-       if (!$this->userModel->update($id, $data)) {
-    // Mostrar la consulta SQL y el error de la base de datos desde el modelo
-       // Si no se realizó correctamente, obtener el último error
-    $dbError = $this->userModel->db->error();
-    print_r($dbError);
+ $this->userModel->db->transStart();  // Inicia la transacción
 
-    log_message('error', 'Error de actualización en la base de datos. Código: ' . $dbError['code']);
-    log_message('error', 'Error de actualización en la base de datos. Mensaje: ' . $dbError['message']);
+// Intentar realizar la actualización
+if (!$this->userModel->update($id, $data)) {
     log_message('error', 'Consulta SQL fallida: ' . $this->userModel->getLastQuery());
+    log_message('error', 'Error en la base de datos: ' . json_encode($this->userModel->db->error()));
+    
+    // Realizar un rollback si la actualización falla
+    $this->userModel->db->transRollback();
+    return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
+}
+
+$this->userModel->db->transComplete();  // Finaliza la transacción
+
+// Si todo va bien, confirmar la transacción
+if ($this->userModel->db->transStatus() === false) {
+    log_message('error', 'La transacción ha fallado');
+    //return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
     return false;
-        //return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
-    }
+}
 
         $this->logAuditAction('user_updated', [
             'user_id'    => $id,

@@ -56,7 +56,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     // ===================================================
     // CORREDOR - DASHBOARD Y OPERACIONES (corredores y admins)
     // ===================================================
-    $routes->group('corredor', ['filter' => 'role:3,7,9,10'], static function($routes) {
+    $routes->group('corredor', ['filter' => 'role:9,10'], static function($routes) {
         // Dashboard principal
         $routes->get('/', 'Corredor::index');
         $routes->get('dashboard', 'Corredor::index');

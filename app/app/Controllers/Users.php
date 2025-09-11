@@ -208,6 +208,7 @@ class Users extends BaseController
         if ($this->userModel->needsPasswordChange($id)) {
             $this->session->setFlashdata('warning', 'Este usuario necesita cambiar su contraseña');
         }
+ 
 
         $data = [
             'title'            => 'Editar Usuario',
@@ -215,7 +216,10 @@ class Users extends BaseController
             'cias'             => $this->ciaModel->getActiveCias(),
             'perfiles'         => $this->perfilModel->getPerfilesByTipo(),
             'perfilesCompania' => $this->perfilModel->getPerfilesCompania(),
-            'perfilesInternos' => $this->perfilModel->getPerfilesInternos(),
+            'perfilesInternos' => $this->perfilModel->getPerfilesInternos(), 
+            'corredores'        => $this->corredorModel->getActiveCorredores(), 
+            'perfilesCorredores'=> $this->perfilModel->where('perfil_tipo', 'corredor')->findAll(),
+            'perfilesInspectores'=> $this->perfilModel->where('perfil_tipo', 'inspector')->findAll(),
         ];
 
         return view('users/edit', $data);

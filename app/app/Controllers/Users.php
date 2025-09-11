@@ -233,7 +233,22 @@ class Users extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Usuario no encontrado');
         }
 
-        // === Reglas de validación (controlador) ===
+        // IMPORTANTE: Detectar el método y obtener datos correctamente
+        $method = $this->request->getMethod();
+        
+        // Si es PUT, los datos vienen diferente cuando hay multipart/form-data
+        if ($method === 'put' || $this->request->getPost('_method') === 'PUT') {
+            // Con PUT simulado y multipart, los datos siguen en POST
+            $data = $this->request->getPost();
+        } else {
+            $data = $this->request->getPost();
+        }
+
+        // Debug para ver qué datos llegan
+        log_message('debug', 'Update Method: ' . $method);
+        log_message('debug', 'Update Data received: ' . json_encode($data));
+
+        // === Reglas de validación ===
         $rules = [
             'user_nombre' => [
                 'label' => 'Nombre',
@@ -244,8 +259,8 @@ class Users extends BaseController
             'user_avatar' => 'permit_empty|is_image[user_avatar]|mime_in[user_avatar,image/jpg,image/jpeg,image/png]|max_size[user_avatar,1024]',
         ];
 
-        // Contraseña opcional (misma regla que usarás en el front)
-        if (!empty($this->request->getPost('user_clave'))) {
+        // Contraseña opcional
+        if (!empty($data['user_clave'])) {
             $rules['user_clave'] = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]'; 
             $rules['confirmar_clave'] = 'matches[user_clave]';
         }
@@ -257,7 +272,7 @@ class Users extends BaseController
         }
 
         // Validaciones personalizadas según perfil/compañía
-        $customErrors = $this->userModel->validateUserByProfileType($this->request->getPost());
+        $customErrors = $this->userModel->validateUserByProfileType($data);
         if (!empty($customErrors)) {
             return redirect()->back()->withInput()->with('errors', $customErrors);
         }
@@ -265,76 +280,86 @@ class Users extends BaseController
         // === Avatar a carpeta PÚBLICA ===
         $avatarName = $usuario['user_avatar'];
         $file = $this->request->getFile('user_avatar');
+        
         if ($file && $file->isValid() && $file->getError() === UPLOAD_ERR_OK) {
             $publicDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
             if (!is_dir($publicDir)) {
                 @mkdir($publicDir, 0755, true);
             }
+            
             // Eliminar anterior si existe
             if (!empty($avatarName)) {
                 $oldPath = $publicDir . DIRECTORY_SEPARATOR . $avatarName;
-                if (is_file($oldPath)) { @unlink($oldPath); }
+                if (is_file($oldPath)) { 
+                    @unlink($oldPath); 
+                }
             }
+            
             // Mover el archivo a la carpeta
             $newName = $file->getRandomName();
             $file->move($publicDir, $newName);
             $avatarName = $newName;
         }
 
-        // cia_id null si viene vacío
-        $ciaId = $this->request->getPost('cia_id');
+        // Normalizar cia_id
+        $ciaId = $data['cia_id'] ?? null;
         $ciaId = ($ciaId === '' || $ciaId === null) ? null : (int) $ciaId;
 
+        // Normalizar corredor_id
+        $corredorId = $data['corredor_id'] ?? null;
+        $corredorId = ($corredorId === '' || $corredorId === null) ? null : (int) $corredorId;
+
         // === Datos a actualizar ===
-        $data = [
-            'user_nombre'   => $this->sanitizeInput($this->request->getPost('user_nombre')),
-            'user_email'    => strtolower(trim((string) $this->request->getPost('user_email'))),
-            'user_telefono' => $this->sanitizeInput($this->request->getPost('user_telefono')),
-            'user_perfil'   => (int) $this->request->getPost('user_perfil'),
+        $updateData = [
+            'user_nombre'   => $this->sanitizeInput($data['user_nombre']),
+            'user_email'    => strtolower(trim((string) $data['user_email'])),
+            'user_telefono' => $this->sanitizeInput($data['user_telefono'] ?? ''),
+            'user_perfil'   => (int) $data['user_perfil'],
             'cia_id'        => $ciaId,
-            'corredor_id'   => (int) $this->request->getPost('corredor_id'),  
+            'corredor_id'   => $corredorId,
             'user_avatar'   => $avatarName,
-            'user_habil'    => (int) $this->request->getPost('user_habil'),
-        ];  
+            'user_habil'    => (int) ($data['user_habil'] ?? 1),
+        ];
 
-        // Contraseña solo si viene; el modelo la hashea en beforeUpdate
-        if (!empty($this->request->getPost('user_clave'))) {
-            $data['user_clave']               = (string) $this->request->getPost('user_clave');
-            $data['user_debe_cambiar_clave']  = 0;
+        // Contraseña solo si viene
+        if (!empty($data['user_clave'])) {
+            $updateData['user_clave'] = (string) $data['user_clave'];
+            $updateData['user_debe_cambiar_clave'] = 0;
         }
 
-        // Llamar al método de actualización del modelo
-        $updateResult = $this->userModel->updateUser($id, $data);
+        // Debug: Ver qué se va a actualizar
+        log_message('debug', 'Update Data to save: ' . json_encode($updateData));
 
-        // Verificar el resultado
-        if (!$updateResult['status']) {
-            log_message('error', 'Error al actualizar el usuario. Detalles: ' . json_encode($updateResult['error']));
-            return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
+        try {
+            // Usar el método del modelo
+            $updateResult = $this->userModel->updateUser($id, $updateData);
+            
+            log_message('debug', 'Update Result: ' . json_encode($updateResult));
+
+            if (!$updateResult['status']) {
+                log_message('error', 'Error al actualizar: ' . json_encode($updateResult['error']));
+                return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
+            }
+
+            // Log de auditoría
+            $this->logAuditAction('user_updated', [
+                'user_id'    => $id,
+                'old_data'   => [
+                    'nombre' => $usuario['user_nombre'],
+                    'email'  => $usuario['user_email'],
+                    'perfil' => $usuario['user_perfil'],
+                    'habil'  => $usuario['user_habil'],
+                ],
+                'new_data'   => $updateData,
+                'updated_by' => $this->session->get('user_id') ?? 'system',
+            ]);
+
+            return redirect()->to('/users')->with('success', 'Usuario actualizado exitosamente');
+
+        } catch (\Exception $e) {
+            log_message('critical', 'Exception en update: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Error inesperado al actualizar');
         }
-
-        // Verificar el número de filas afectadas
-        $affectedRows = $this->userModel->db->affectedRows();
-        log_message('debug', 'Filas afectadas: ' . $affectedRows);
-
-        if ($affectedRows == 0) {
-            log_message('error', 'No se actualizó ningún registro. Revisa la condición WHERE.');
-            return redirect()->back()->withInput()->with('error', 'No se actualizó ningún registro.');
-        }
-
-        // Si la actualización fue exitosa, continuar con la auditoría
-        $this->logAuditAction('user_updated', [
-            'user_id'    => $id,
-            'old_data'   => [
-                'nombre' => $usuario['user_nombre'],
-                'email'  => $usuario['user_email'],
-                'perfil' => $usuario['user_perfil'],
-                'habil'  => $usuario['user_habil'],
-            ],
-            'new_data'   => $data,
-            'updated_by' => $this->session->get('user_id') ?? 'system',
-        ]);
-
-        return redirect()->to('/users')->with('success', 'Usuario actualizado exitosamente');
     }
  
     /** Eliminar */

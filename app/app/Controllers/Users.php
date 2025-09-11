@@ -296,6 +296,7 @@ class Users extends BaseController
             'user_avatar'   => $avatarName,
             'user_habil'    => (int) $this->request->getPost('user_habil'),
         ];
+        echo $id;
         print_r($data);
         return false;
         // Contraseña solo si viene; el modelo la hashea en beforeUpdate

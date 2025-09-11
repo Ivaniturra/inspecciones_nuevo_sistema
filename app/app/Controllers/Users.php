@@ -325,7 +325,7 @@ if (!$this->userModel->update($id, $data)) {
     
     // Realizar un rollback si la actualización falla
     $this->userModel->db->transRollback();
-    return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
+   // return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
 }
 
 $this->userModel->db->transComplete();  // Finaliza la transacción

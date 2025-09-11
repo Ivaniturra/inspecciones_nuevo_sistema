@@ -311,7 +311,10 @@ class Users extends BaseController
         ];
 
         // === IMPORTANTE: saltar validación del MODELO (ya validamos en el controlador) ===
-        if ($this->userModel->skipValidation(true)->update($id, $data)) {
+        if (!$this->userModel->skipValidation(true)->update($id, $data)) {
+            log_message('error', 'Error al actualizar el usuario. Datos: ' . json_encode($data));
+            return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
+        }
             $this->logAuditAction('user_updated', [
                 'user_id'    => $id,
                 'old_data'   => $oldData,
@@ -319,8 +322,7 @@ class Users extends BaseController
                 'updated_by' => $this->session->get('user_id') ?? 'system',
             ]);
 
-            return redirect()->to('/users')->with('success', 'Usuario actualizado exitosamente');
-        }
+            return redirect()->to('/users')->with('success', 'Usuario actualizado exitosamente'); 
 
         return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
     }

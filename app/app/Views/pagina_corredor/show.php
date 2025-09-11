@@ -77,7 +77,7 @@
 
     <!-- Estadísticas -->
     <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3">
+        <div class="col-lg-4 col-md-6 mb-4">
             <div class="card border-0 shadow-sm stats-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -92,7 +92,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 mb-3">
+        <div class="col-lg-4 col-md-6 mb-4">
             <div class="card border-0 shadow-sm stats-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -107,7 +107,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 mb-3">
+        <div class="col-lg-4 col-md-6 mb-4">
             <div class="card border-0 shadow-sm stats-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center">

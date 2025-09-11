@@ -211,7 +211,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
 
     <!-- Inspecciones -->
     <a class="nav-link <?= url_is('corredor/inspecciones*') ? 'active' : '' ?>" 
-       href="<?= base_url('corredor/inspecciones') ?>" 
+       href="<?= base_url('corredor/') ?>" 
        data-bs-toggle="tooltip" 
        data-bs-title="Gestionar Inspecciones">
         <i class="icon fa-solid fa-clipboard-check"></i>
@@ -220,7 +220,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
 
     <!-- Nueva Inspección -->
     <a class="nav-link <?= url_is('corredor/inspecciones/create') ? 'active' : '' ?>" 
-       href="<?= base_url('corredor/inspecciones/create') ?>" 
+       href="<?= base_url('corredor/create') ?>" 
        data-bs-toggle="tooltip" 
        data-bs-title="Crear Nueva Inspección">
         <i class="icon fa-solid fa-plus-circle"></i>

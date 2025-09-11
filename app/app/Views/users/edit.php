@@ -414,47 +414,48 @@ Editar Usuario
 
 <?= $this->section('scripts') ?>
 <script>
-$(document).ready(function() {
-    const originalData = {
-        nombre:      $('#user_nombre').val(),
-        email:       $('#user_email').val(),
-        telefono:    $('#user_telefono').val(),
-        perfil:      $('#user_perfil').val(),
-        cia:         $('#cia_id').val(),
-        corredor:    $('#corredor_id').val(),
-        estado:      $('#user_habil').val()
-    };
+    $(document).ready(function() {
+        const originalData = {
+            nombre:      $('#user_nombre').val(),
+            email:       $('#user_email').val(),
+            telefono:    $('#user_telefono').val(),
+            perfil:      $('#user_perfil').val(),
+            cia:         $('#cia_id').val(),
+            corredor:    $('#corredor_id').val(),
+            estado:      $('#user_habil').val()
+        };
 
-    // ===== Perfil: mostrar/ocultar campos según tipo =====
-    function applyPerfilUI() {
-        const tipo = $('#user_perfil').find('option:selected').data('tipo');
-        
-        // Ocultar todos los contenedores primero
-        $('#cia-container, #corredor-container, #interno-info, #inspector-info').hide();
-        $('#cia_id, #corredor_id').prop('required', false);
-        
-        switch(tipo) {
-            case 'compania':
-                $('#cia-container').show();
-                $('#cia_id').prop('required', true);
-                break;
-                
-            case 'corredor':
-                $('#corredor-container').show();
-                $('#corredor_id').prop('required', true);
-                break;
-                
-            case 'interno':
-                $('#interno-info').show();
-                break;
-                
-            case 'inspector':
-                $('#inspector-info').show();
-                break;
+        // ===== Perfil: mostrar/ocultar campos según tipo =====
+        function applyPerfilUI() {
+            const tipo = $('#user_perfil').find('option:selected').data('tipo');
+            
+            // Ocultar todos los contenedores primero
+            $('#cia-container, #corredor-container, #interno-info, #inspector-info').hide();
+            $('#cia_id, #corredor_id').prop('required', false);
+            
+            switch(tipo) {
+                case 'compania':
+                    $('#cia-container').show();
+                    $('#cia_id').prop('required', true);
+                    break;
+                    
+                case 'corredor':
+                    $('#corredor-container').show();
+                    $('#corredor_id').prop('required', true);
+                    break;
+                    
+                case 'interno':
+                    $('#interno-info').show();
+                    break;
+                    
+                case 'inspector':
+                    $('#inspector-info').show();
+                    break;
+            }
         }
-    }
-    $('#user_perfil').on('change', applyPerfilUI);
-    applyPerfilUI(); // inicial
+        $('#user_perfil').on('change', applyPerfilUI);
+        applyPerfilUI(); // inicial
+    }); 
 
     // ===== Password fuerte (igual al backend) =====
     const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;

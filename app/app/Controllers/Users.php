@@ -226,7 +226,7 @@ class Users extends BaseController
     }
 
     /** Actualizar */
-   public function update($id)
+    public function update($id)
     {
         $usuario = $this->userModel->find($id);
         if (!$usuario) {
@@ -246,7 +246,7 @@ class Users extends BaseController
 
         // Contraseña opcional (misma regla que usarás en el front)
         if (!empty($this->request->getPost('user_clave'))) {
-           $rules['user_clave'] = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]'; 
+        $rules['user_clave'] = 'regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]'; 
             $rules['confirmar_clave'] = 'matches[user_clave]';
         }
 
@@ -283,6 +283,7 @@ class Users extends BaseController
         // cia_id null si viene vacío
         $ciaId = $this->request->getPost('cia_id');
         $ciaId = ($ciaId === '' || $ciaId === null) ? null : (int) $ciaId;
+        
 
         // === Datos a actualizar ===
         $data = [
@@ -323,6 +324,7 @@ class Users extends BaseController
 
         return redirect()->back()->withInput()->with('error', 'Error al actualizar el usuario');
     }
+
 
     /** Eliminar */
     public function delete($id)

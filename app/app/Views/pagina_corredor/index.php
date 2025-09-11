@@ -230,7 +230,7 @@
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <?php endif; ?>
-                                            <?php if ($inspeccion['estado'] === 'pendiente'): ?>
+                                            <?php if ($inspeccion['estado'] === 'Solicitud'): ?>
                                             <button type="button" 
                                                     class="btn btn-outline-danger btn-sm" 
                                                     title="Eliminar"

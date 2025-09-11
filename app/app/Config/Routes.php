@@ -18,7 +18,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
  
 
     $routes->group('dashboard', ['filter' => 'role:7'], static function($routes) {
-        $routes->get('/', 'Dashboard::index', ['as' => 'dashboard']);
+        //$routes->get('/', 'Dashboard::index', ['as' => 'dashboard']);
     });
      $routes->group('corredores', ['filter' => 'role:7'], static function($routes) {
         $routes->get('/',                 'Corredores::index');

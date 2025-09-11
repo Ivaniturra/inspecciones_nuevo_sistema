@@ -75,15 +75,13 @@ class Corredor extends BaseController
                                ->where('MONTH(inspecciones_created_at)', date('m'))
                                ->where('YEAR(inspecciones_created_at)', date('Y'))
                                ->countAllResults();
-        
-        $comisionesMes = $completadasMes * 50000;
+         
         
         return [
             'solicitudes_pendientes' => $pendientes,
             'en_proceso' => $enProceso,
             'completadas_mes' => $completadas,
-            'canceladas' => $canceladas,
-            'comisiones_mes' => $comisionesMes,
+            'canceladas' => $canceladas, 
             'total_inspecciones' => $pendientes + $enProceso + $completadas + $canceladas
         ];
     }

@@ -121,22 +121,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm stats-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title text-muted mb-1">Comisiones Mes</h6>
-                            <h3 class="mb-0 text-primary">$<?= number_format($stats['comisiones_mes']) ?></h3>
-                        </div>
-                        <div class="text-primary">
-                            <i class="fas fa-dollar-sign fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </div> 
     </div>
 
     <!-- Filtros rápidos -->

@@ -182,8 +182,11 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php
+                                print_r($inspeccion);
+                                ?>
                                 <?php foreach ($inspecciones as $inspeccion): 
-                                    print_r($inspeccion);
+                                    
                                     ?>
                                 <tr>
                                     <td><strong>#<?= $inspeccion['inspeccion_id'] ?></strong></td>

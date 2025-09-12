@@ -67,6 +67,8 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->get('show/(:num)', 'Corredor::show/$1');
         $routes->get('edit/(:num)', 'Corredor::edit/$1');
         $routes->post('update/(:num)', 'Corredor::update/$1');
+            $routes->put('update/(:num)', 'CorredorController::update/$1'); // Para REST
+
         $routes->get('delete/(:num)', 'Corredor::delete/$1');
         
         // Rutas AJAX

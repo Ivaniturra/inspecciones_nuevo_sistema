@@ -131,8 +131,7 @@
 
     <!-- Formulario -->
     <form action="<?= base_url('corredor/update/' . $inspeccion['inspecciones_id']) ?>" method="post" id="editInspeccionForm">
-        <?= csrf_field() ?>
-        <input type="hidden" name="_method" value="PUT">
+        <?= csrf_field() ?> 
         
         <div class="row">
             <!-- Información del Asegurado -->

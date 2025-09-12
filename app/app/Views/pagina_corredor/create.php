@@ -2,9 +2,7 @@
 
 <?= $this->section('title') ?>
 <?= $title ?>
-<?= $this->endSection() ?>
- 
-
+<?= $this->endSection() ?> 
 <style>
     body {
         background-color: #f8f9fa;
@@ -458,8 +456,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('js') ?>
-<!-- Asegurar que jQuery esté cargado --> 
-
+ 
 <script>
 $(document).ready(function() {
     console.log('Script cargado correctamente');

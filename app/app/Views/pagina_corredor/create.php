@@ -351,7 +351,14 @@
 </div>
 
 <script>
-$(document).ready(function() {
+// Esperar a que jQuery esté disponible
+(function waitForjQuery() {
+    if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+        setTimeout(waitForjQuery, 50);
+        return;
+    }
+    
+    $(document).ready(function() {
     console.log('Script cargado correctamente');
     console.log('Elemento #inspecciones_rut encontrado:', $('#inspecciones_rut').length);
 
@@ -615,7 +622,7 @@ $(document).ready(function() {
                 alert(mensajeError);
             }
         });
-    }); 
+    });
 });
 </script>
 <?= $this->endSection() ?>

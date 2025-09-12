@@ -102,8 +102,7 @@ class Corredor extends BaseController
         // Obtener detalles completos usando query builder
         $inspeccion = $this->inspeccionesModel->select('
             inspecciones.*,
-            cias.cia_nombre,
-            cias.cia_email,
+            cias.cia_nombre, 
             cias.cia_telefono,
             users.user_nombre,
             users.user_email,

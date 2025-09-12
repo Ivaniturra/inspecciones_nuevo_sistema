@@ -120,18 +120,18 @@
     </div>
     <?php endif; ?>
 
-    <!-- Mensajes de éxito -->
+
     <?php if (session('success')): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i>
-        <?= session('success') ?>
+        <?= esc(session('success')) ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     <?php endif; ?>
 
     <!-- Formulario -->
     <form action="<?= base_url('corredor/update/' . $inspeccion['inspecciones_id']) ?>" method="post" id="editInspeccionForm">
-        <?= csrf_field() ?> 
+        <?= csrf_field() ?>     
         
         <div class="row">
             <!-- Información del Asegurado -->

@@ -146,7 +146,9 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
 <?= $this->renderSection('styles') ?>
 </head>
 <body>
-
+<!-- En el <head> de layouts/maincorredor.php -->
+<meta name="csrf-name" content="<?= csrf_token() ?>">
+<meta name="csrf-hash" content="<?= csrf_hash() ?>">
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg navbar-dark brandbar sticky-top" style="height:var(--nav-h);">
   <div class="container-fluid">

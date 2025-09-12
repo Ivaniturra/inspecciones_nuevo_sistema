@@ -227,27 +227,134 @@ class Corredor extends BaseController
 
     public function store()
     {
-        $data = $this->request->getPost();
-        $data['user_id'] = session('user_id');
-        $data['inspecciones_estado'] = 'pendiente'; // Estado inicial según tu BD
-        $data['inspecciones_fecha_creacion'] = date('Y-m-d H:i:s');
-
-        // Validar datos básicos usando los nombres correctos de campos
-        if (empty($data['inspecciones_asegurado']) || empty($data['inspecciones_rut']) || empty($data['inspecciones_patente'])) {
-            return redirect()->back()->with('error', 'Faltan campos obligatorios')->withInput();
+        $postData = $this->request->getPost();
+        
+        // Debug: ver qué datos llegan
+        log_message('debug', 'Datos POST recibidos: ' . json_encode($postData));
+        
+        // Mapear campos del formulario a campos de la BD
+        $data = [
+            'inspecciones_asegurado' => $postData['asegurado'] ?? '',
+            'inspecciones_rut' => $postData['inspecciones_rut'] ?? '',
+            'inspecciones_patente' => $postData['patente'] ?? '',
+            'inspecciones_marca' => $postData['marca'] ?? '',
+            'inspecciones_modelo' => $postData['modelo'] ?? '',
+            'inspecciones_n_poliza' => $postData['n_poliza'] ?? '',
+            'inspecciones_direccion' => $postData['inspecciones_direccion'] ?? '',
+            'inspecciones_celular' => $postData['celular'] ?? '',
+            'inspecciones_telefono' => $postData['telefono'] ?? null,
+            'cia_id' => (int)($postData['cia_id'] ?? 0),
+            'comunas_id' => (int)($postData['comunas_id'] ?? 0),
+            'user_id' => (int)session('user_id'),
+            'inspecciones_estado' => 'pendiente',
+            'inspecciones_fecha_creacion' => date('Y-m-d H:i:s')
+        ];
+        
+        // Debug: ver datos mapeados
+        log_message('debug', 'Datos mapeados para BD: ' . json_encode($data));
+        
+        // Validación básica
+        $errores = [];
+        
+        if (empty($data['inspecciones_asegurado'])) {
+            $errores[] = 'El nombre del asegurado es obligatorio';
         }
-
-        // Usar el método que crea con bitácora si existe, si no usar save normal
-        if (method_exists($this->inspeccionesModel, 'crearInspeccionConBitacora')) {
-            $inspeccionId = $this->inspeccionesModel->crearInspeccionConBitacora($data);
-        } else {
-            $inspeccionId = $this->inspeccionesModel->save($data);
+        
+        if (empty($data['inspecciones_rut'])) {
+            $errores[] = 'El RUT es obligatorio';
         }
-
-        if ($inspeccionId) {
-            return redirect()->to(base_url('corredor'))->with('success', 'Inspección creada correctamente');
-        } else {
-            return redirect()->back()->with('error', 'Error al crear la inspección')->withInput();
+        
+        if (empty($data['inspecciones_patente'])) {
+            $errores[] = 'La patente es obligatoria';
+        }
+        
+        if (empty($data['inspecciones_marca'])) {
+            $errores[] = 'La marca es obligatoria';
+        }
+        
+        if (empty($data['inspecciones_modelo'])) {
+            $errores[] = 'El modelo es obligatorio';
+        }
+        
+        if (empty($data['inspecciones_n_poliza'])) {
+            $errores[] = 'El número de póliza es obligatorio';
+        }
+        
+        if (empty($data['inspecciones_direccion'])) {
+            $errores[] = 'La dirección es obligatoria';
+        }
+        
+        if (empty($data['inspecciones_celular'])) {
+            $errores[] = 'El celular es obligatorio';
+        }
+        
+        if ($data['cia_id'] <= 0) {
+            $errores[] = 'Debe seleccionar una compañía de seguros';
+        }
+        
+        if ($data['comunas_id'] <= 0) {
+            $errores[] = 'Debe seleccionar una comuna';
+        }
+        
+        // Si hay errores, retornar
+        if (!empty($errores)) {
+            log_message('error', 'Errores de validación: ' . implode(', ', $errores));
+            
+            // Si es AJAX, retornar JSON
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $errores
+                ]);
+            }
+            
+            return redirect()->back()
+                ->with('errors', $errores)
+                ->withInput();
+        }
+        
+        try {
+            // Intentar guardar
+            if (method_exists($this->inspeccionesModel, 'crearInspeccionConBitacora')) {
+                $inspeccionId = $this->inspeccionesModel->crearInspeccionConBitacora($data);
+            } else {
+                $result = $this->inspeccionesModel->insert($data);
+                $inspeccionId = $result ? $this->inspeccionesModel->getInsertID() : false;
+            }
+            
+            if ($inspeccionId) {
+                log_message('info', 'Inspección creada exitosamente con ID: ' . $inspeccionId);
+                
+                // Si es AJAX, retornar JSON
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => true,
+                        'message' => 'Inspección creada exitosamente',
+                        'id' => $inspeccionId
+                    ]);
+                }
+                
+                return redirect()->to(base_url('corredor'))
+                    ->with('success', 'Inspección creada correctamente');
+            } else {
+                throw new \Exception('No se pudo insertar en la base de datos');
+            }
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error al crear inspección: ' . $e->getMessage());
+            
+            // Si es AJAX, retornar JSON
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(500)->setJSON([
+                    'success' => false,
+                    'message' => 'Error interno del servidor: ' . $e->getMessage()
+                ]);
+            }
+            
+            return redirect()->back()
+                ->with('error', 'Error al crear la inspección: ' . $e->getMessage())
+                ->withInput();
         }
     }
 

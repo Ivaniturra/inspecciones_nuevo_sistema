@@ -603,10 +603,24 @@
         const textoOriginal = $submitBtn.html();
         $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Creando...');
 
+        // Obtener token CSRF
+        const csrfName = $('meta[name="csrf-name"]').attr('content') || 'csrf_test_name';
+        const csrfHash = $('meta[name="csrf-hash"]').attr('content') || $('input[name="csrf_test_name"]').val();
+        
+        let formData = $(this).serialize();
+        
+        // Agregar CSRF si no está en el serialize
+        if (formData.indexOf('csrf_test_name=') === -1 && csrfHash) {
+            formData += '&' + csrfName + '=' + encodeURIComponent(csrfHash);
+        }
+
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST',
-            data: $(this).serialize(),
+            data: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             success: function(response) {
                 $submitBtn.prop('disabled', false).html(textoOriginal);
                 manejarEnvioExitoso();

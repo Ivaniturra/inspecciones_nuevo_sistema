@@ -182,49 +182,44 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php
-                                print_r($inspecciones);
-                                ?>
-                                <?php foreach ($inspecciones as $inspeccion): 
-                                    
-                                    ?>
+                                <?php foreach ($inspecciones as $inspeccion): ?>
                                 <tr>
-                                    <td><strong>#<?= $inspeccion['inspeccion_id'] ?></strong></td>
-                                    <td><?= esc($inspeccion['asegurado']) ?></td>
-                                    <td><code><?= esc($inspeccion['rut']) ?></code></td>
-                                    <td><span class="badge bg-secondary"><?= esc($inspeccion['patente']) ?></span></td>
+                                    <td><strong>#<?= $inspeccion['inspecciones_id'] ?></strong></td>
+                                    <td><?= esc($inspeccion['inspecciones_asegurado']) ?></td>
+                                    <td><code><?= esc($inspeccion['inspecciones_rut']) ?></code></td>
+                                    <td><span class="badge bg-secondary"><?= esc($inspeccion['inspecciones_patente']) ?></span></td>
                                     <td>
-                                        <small class="text-muted d-block"><?= esc($inspeccion['marca'] ?? 'N/A') ?></small>
-                                        <strong><?= esc($inspeccion['modelo'] ?? 'N/A') ?></strong>
+                                        <small class="text-muted d-block"><?= esc($inspeccion['inspecciones_marca'] ?? 'N/A') ?></small>
+                                        <strong><?= esc($inspeccion['inspecciones_modelo'] ?? 'N/A') ?></strong>
                                     </td>
                                     <td><?= esc($inspeccion['cia_nombre'] ?? 'N/A') ?></td>
                                     <td>
-                                        <span class="badge status-badge status-<?= $inspeccion['estado'] ?>">
-                                            <?= ucfirst(str_replace('_', ' ', $inspeccion['estado'])) ?>
+                                        <span class="badge status-badge status-<?= $inspeccion['inspecciones_estado'] ?>">
+                                            <?= ucfirst(str_replace('_', ' ', $inspeccion['inspecciones_estado'])) ?>
                                         </span>
                                     </td>
                                     <td>
-                                        <small><?= date('d/m/Y H:i', strtotime($inspeccion['created_at'])) ?></small>
+                                        <small><?= date('d/m/Y H:i', strtotime($inspeccion['inspecciones_created_at'])) ?></small>
                                     </td>
                                     <td class="table-actions">
                                         <div class="btn-group" role="group">
-                                            <a href="<?= base_url('corredor/show/' . $inspeccion['inspeccion_id']) ?>" 
+                                            <a href="<?= base_url('corredor/show/' . $inspeccion['inspecciones_id']) ?>" 
                                                class="btn btn-outline-primary btn-sm" 
                                                title="Ver detalles">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <?php if (in_array($inspeccion['estado'], ['pendiente', 'en_proceso'])): ?>
-                                            <a href="<?= base_url('corredor/edit/' . $inspeccion['inspeccion_id']) ?>" 
+                                            <?php if (in_array($inspeccion['inspecciones_estado'], ['pendiente', 'en_proceso'])): ?>
+                                            <a href="<?= base_url('corredor/edit/' . $inspeccion['inspecciones_id']) ?>" 
                                                class="btn btn-outline-secondary btn-sm" 
                                                title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <?php endif; ?>
-                                            <?php if ($inspeccion['estado'] === 'Solicitud'): ?>
+                                            <?php if ($inspeccion['inspecciones_estado'] === 'pendiente'): ?>
                                             <button type="button" 
                                                     class="btn btn-outline-danger btn-sm" 
                                                     title="Eliminar"
-                                                    onclick="confirmarEliminacion(<?= $inspeccion['inspeccion_id'] ?>)">
+                                                    onclick="confirmarEliminacion(<?= $inspeccion['inspecciones_id'] ?>)">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                             <?php endif; ?>

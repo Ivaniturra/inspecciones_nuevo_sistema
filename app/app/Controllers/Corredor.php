@@ -30,7 +30,7 @@ class Corredor extends BaseController
         $inspecciones = array_filter($inspecciones, function($inspeccion) use ($userId) {
             return $inspeccion['user_id'] == $userId;
         });
-        
+        print_r($inspecciones);
         // Calcular estadísticas reales
         $stats = $this->calcularEstadisticas($userId);
         

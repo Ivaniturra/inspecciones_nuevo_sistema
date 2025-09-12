@@ -161,24 +161,113 @@ class Corredor extends BaseController
         
         // Verificar que la inspección pertenece al usuario
         $inspeccion = $this->inspeccionesModel->where('inspecciones_id', $id)
-                           ->where('user_id', $userId)
-                           ->first();
+                        ->where('user_id', $userId)
+                        ->first();
         
         if (!$inspeccion) {
             return redirect()->back()->with('error', 'Inspección no encontrada');
         }
 
-        $data = $this->request->getPost();
+        $postData = $this->request->getPost();
         
-        // Validar datos básicos usando los nombres correctos de campos
-        if (empty($data['inspecciones_asegurado']) || empty($data['inspecciones_rut']) || empty($data['inspecciones_patente'])) {
-            return redirect()->back()->with('error', 'Faltan campos obligatorios')->withInput();
+        // Debug: ver qué datos llegan
+        log_message('debug', 'Datos POST recibidos en update: ' . json_encode($postData));
+        
+        // Mapear campos del formulario a campos de la BD (igual que en store)
+        $data = [
+            'inspecciones_asegurado' => $postData['asegurado'] ?? '',
+            'inspecciones_rut' => $postData['inspecciones_rut'] ?? '',
+            'inspecciones_patente' => $postData['patente'] ?? '',
+            'inspecciones_marca' => $postData['marca'] ?? '',
+            'inspecciones_modelo' => $postData['modelo'] ?? '',
+            'inspecciones_n_poliza' => $postData['n_poliza'] ?? '',
+            'inspecciones_direccion' => $postData['inspecciones_direccion'] ?? '',
+            'inspecciones_celular' => $postData['celular'] ?? '',
+            'inspecciones_telefono' => $postData['telefono'] ?? null,
+            'inspecciones_observaciones' => $postData['inspecciones_observaciones'] ?? null,
+            'cia_id' => (int)($postData['cia_id'] ?? 0),
+            'comunas_id' => (int)($postData['comunas_id'] ?? 0),
+            // NO incluir user_id ni campos de fecha - no deben cambiar en update
+        ];
+        
+        // Debug: ver datos mapeados
+        log_message('debug', 'Datos mapeados para update: ' . json_encode($data));
+        
+        // Validación básica
+        $errores = [];
+        
+        if (empty($data['inspecciones_asegurado'])) {
+            $errores[] = 'El nombre del asegurado es obligatorio';
         }
-
-        if ($this->inspeccionesModel->update($id, $data)) {
-            return redirect()->to(base_url('corredor'))->with('success', 'Inspección actualizada correctamente');
-        } else {
-            return redirect()->back()->with('error', 'Error al actualizar la inspección')->withInput();
+        
+        if (empty($data['inspecciones_rut'])) {
+            $errores[] = 'El RUT es obligatorio';
+        }
+        
+        if (empty($data['inspecciones_patente'])) {
+            $errores[] = 'La patente es obligatoria';
+        }
+        
+        if (empty($data['inspecciones_marca'])) {
+            $errores[] = 'La marca es obligatoria';
+        }
+        
+        if (empty($data['inspecciones_modelo'])) {
+            $errores[] = 'El modelo es obligatorio';
+        }
+        
+        if (empty($data['inspecciones_n_poliza'])) {
+            $errores[] = 'El número de póliza es obligatorio';
+        }
+        
+        if (empty($data['inspecciones_direccion'])) {
+            $errores[] = 'La dirección es obligatoria';
+        }
+        
+        if (empty($data['inspecciones_celular'])) {
+            $errores[] = 'El celular es obligatorio';
+        }
+        
+        if ($data['cia_id'] <= 0) {
+            $errores[] = 'Debe seleccionar una compañía de seguros';
+        }
+        
+        if ($data['comunas_id'] <= 0) {
+            $errores[] = 'Debe seleccionar una comuna';
+        }
+        
+        // Si hay errores, retornar
+        if (!empty($errores)) {
+            log_message('error', 'Errores de validación en update: ' . implode(', ', $errores));
+            return redirect()->back()
+                ->with('errors', $errores)
+                ->withInput();
+        }
+        
+        try {
+            // Intentar actualizar usando el método correcto
+            $result = $this->inspeccionesModel
+                ->where('inspecciones_id', $id)
+                ->where('user_id', $userId) // Seguridad adicional
+                ->set($data)
+                ->update();
+            
+            // Alternativa si el método anterior no funciona:
+            // $result = $this->inspeccionesModel->update($id, $data);
+            
+            if ($result) {
+                log_message('info', 'Inspección actualizada exitosamente: ID ' . $id);
+                return redirect()->to(base_url('corredor/show/' . $id))
+                    ->with('success', 'Inspección actualizada correctamente');
+            } else {
+                throw new \Exception('No se pudo actualizar en la base de datos');
+            }
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error al actualizar inspección: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error al actualizar la inspección: ' . $e->getMessage())
+                ->withInput();
         }
     }
 

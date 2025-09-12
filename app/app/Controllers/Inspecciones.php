@@ -25,13 +25,13 @@ class Inspecciones extends BaseController
     public function index()
     {
         $inspecciones = $this->inspeccionesModel->getInspeccionesWithDetails();
-
-        $data = [
+print_r($inspecciones);
+        /*$data = [
             'title' => 'Inspecciones',
             'inspecciones' => $inspecciones
         ];
         print_r($inspecciones);
-        return view('inspecciones/index', $data);
+        return view('inspecciones/index', $data);*/
     }
 
     /**

@@ -624,5 +624,6 @@
         });
     });
 });
+})();
 </script>
 <?= $this->endSection() ?>

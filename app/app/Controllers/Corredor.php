@@ -315,12 +315,38 @@ class Corredor extends BaseController
         }
         
         try {
+            // Debug: verificar el modelo
+            log_message('debug', 'Modelo disponible: ' . get_class($this->inspeccionesModel));
+            
             // Intentar guardar
             if (method_exists($this->inspeccionesModel, 'crearInspeccionConBitacora')) {
+                log_message('debug', 'Usando crearInspeccionConBitacora');
                 $inspeccionId = $this->inspeccionesModel->crearInspeccionConBitacora($data);
             } else {
+                log_message('debug', 'Usando insert normal');
+                
+                // Debug: verificar datos antes de insert
+                log_message('debug', 'Datos para insert: ' . json_encode($data));
+                
                 $result = $this->inspeccionesModel->insert($data);
-                $inspeccionId = $result ? $this->inspeccionesModel->getInsertID() : false;
+                log_message('debug', 'Resultado insert: ' . ($result ? 'true' : 'false'));
+                
+                if ($result) {
+                    $inspeccionId = $this->inspeccionesModel->getInsertID();
+                    log_message('debug', 'Insert ID obtenido: ' . $inspeccionId);
+                } else {
+                    // Debug: obtener errores del modelo
+                    $errors = $this->inspeccionesModel->errors();
+                    log_message('error', 'Errores del modelo: ' . json_encode($errors));
+                    
+                    // Debug: obtener último error de la BD
+                    $db = \Config\Database::connect();
+                    $lastQuery = $db->getLastQuery();
+                    log_message('error', 'Última query: ' . $lastQuery);
+                    log_message('error', 'Error BD: ' . $db->error()['message']);
+                    
+                    throw new \Exception('Insert falló. Errores: ' . json_encode($errors) . ' - Query: ' . $lastQuery . ' - BD Error: ' . $db->error()['message']);
+                }
             }
             
             if ($inspeccionId) {

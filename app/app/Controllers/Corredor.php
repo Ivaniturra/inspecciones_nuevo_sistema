@@ -227,12 +227,10 @@ class Corredor extends BaseController
 
     public function store()
     {
+        // Mostrar datos recibidos
         $postData = $this->request->getPost();
         
-        // Debug: ver qué datos llegan
-        log_message('debug', 'Datos POST recibidos: ' . json_encode($postData));
-        
-        // Mapear campos del formulario a campos de la BD
+        // Mapear campos
         $data = [
             'inspecciones_asegurado' => $postData['asegurado'] ?? '',
             'inspecciones_rut' => $postData['inspecciones_rut'] ?? '',
@@ -246,141 +244,57 @@ class Corredor extends BaseController
             'cia_id' => (int)($postData['cia_id'] ?? 0),
             'comunas_id' => (int)($postData['comunas_id'] ?? 0),
             'user_id' => (int)session('user_id'),
-            'inspecciones_estado' => 'pendiente',
-            'inspecciones_fecha_creacion' => date('Y-m-d H:i:s')
+            'inspecciones_estado' => 'pendiente'
+            // NO incluir inspecciones_fecha_creacion - la tabla usa created_at automático
         ];
         
-        // Debug: ver datos mapeados
-        log_message('debug', 'Datos mapeados para BD: ' . json_encode($data));
-        
-        // Validación básica
-        $errores = [];
-        
-        if (empty($data['inspecciones_asegurado'])) {
-            $errores[] = 'El nombre del asegurado es obligatorio';
-        }
-        
-        if (empty($data['inspecciones_rut'])) {
-            $errores[] = 'El RUT es obligatorio';
-        }
-        
-        if (empty($data['inspecciones_patente'])) {
-            $errores[] = 'La patente es obligatoria';
-        }
-        
-        if (empty($data['inspecciones_marca'])) {
-            $errores[] = 'La marca es obligatoria';
-        }
-        
-        if (empty($data['inspecciones_modelo'])) {
-            $errores[] = 'El modelo es obligatorio';
-        }
-        
-        if (empty($data['inspecciones_n_poliza'])) {
-            $errores[] = 'El número de póliza es obligatorio';
-        }
-        
-        if (empty($data['inspecciones_direccion'])) {
-            $errores[] = 'La dirección es obligatoria';
-        }
-        
-        if (empty($data['inspecciones_celular'])) {
-            $errores[] = 'El celular es obligatorio';
-        }
-        
-        if ($data['cia_id'] <= 0) {
-            $errores[] = 'Debe seleccionar una compañía de seguros';
-        }
-        
-        if ($data['comunas_id'] <= 0) {
-            $errores[] = 'Debe seleccionar una comuna';
-        }
-        
-        // Si hay errores, retornar
-        if (!empty($errores)) {
-            log_message('error', 'Errores de validación: ' . implode(', ', $errores));
-            
-            // Si es AJAX, retornar JSON
-            if ($this->request->isAJAX()) {
-                return $this->response->setStatusCode(422)->setJSON([
-                    'success' => false,
-                    'message' => 'Error de validación',
-                    'errors' => $errores
-                ]);
-            }
-            
-            return redirect()->back()
-                ->with('errors', $errores)
-                ->withInput();
+        // Validación rápida
+        if (empty($data['inspecciones_asegurado']) || empty($data['inspecciones_rut'])) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'Datos incompletos',
+                'debug' => ['postData' => $postData, 'mappedData' => $data]
+            ]);
         }
         
         try {
-            // Debug: verificar el modelo
-            log_message('debug', 'Modelo disponible: ' . get_class($this->inspeccionesModel));
+            // Usar Query Builder directo para ver el error exacto
+            $db = \Config\Database::connect();
+            $builder = $db->table('inspecciones');
             
-            // Intentar guardar
-            if (method_exists($this->inspeccionesModel, 'crearInspeccionConBitacora')) {
-                log_message('debug', 'Usando crearInspeccionConBitacora');
-                $inspeccionId = $this->inspeccionesModel->crearInspeccionConBitacora($data);
+            $result = $builder->insert($data);
+            
+            if ($result) {
+                $insertId = $db->insertID();
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Inspección creada exitosamente',
+                    'id' => $insertId
+                ]);
             } else {
-                log_message('debug', 'Usando insert normal');
-                
-                // Debug: verificar datos antes de insert
-                log_message('debug', 'Datos para insert: ' . json_encode($data));
-                
-                $result = $this->inspeccionesModel->insert($data);
-                log_message('debug', 'Resultado insert: ' . ($result ? 'true' : 'false'));
-                
-                if ($result) {
-                    $inspeccionId = $this->inspeccionesModel->getInsertID();
-                    log_message('debug', 'Insert ID obtenido: ' . $inspeccionId);
-                } else {
-                    // Debug: obtener errores del modelo
-                    $errors = $this->inspeccionesModel->errors();
-                    log_message('error', 'Errores del modelo: ' . json_encode($errors));
-                    
-                    // Debug: obtener último error de la BD
-                    $db = \Config\Database::connect();
-                    $lastQuery = $db->getLastQuery();
-                    log_message('error', 'Última query: ' . $lastQuery);
-                    log_message('error', 'Error BD: ' . $db->error()['message']);
-                    
-                    throw new \Exception('Insert falló. Errores: ' . json_encode($errors) . ' - Query: ' . $lastQuery . ' - BD Error: ' . $db->error()['message']);
-                }
-            }
-            
-            if ($inspeccionId) {
-                log_message('info', 'Inspección creada exitosamente con ID: ' . $inspeccionId);
-                
-                // Si es AJAX, retornar JSON
-                if ($this->request->isAJAX()) {
-                    return $this->response->setJSON([
-                        'success' => true,
-                        'message' => 'Inspección creada exitosamente',
-                        'id' => $inspeccionId
-                    ]);
-                }
-                
-                return redirect()->to(base_url('corredor'))
-                    ->with('success', 'Inspección creada correctamente');
-            } else {
-                throw new \Exception('No se pudo insertar en la base de datos');
-            }
-            
-        } catch (\Exception $e) {
-            log_message('error', 'Error al crear inspección: ' . $e->getMessage());
-            
-            // Si es AJAX, retornar JSON
-            if ($this->request->isAJAX()) {
+                // Obtener error específico
+                $error = $db->error();
                 return $this->response->setStatusCode(500)->setJSON([
                     'success' => false,
-                    'message' => 'Error interno del servidor: ' . $e->getMessage()
+                    'message' => 'Error de BD: ' . $error['message'],
+                    'debug' => [
+                        'error_code' => $error['code'],
+                        'error_message' => $error['message'],
+                        'last_query' => $db->getLastQuery()->getQuery(),
+                        'data_sent' => $data
+                    ]
                 ]);
             }
             
-            return redirect()->back()
-                ->with('error', 'Error al crear la inspección: ' . $e->getMessage())
-                ->withInput();
+        } catch (\Exception $e) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Excepción: ' . $e->getMessage(),
+                'debug' => [
+                    'exception_trace' => $e->getTraceAsString(),
+                    'data_sent' => $data
+                ]
+            ]);
         }
     }
 

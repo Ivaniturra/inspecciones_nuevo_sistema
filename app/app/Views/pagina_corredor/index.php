@@ -182,7 +182,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($inspecciones as $inspeccion): ?>
+                                <?php foreach ($inspecciones as $inspeccion): 
+                                    print_r($inspeccion);
+                                    ?>
                                 <tr>
                                     <td><strong>#<?= $inspeccion['inspeccion_id'] ?></strong></td>
                                     <td><?= esc($inspeccion['asegurado']) ?></td>

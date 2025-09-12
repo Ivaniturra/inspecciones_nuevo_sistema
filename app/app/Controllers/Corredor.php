@@ -32,7 +32,7 @@ class Corredor extends BaseController
         });
         print_r($inspecciones);
         // Calcular estadísticas reales
-        $stats = $this->calcularEstadisticas($userId);
+        /*$stats = $this->calcularEstadisticas($userId);
         
         $data = [
             'title' => 'Dashboard Corredor',
@@ -47,7 +47,7 @@ class Corredor extends BaseController
             'nav_bg' => session('nav_bg'),
         ];
 
-        return view('pagina_corredor/index', $data);
+        return view('pagina_corredor/index', $data);*/
     }
 
     private function calcularEstadisticas($userId)

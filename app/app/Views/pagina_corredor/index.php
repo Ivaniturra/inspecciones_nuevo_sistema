@@ -183,7 +183,7 @@
                             </thead>
                             <tbody>
                                 <?php
-                                print_r($inspeccion);
+                                print_r($inspecciones);
                                 ?>
                                 <?php foreach ($inspecciones as $inspeccion): 
                                     

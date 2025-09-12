@@ -30,7 +30,7 @@ class Inspecciones extends BaseController
             'title' => 'Inspecciones',
             'inspecciones' => $inspecciones
         ];
-
+        print_r($inspecciones);
         return view('inspecciones/index', $data);
     }
 

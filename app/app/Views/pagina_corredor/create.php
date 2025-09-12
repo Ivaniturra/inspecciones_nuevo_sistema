@@ -2,89 +2,46 @@
 
 <?= $this->section('title') ?>
 <?= $title ?>
-<?= $this->endSection() ?> 
+<?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
 <style>
-    body {
-        background-color: #f8f9fa;
-    }
-    
-    .container-fluid {
-        padding: 2rem;
-    }
-    
-    .form-floating {
-        margin-bottom: 1rem !important;
-    }
-    
-    .form-floating > .form-control,
-    .form-floating > .form-select {
+    body { background-color: #f8f9fa; }
+    .container-fluid { padding: 2rem; }
+    .form-floating { margin-bottom: 1rem !important; }
+    .form-floating > .form-control, .form-floating > .form-select {
         height: calc(3.5rem + 2px);
-        line-height: 1.25;
         border: 1px solid #ced4da;
         border-radius: 0.5rem;
-        font-size: 1rem;
     }
-    
-    .form-floating > .form-control:focus,
-    .form-floating > .form-select:focus {
+    .form-floating > .form-control:focus, .form-floating > .form-select:focus {
         border-color: #86b7fe;
-        outline: 0;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
-    
-    .form-floating > label {
-        padding: 1rem 0.75rem;
-        color: #6c757d;
-    }
-    
     .card {
         border: none !important;
         border-radius: 15px !important;
         box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1) !important;
         margin-bottom: 2rem;
     }
-    
     .card-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         color: white !important;
         border-bottom: none !important;
         padding: 1.5rem;
         border-radius: 15px 15px 0 0 !important;
-    }
-    
-    .card-header h5 {
-        margin: 0;
         font-weight: 600;
     }
-    
-    .card-body {
-        padding: 2rem;
-        background: white;
-    }
-    
-    .card-header.bg-info {
-        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
-    }
-    
-    .required::after {
-        content: " *";
-        color: #dc3545 !important;
-        font-weight: bold;
-    }
-    
-    .rut-input,
-    .patente-input {
-        text-transform: uppercase !important;
-    }
-    
+    .card-body { padding: 2rem; background: white; }
+    .card-header.bg-info { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important; }
+    .required::after { content: " *"; color: #dc3545 !important; font-weight: bold; }
+    .rut-input, .patente-input { text-transform: uppercase !important; }
     .preview-section {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
         border-radius: 12px !important;
         padding: 1.5rem !important;
-        margin-top: 0;
         border: 1px solid #dee2e6;
     }
-    
     .preview-section h6 {
         color: #0d6efd;
         font-weight: 600;
@@ -92,107 +49,46 @@
         border-bottom: 2px solid #0d6efd;
         padding-bottom: 0.5rem;
     }
-    
-    .preview-section p {
-        margin-bottom: 0.5rem;
-        color: #495057;
-    }
-    
-    .preview-section strong {
-        color: #212529;
-        min-width: 100px;
-        display: inline-block;
-    }
-    
     .btn {
         border-radius: 10px;
         font-weight: 500;
         padding: 0.75rem 1.5rem;
         transition: all 0.3s ease;
     }
-    
     .btn-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border: none;
         box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
     }
-    
     .btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
-        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
     }
-    
     .btn-outline-secondary {
         border: 2px solid #6c757d;
         color: #6c757d;
-        background: transparent;
     }
-    
     .btn-outline-secondary:hover {
         background: #6c757d;
         color: white;
-        transform: translateY(-1px);
     }
-    
-    .btn-lg {
-        padding: 1rem 2rem;
-        font-size: 1.1rem;
-    }
-    
-    .h3 {
-        color: #495057;
-        font-weight: 600;
-    }
-    
-    .text-primary {
-        color: #667eea !important;
-    }
-    
-    .alert {
-        border-radius: 12px;
-        border: none;
-        margin-bottom: 2rem;
-    }
-    
+    .btn-lg { padding: 1rem 2rem; font-size: 1.1rem; }
+    .h3 { color: #495057; font-weight: 600; }
+    .text-primary { color: #667eea !important; }
     .is-invalid {
         border-color: #dc3545 !important;
         box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
     }
-    
     .invalid-feedback {
         display: block !important;
-        width: 100%;
         margin-top: 0.25rem;
         font-size: 0.875rem;
         color: #dc3545;
     }
-    
-    .form-text {
-        margin-top: 0.25rem;
-        font-size: 0.875rem;
-        color: #6c757d;
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-        .container-fluid {
-            padding: 1rem;
-        }
-        
-        .card-body {
-            padding: 1.5rem;
-        }
-        
-        .btn-lg {
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-        }
-    }
+    .form-text { margin-top: 0.25rem; font-size: 0.875rem; color: #6c757d; }
+    .alert { border-radius: 12px; border: none; margin-bottom: 2rem; }
 </style>
-<?= $this->endSection() ?>
 
-<?= $this->section('content') ?>
 <div class="container-fluid">
     <!-- Header -->
     <div class="row mb-4">
@@ -453,14 +349,10 @@
         </div>
     </form>
 </div>
-<?= $this->endSection() ?>
 
-<?= $this->section('js') ?>
- 
 <script>
 $(document).ready(function() {
     console.log('Script cargado correctamente');
-    console.log('jQuery version:', $.fn.jquery);
     console.log('Elemento #inspecciones_rut encontrado:', $('#inspecciones_rut').length);
 
     // ---------- Funciones Helper ----------
@@ -558,7 +450,7 @@ $(document).ready(function() {
         }
     });
 
-    // Patente - Formateo y validación
+    // Patente
     $(document).on('input', '#patente', function() {
         let valor = $(this).val().toUpperCase().replace(/[^A-Z0-9-]/g, '');
         if (valor.length > 7) valor = valor.substring(0, 7);
@@ -574,18 +466,18 @@ $(document).ready(function() {
         
         if (patente && !validarPatente(patente)) {
             $input.addClass('is-invalid');
-            $input.after('<div class="invalid-feedback">Formato inválido (ej: ABC123 o ABCD12)</div>');
+            $input.after('<div class="invalid-feedback">Formato inválido</div>');
         } else if (patente) {
             $input.addClass('is-valid');
         }
     });
 
-    // Teléfonos - Formateo
+    // Teléfonos
     $(document).on('blur', '#celular, #telefono', function() {
         $(this).val(formatearTelefonoCL($(this).val()));
     });
 
-    // ---------- Preview en tiempo real ----------
+    // ---------- Preview ----------
     function updatePreview() {
         $('#preview-asegurado').text($('#asegurado').val() || '-');
         $('#preview-rut').text($('#inspecciones_rut').val() || '-');
@@ -606,12 +498,44 @@ $(document).ready(function() {
     $(document).on('input change', 'input, select', updatePreview);
     updatePreview();
 
+    // ---------- Función para limpiar campos del vehículo ----------
+    function limpiarCamposVehiculo() {
+        $('#patente').val('').removeClass('is-valid is-invalid');
+        $('#marca').val('').removeClass('is-valid is-invalid');
+        $('#modelo').val('').removeClass('is-valid is-invalid');
+        $('#n_poliza').val('').removeClass('is-valid is-invalid');
+        $('#cia_id').val('').removeClass('is-valid is-invalid');
+        $('.invalid-feedback').remove();
+        updatePreview();
+        $('#patente').focus();
+    }
+
+    // ---------- Manejar envío exitoso ----------
+    function manejarEnvioExitoso() {
+        const pregunta = '¡Inspección creada exitosamente!\n\n' +
+                        '¿Desea crear otra inspección con los mismos datos del asegurado?\n' +
+                        '(Se mantendrán: Nombre, RUT, Dirección, Comuna y Teléfonos)\n' +
+                        '(Se limpiarán: Patente, Marca, Modelo, Compañía y Póliza)';
+        
+        if (confirm(pregunta)) {
+            limpiarCamposVehiculo();
+            const alertaInfo = `
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Nueva inspección:</strong> Complete los datos del vehículo para el mismo asegurado.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('.container-fluid').prepend(alertaInfo);
+            setTimeout(() => { $('.alert-info').fadeOut(); }, 5000);
+        } else {
+            window.location.href = '<?= base_url('corredor') ?>';
+        }
+    }
+
     // ---------- Validación del formulario ----------
     $('#inspeccionForm').on('submit', function(e) {
-        console.log('Validando formulario...');
         const errores = [];
-
-        // Limpiar validaciones previas
         $('.is-invalid').removeClass('is-invalid');
         $('.invalid-feedback').remove();
 
@@ -652,18 +576,45 @@ $(document).ready(function() {
 
         if (errores.length) {
             e.preventDefault();
-            
             let mensajeError = 'Se encontraron los siguientes errores:\n\n';
             errores.forEach((error, index) => {
                 mensajeError += `${index + 1}. ${error}\n`;
             });
-            
             alert(mensajeError);
             $('.is-invalid').first().focus();
             return false;
         }
 
-        return confirm('¿Está seguro de que desea crear esta inspección?');
+        if (!confirm('¿Está seguro de que desea crear esta inspección?')) {
+            e.preventDefault();
+            return false;
+        }
+
+        // Envío por AJAX
+        e.preventDefault();
+        const $submitBtn = $(this).find('button[type="submit"]');
+        const textoOriginal = $submitBtn.html();
+        $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Creando...');
+
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                $submitBtn.prop('disabled', false).html(textoOriginal);
+                manejarEnvioExitoso();
+            },
+            error: function(xhr, status, error) {
+                $submitBtn.prop('disabled', false).html(textoOriginal);
+                let mensajeError = 'Error al crear la inspección. ';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    mensajeError += xhr.responseJSON.message;
+                } else {
+                    mensajeError += 'Intente nuevamente.';
+                }
+                alert(mensajeError);
+            }
+        });
     });
 });
 </script>

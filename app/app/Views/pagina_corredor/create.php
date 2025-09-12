@@ -615,7 +615,7 @@ $(document).ready(function() {
                 alert(mensajeError);
             }
         });
-    });
+    }); 
 });
 </script>
 <?= $this->endSection() ?>

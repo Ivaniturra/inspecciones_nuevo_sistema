@@ -388,12 +388,15 @@
 <?= $this->endSection() ?>
 <?= $this->section('scripts') ?>
 <script>
-  console.log('VISTA: scripts de la vista ejecutándose');
-
-  // aquí tu código actual (ready, ajax, validaciones, etc.)
-  $(function(){
-    console.log('VISTA: jQuery y DOM OK');
-    // ... tu JS existente ...
-  });
+const URLS = {
+  carrocerias: <?= json_encode(base_url('inspecciones/carrocerias/')) ?>,
+  tipoInfo:    <?= json_encode(base_url('inspecciones/tipo-inspeccion-info/')) ?>,
+  store:       <?= json_encode(base_url('corredor/store')) ?>
+};
+const CSRF = {
+  name: <?= json_encode(csrf_token()) ?>,
+  hash: <?= json_encode(csrf_hash()) ?>
+};
+console.log('URLs OK', URLS);
 </script>
 <?= $this->endSection() ?>

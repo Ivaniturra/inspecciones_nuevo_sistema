@@ -92,7 +92,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     // ===================================================
     // INSPECCIONES - GESTIÓN ADMINISTRATIVA COMPLETA
     // ===================================================
-    $routes->group('inspecciones', ['filter' => 'role:3,7'], static function($routes) {
+    $routes->group('inspecciones', static function($routes) {
         $routes->get('/', 'Inspecciones::index');
         $routes->get('create', 'Inspecciones::create');
         $routes->post('store', 'Inspecciones::store');

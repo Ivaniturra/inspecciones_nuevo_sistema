@@ -118,8 +118,8 @@ $routes->group('api', static function($routes) {
     $routes->get('estados/list', 'Api\EstadosController::list');
     $routes->get('cias/search', 'Api\CiasController::search');
     $routes->post('inspecciones/status', 'Api\InspeccionesController::updateStatus');
-    $routes->get('api/tipos-inspeccion', 'Inspecciones::getTiposInspeccion'); 
-    $routes->get('tipos-inspeccion/(:num)', 'Corredor::getTipoInspeccionInfo/$1');
+    $routes->get('tipos-inspeccion', 'Inspecciones::getTiposInspeccion'); 
+    $routes->get('tipos-inspeccion/(:num)', 'Inspecciones::getTipoInspeccionInfo/$1');
     $routes->get('carrocerias/(:num)', 'Corredor::getCarroceriasByTipo/$1');
 });
     // ===================================================

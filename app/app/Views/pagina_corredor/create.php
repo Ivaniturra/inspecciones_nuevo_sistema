@@ -427,6 +427,7 @@ $(document).ready(function() {
             });
             
             // Cargar información del tipo de inspección
+            alert(tipoInspeccionId)
             $.ajax({
                 url: '<?= base_url("inspecciones/tipo-inspeccion-info/") ?>' + tipoInspeccionId,
                 method: 'GET',

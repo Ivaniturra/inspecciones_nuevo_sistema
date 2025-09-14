@@ -388,15 +388,292 @@
 <?= $this->endSection() ?>
 <?= $this->section('scripts') ?>
 <script>
+/** ========================
+ *  Config & helpers
+ *  ======================== */
 const URLS = {
-  carrocerias: <?= json_encode(base_url('inspecciones/carrocerias/')) ?>,
-  tipoInfo:    <?= json_encode(base_url('inspecciones/tipo-inspeccion-info/')) ?>,
-  store:       <?= json_encode(base_url('corredor/store')) ?>
+  carrocerias: '/inspecciones/carrocerias/',       // GET /{tipo_inspeccion_id}
+  tipoInfo:    '/inspecciones/tipo-inspeccion-info/', // GET /{tipo_inspeccion_id}
+  store:       '/corredor/store'                   // POST
 };
+const DEBUG = false; // pon true para ver logs de depuración
+
+// CSRF desde <meta> del layout
 const CSRF = {
-  name: <?= json_encode(csrf_token()) ?>,
-  hash: <?= json_encode(csrf_hash()) ?>
+  name: document.querySelector('meta[name="csrf-name"]')?.getAttribute('content'),
+  hash: document.querySelector('meta[name="csrf-hash"]')?.getAttribute('content')
 };
-console.log('URLs OK', URLS);
+
+// Log condicional
+function dlog(...args){ if (DEBUG) console.log(...args); }
+
+// Encuentra el div.invalid-feedback más cercano aunque la estructura varíe
+function getFeedback($el){
+  let $fb = $el.siblings('.invalid-feedback');
+  if (!$fb.length) $fb = $el.closest('.mb-3, .form-group').find('> .invalid-feedback, .invalid-feedback');
+  return $fb.first();
+}
+
+// Validación RUT chileno
+function validarRUT(rut){
+  rut = (rut || '').replace(/[^0-9kK]/g,'');
+  if (rut.length < 8 || rut.length > 9) return false;
+  const dv = rut.slice(-1).toLowerCase();
+  const num = rut.slice(0, -1);
+  let suma = 0, mul = 2;
+  for (let i = num.length - 1; i >= 0; i--){
+    suma += parseInt(num[i], 10) * mul;
+    mul = (mul === 7) ? 2 : mul + 1;
+  }
+  const resto = suma % 11;
+  const dvCalc = (resto === 0) ? '0' : (resto === 1 ? 'k' : String(11 - resto));
+  return dv === dvCalc;
+}
+
+// Email simple
+const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e || '');
+
+// Alertas bonitas arriba del contenido
+function showAlert(type, message){
+  const klass = type === 'error' ? 'alert-danger' : 'alert-success';
+  const icon  = type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+  const html  = `
+    <div class="alert ${klass} alert-dismissible fade show" role="alert">
+      <i class="${icon} me-2"></i>${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+  $('.container-fluid').prepend(html);
+  setTimeout(()=> $('.alert').fadeOut(), 5000);
+  $('html, body').animate({ scrollTop: 0 }, 500);
+}
+
+// Handler de errores de API estandarizado
+function handleErrors(response){
+  if (response?.errors && Array.isArray(response.errors)){
+    response.errors.forEach(err => showAlert('error', err));
+  } else if (response?.message){
+    showAlert('error', response.message);
+  } else {
+    showAlert('error', 'Error desconocido al crear la inspección');
+  }
+}
+
+/** ========================
+ *  App
+ *  ======================== */
+$(function(){
+  dlog('VISTA: jQuery y DOM OK', {URLS, CSRF});
+
+  // Smoke test de elementos clave:
+  ['#tipo_inspeccion_id','#tipo_carroceria_id','#inspeccionForm','#successModal','#spinnerContainer','#btnGuardar']
+    .forEach(sel => dlog('SMOKE', sel, document.querySelector(sel) ? 'OK' : 'NO ENCONTRADO'));
+
+  // ==== Cambio de Tipo de Inspección -> cargar Carrocerías + Info ====
+  $('#tipo_inspeccion_id').on('change', function(){
+    const id = this.value;
+    const $car = $('#tipo_carroceria_id');
+    const $info = $('#tipoInspeccionInfo');
+
+    $car.html('<option value="">Cargando...</option>').prop('disabled', true);
+    $info.hide();
+
+    if (!id){
+      $car.html('<option value="">Primero seleccione tipo de inspección</option>');
+      return;
+    }
+
+    // Carrocerías
+    $.ajax({
+      url: URLS.carrocerias + encodeURIComponent(id),
+      method: 'GET',
+      dataType: 'json'
+    })
+    .done(function(resp){
+      dlog('[carrocerias][200]', resp);
+      let opts = '<option value="">Seleccione carrocería</option>';
+      if (resp?.success) {
+        const cs = resp.carrocerias || {};
+        if (Object.keys(cs).length){
+          $.each(cs, (k, v) => opts += `<option value="${k}">${v}</option>`);
+          $car.prop('disabled', false);
+        } else {
+          opts = '<option value="">No hay carrocerías disponibles</option>';
+        }
+      } else {
+        opts = '<option value="">No se pudo cargar</option>';
+      }
+      $car.html(opts);
+    })
+    .fail(function(xhr, textStatus, err){
+      console.warn('[carrocerias][FAIL]', textStatus, err, xhr.status, xhr.responseText);
+      $car.html('<option value="">Error al cargar carrocerías</option>');
+    });
+
+    // Info tipo inspección
+    $.ajax({
+      url: URLS.tipoInfo + encodeURIComponent(id),
+      method: 'GET',
+      dataType: 'json'
+    })
+    .done(function(resp){
+      dlog('[tipo-info][200]', resp);
+      if (resp?.success){
+        const tipo = resp.tipo || {};
+        const info = resp.info_adicional || {};
+        $('#descripcionTipoInspeccion').text(tipo.tipo_inspeccion_descripcion || '');
+        $('#duracionEstimada').text(info.duracion_estimada || '');
+        $('#costoAproximado').text(info.costo_aproximado || '');
+        const $alert = $info.find('.alert');
+        $alert.removeClass('alert-info alert-warning alert-success alert-danger')
+              .addClass('alert-' + (info.color_badge || 'info'));
+        $info.show();
+      }
+    })
+    .fail(function(xhr, textStatus, err){
+      console.warn('[tipo-info][FAIL]', textStatus, err, xhr.status, xhr.responseText);
+    });
+  });
+
+  // ==== Formateos ====
+  // RUT: puntos y guion
+  $('#inspecciones_rut').on('input', function(){
+    let rut = $(this).val().replace(/[^0-9kK]/g,'');
+    if (rut.length > 1){
+      rut = rut.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + rut.slice(-1);
+    }
+    $(this).val(rut);
+  });
+
+  // Celular: 8 dígitos visibles (sin +569)
+  $('#inspecciones_celular').on('input', function(){
+    let v = $(this).val().replace(/[^0-9]/g,'');
+    if (v.length > 8) v = v.substring(0, 8);
+    if (v.length > 4) v = v.substring(0,4) + ' ' + v.substring(4);
+    $(this).val(v);
+  });
+
+  // Teléfono fijo: 9 dígitos con espacios
+  $('#inspecciones_telefono').on('input', function(){
+    let v = $(this).val().replace(/[^0-9]/g,'');
+    if (v.length > 9) v = v.substring(0, 9);
+    if (v.length > 2){
+      v = (v.length <= 6)
+        ? v.substring(0,2) + ' ' + v.substring(2)
+        : v.substring(0,2) + ' ' + v.substring(2,5) + ' ' + v.substring(5);
+    }
+    $(this).val(v);
+  });
+
+  // ==== Validación en blur ====
+  $('input[required], select[required]').on('blur', function(){
+    const $el = $(this);
+    const val = ($el.val() || '').toString().trim();
+    const $fb = getFeedback($el);
+    if (!val){ $el.addClass('is-invalid'); $fb.text('Este campo es obligatorio'); }
+    else { $el.removeClass('is-invalid'); $fb.text(''); }
+  });
+
+  $('#inspecciones_rut').on('blur', function(){
+    const $el = $(this), $fb = getFeedback($el), v = $el.val();
+    if (v && !validarRUT(v)){ $el.addClass('is-invalid'); $fb.text('RUT inválido'); }
+    else { $el.removeClass('is-invalid'); $fb.text(''); }
+  });
+
+  $('#inspecciones_email').on('blur', function(){
+    const $el = $(this), $fb = getFeedback($el), v = $el.val();
+    if (v && !isValidEmail(v)){ $el.addClass('is-invalid'); $fb.text('Email inválido'); }
+    else { $el.removeClass('is-invalid'); $fb.text(''); }
+  });
+
+  // ==== Envío del formulario ====
+  $('#inspeccionForm').on('submit', function(e){
+    e.preventDefault();
+
+    // limpiar errores previos
+    $('.is-invalid').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
+
+    // Validación requerida básica
+    let hasErrors = false;
+    $('input[required], select[required]').each(function(){
+      const $el = $(this);
+      const val = ($el.val() || '').toString().trim();
+      if (!val){
+        getFeedback($el).text('Este campo es obligatorio');
+        $el.addClass('is-invalid');
+        hasErrors = true;
+      }
+    });
+
+    // Validación RUT + Email
+    const rut = $('#inspecciones_rut').val();
+    if (rut && !validarRUT(rut)){
+      const $el = $('#inspecciones_rut');
+      getFeedback($el).text('RUT inválido');
+      $el.addClass('is-invalid');
+      hasErrors = true;
+    }
+    const email = $('#inspecciones_email').val();
+    if (email && !isValidEmail(email)){
+      const $el = $('#inspecciones_email');
+      getFeedback($el).text('Email inválido');
+      $el.addClass('is-invalid');
+      hasErrors = true;
+    }
+
+    if (hasErrors){
+      showAlert('error', 'Por favor corrija los errores en el formulario');
+      return;
+    }
+
+    // Spinner + disable
+    $('#spinnerContainer').show();
+    $('#btnGuardar').prop('disabled', true);
+
+    // FormData + CSRF
+    const formData = new FormData(this);
+    if (CSRF.name && CSRF.hash) formData.append(CSRF.name, CSRF.hash);
+
+    // Enviar
+    $.ajax({
+      url: URLS.store,
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      dataType: 'json'
+    })
+    .done(function(resp){
+      dlog('[store][200]', resp);
+      if (resp?.success){
+        $('#inspeccionId').text('#' + resp.id);
+        if (resp.whatsapp_url) $('#whatsappBtn').attr('href', resp.whatsapp_url);
+
+        // Si CI4 regenera token y lo devuelves en JSON:
+        if (resp.csrf && resp.csrf.name && resp.csrf.hash){
+          CSRF.name = resp.csrf.name;
+          CSRF.hash = resp.csrf.hash;
+        }
+
+        // Mostrar modal (Bootstrap 5)
+        const modal = new bootstrap.Modal(document.getElementById('successModal'));
+        modal.show();
+      } else {
+        handleErrors(resp || {});
+      }
+    })
+    .fail(function(xhr, textStatus, err){
+      console.warn('[store][FAIL]', textStatus, err, xhr.status, xhr.responseText);
+      let r = {};
+      try { r = JSON.parse(xhr.responseText); }
+      catch { r = { message: 'Error de conexión' }; }
+      handleErrors(r);
+    })
+    .always(function(){
+      $('#spinnerContainer').hide();
+      $('#btnGuardar').prop('disabled', false);
+    });
+  });
+});
 </script>
 <?= $this->endSection() ?>

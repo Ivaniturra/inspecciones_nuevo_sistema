@@ -51,6 +51,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->match(['POST','PUT'], 'update/(:num)', 'Corredores::update/$1');
         $routes->match(['POST','DELETE'], 'delete/(:num)', 'Corredores::delete/$1');
         $routes->post('toggleStatus/(:num)', 'Corredores::toggleStatus/$1');
+        
     });
 
     // ===================================================
@@ -67,6 +68,8 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->get('show/(:num)', 'Corredor::show/$1');
         $routes->get('edit/(:num)', 'Corredor::edit/$1');
         $routes->post('update/(:num)', 'Corredor::update/$1'); 
+        $routes->get('filter-status', 'Corredor::filterByStatus');
+
 
         $routes->get('delete/(:num)', 'Corredor::delete/$1');
         
@@ -102,6 +105,10 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->post('agregarComentario', 'Inspecciones::agregarComentario');
         $routes->post('cambiarEstado', 'Inspecciones::cambiarEstado');
         $routes->delete('eliminarComentario/(:num)', 'Inspecciones::eliminarComentario/$1');
+
+          $routes->get('api/carrocerias/(:num)', 'Inspecciones::getCarroceriasByTipo/$1');
+        $routes->get('api/tipo-inspeccion-info/(:num)', 'Inspecciones::getTipoInspeccionInfo/$1');
+        $routes->get('api/tipos-inspeccion', 'Inspecciones::getTiposInspeccion');
         
         // Reportes administrativos
         $routes->get('reportes', 'Inspecciones::reportes');

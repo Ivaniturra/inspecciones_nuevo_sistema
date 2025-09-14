@@ -94,53 +94,39 @@
         </div>
     </div>
 
-    <!-- Estadísticas -->
-    <div class="row mb-4">
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm stats-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title text-muted mb-1">Solicitudes</h6>
-                            <h3 class="mb-0 text-warning"><?= number_format($stats['solicitudes_pendientes']) ?></h3>
-                        </div>
-                        <div class="text-warning">
-                            <i class="fas fa-file-alt fa-2x"></i>
-                        </div>
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary btn-sm filter-estado active" data-filter="all">
+                            <i class="fas fa-list me-1"></i>Todas (<?= count($inspecciones) ?>)
+                        </button>
+                        
+                        <?php if (!empty($estados)): ?>
+                            <?php foreach ($estados as $estadoId => $estadoData): ?>
+                                <?php 
+                                // Contar inspecciones por estado_id ← CAMBIO AQUÍ
+                                $count = count(array_filter($inspecciones, function($insp) use ($estadoId) {
+                                    return $insp['estado_id'] == $estadoId; // ← CAMBIO: usar estado_id
+                                }));
+                                
+                                // Obtener color de texto apropiado
+                                $bgColor = $estadoData['color'];
+                                $textColor = $this->getTextColorForBackground($bgColor);
+                                ?>
+                                <button class="btn btn-sm filter-estado" 
+                                        data-filter="<?= $estadoId ?>"
+                                        style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>; border-color: <?= $bgColor ?>;">
+                                    <span class="estado-dot me-1" style="background-color: <?= $textColor ?>; opacity: 0.8;"></span>
+                                    <?= esc($estadoData['nombre']) ?> (<?= $count ?>)
+                                </button>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm stats-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title text-muted mb-1">En Proceso</h6>
-                            <h3 class="mb-0 text-info"><?= number_format($stats['en_proceso']) ?></h3>
-                        </div>
-                        <div class="text-info">
-                            <i class="fas fa-search fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm stats-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title text-muted mb-1">Completadas</h6>
-                            <h3 class="mb-0 text-success"><?= number_format($stats['completadas_mes']) ?></h3>
-                        </div>
-                        <div class="text-success">
-                            <i class="fas fa-thumbs-up fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> 
     </div>
 
     <!-- Filtros por Estados del Sistema -->
@@ -211,7 +197,7 @@
                             </thead>
                             <tbody>
                                 <?php foreach ($inspecciones as $inspeccion): ?>
-                                <tr data-estado="<?= $inspeccion['estado_id'] ?? 'sin-estado' ?>">
+                                    <tr data-estado="<?= $inspeccion['estado_id'] ?? 'sin-estado' ?>"> <!-- ← CAMBIO AQUÍ -->
                                     <td><strong>#<?= $inspeccion['inspecciones_id'] ?></strong></td>
                                     <td><?= esc($inspeccion['inspecciones_asegurado']) ?></td>
                                     <td><code><?= esc($inspeccion['inspecciones_rut']) ?></code></td>
@@ -223,14 +209,14 @@
                                     <td><?= esc($inspeccion['cia_nombre'] ?? 'N/A') ?></td>
                                     <td>
                                         <?php 
-                                        $estadoId = $inspeccion['estado_id'] ?? null;
+                                        $estadoId = $inspeccion['estado_id'] ?? null; // ← CAMBIO AQUÍ
                                         if ($estadoId && isset($estados[$estadoId])):
                                             $estadoInfo = $estados[$estadoId];
                                             $bgColor = $estadoInfo['color'];
                                             $textColor = $this->getTextColorForBackground($bgColor);
                                         ?>
                                             <span class="status-badge" 
-                                                  style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>;">
+                                                style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>;">
                                                 <span class="estado-dot me-1" style="background-color: <?= $textColor ?>; opacity: 0.7;"></span>
                                                 <?= esc($estadoInfo['nombre']) ?>
                                             </span>
@@ -326,12 +312,16 @@ $(document).ready(function() {
         if (filter === 'all') {
             // Mostrar todas las filas
             $('#inspeccionesTable tbody tr').show();
-            table.draw();
+            if (typeof table !== 'undefined') {
+                table.draw();
+            }
         } else {
-            // Filtrar por estado_id
+            // Filtrar por estado_id ← CAMBIO AQUÍ
             $('#inspeccionesTable tbody tr').hide();
             $('#inspeccionesTable tbody tr[data-estado="' + filter + '"]').show();
-            table.draw();
+            if (typeof table !== 'undefined') {
+                table.draw();
+            }
         }
     });
     <?php endif; ?>

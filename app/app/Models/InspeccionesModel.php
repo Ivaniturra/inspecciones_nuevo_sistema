@@ -12,21 +12,24 @@ class InspeccionesModel extends Model
     protected $useSoftDeletes = false;
     protected $protectFields = true;
     protected $allowedFields = [
-        'asegurado',
-        'rut',
-        'patente',
-        'marca',
-        'modelo',
-        'n_poliza',
-        'direccion',
-        'comuna',
-        'celular',
-        'telefono',
+        'inspecciones_asegurado',
+        'inspecciones_rut',
+        'inspecciones_email', // ← NUEVO
+        'inspecciones_patente',
+        'inspecciones_marca',
+        'inspecciones_modelo',
+        'inspecciones_n_poliza',
+        'inspecciones_direccion',
+        'inspecciones_celular',
+        'inspecciones_telefono',
+        'inspecciones_observaciones', // ← NUEVO
         'cia_id',
+        'comunas_id',
+        'tipo_inspeccion_id', // ← NUEVO
+        'tipo_carroceria_id', // ← NUEVO
         'user_id',
-        'fecha_creacion',
-        'estado'
-    ];
+        'estado_id' // ← CAMBIO: ahora es estado_id en lugar de estado
+    ]; 
 
     // Dates
     protected $useTimestamps = true;
@@ -226,9 +229,15 @@ class InspeccionesModel extends Model
     {
         $total = $this->countAllResults();
         
-        $por_estado = $this->select('inspecciones_estado, COUNT(*) as total')
-            ->groupBy('inspecciones_estado')
-            ->findAll();
+        // Obtener estadísticas por estado_id con nombres de estados
+        $por_estado = $this->select('
+            estados.estado_nombre,
+            estados.estado_color,
+            COUNT(*) as total
+        ')
+        ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left')
+        ->groupBy('inspecciones.estado_id, estados.estado_nombre, estados.estado_color')
+        ->findAll();
 
         $hoy = $this->where('DATE(inspecciones_created_at)', date('Y-m-d'))
             ->countAllResults();
@@ -239,4 +248,29 @@ class InspeccionesModel extends Model
             'creadas_hoy' => $hoy
         ];
     }
+    public function getEstadisticasByUser($userId)
+    {
+        $total = $this->where('user_id', $userId)->countAllResults();
+        
+        $por_estado = $this->select('
+            estados.estado_nombre,
+            estados.estado_color,
+            COUNT(*) as total
+        ')
+        ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left')
+        ->where('inspecciones.user_id', $userId)
+        ->groupBy('inspecciones.estado_id, estados.estado_nombre, estados.estado_color')
+        ->findAll();
+
+        $hoy = $this->where('user_id', $userId)
+            ->where('DATE(inspecciones_created_at)', date('Y-m-d'))
+            ->countAllResults();
+
+        return [
+            'total' => $total,
+            'por_estado' => $por_estado,
+            'creadas_hoy' => $hoy
+        ];
+    }
+
 } 

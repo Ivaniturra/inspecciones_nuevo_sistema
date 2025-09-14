@@ -384,71 +384,63 @@
             </div>
         </div>
     </div>
-</div>
-<?= $this->endSection() ?>
-
-<?= $this->section('js') ?>
+</div> 
 <script>
-/* Prueba mínima para confirmar que la sección js sí se renderiza */
-console.log('inspecciones.js cargado');
+console.log('inline JS alcanzado');
 
-(function () {
-  // Si no hay jQuery, salimos con aviso claro
-  if (typeof window.jQuery === 'undefined') {
-    console.error('jQuery no está cargado. Inclúyelo antes de este script.');
-    return;
+(function waitForjQuery() {
+  if (!window.jQuery) {
+    console.warn('Esperando jQuery...');
+    return setTimeout(waitForjQuery, 50);
   }
 
-  const $doc = $(document);
+  // Cuando jQuery esté listo y el DOM cargado:
+  $(function () {
+    console.log('DOM listo y jQuery OK');
 
-  // Helper: encuentra el div.invalid-feedback sin depender de la estructura
-  function getFeedback($el) {
-    // busca en el contenedor de la fila
-    let $fb = $el.siblings('.invalid-feedback');
-    if ($fb.length === 0) {
-      $fb = $el.closest('.mb-3, .form-group').find('> .invalid-feedback, .invalid-feedback');
+    // ====== TU CÓDIGO EXISTENTE ======
+    // Helper para feedback de validación
+    function getFeedback($el) {
+      let $fb = $el.siblings('.invalid-feedback');
+      if ($fb.length === 0) {
+        $fb = $el.closest('.mb-3, .form-group').find('> .invalid-feedback, .invalid-feedback');
+      }
+      return $fb.first();
     }
-    return $fb.first();
-  }
 
-  // Validación RUT
-  function validarRUT(rut) {
-    rut = (rut || '').replace(/[^0-9kK]/g, '');
-    if (rut.length < 8 || rut.length > 9) return false;
-    const dv = rut.slice(-1).toLowerCase();
-    const numero = rut.slice(0, -1);
-    let suma = 0, mul = 2;
-    for (let i = numero.length - 1; i >= 0; i--) {
-      suma += parseInt(numero[i], 10) * mul;
-      mul = (mul === 7) ? 2 : mul + 1;
+    function validarRUT(rut) {
+      rut = (rut || '').replace(/[^0-9kK]/g, '');
+      if (rut.length < 8 || rut.length > 9) return false;
+      const dv = rut.slice(-1).toLowerCase();
+      const numero = rut.slice(0, -1);
+      let suma = 0, mul = 2;
+      for (let i = numero.length - 1; i >= 0; i--) {
+        suma += parseInt(numero[i], 10) * mul;
+        mul = (mul === 7) ? 2 : mul + 1;
+      }
+      const resto = suma % 11;
+      const dvCalc = (resto === 0) ? '0' : (resto === 1 ? 'k' : String(11 - resto));
+      return dv === dvCalc;
     }
-    const resto = suma % 11;
-    const dvCalc = (resto === 0) ? '0' : (resto === 1 ? 'k' : String(11 - resto));
-    return dv === dvCalc;
-  }
 
-  // Validación email
-  function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '');
-  }
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '');
+    }
 
-  function showAlert(type, message) {
-    const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
-    const icon = type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
-    const html = `
-      <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-        <i class="${icon} me-2"></i>${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>`;
-    $('.container-fluid').prepend(html);
-    setTimeout(() => $('.alert').fadeOut(), 5000);
-    $('html, body').animate({ scrollTop: 0 }, 500);
-  }
+    function showAlert(type, message) {
+      const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
+      const icon = type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+      const html = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+          <i class="${icon} me-2"></i>${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>`;
+      $('.container-fluid').prepend(html);
+      setTimeout(() => $('.alert').fadeOut(), 5000);
+      $('html, body').animate({ scrollTop: 0 }, 500);
+    }
 
-  $doc.ready(function () {
-    console.log('DOM listo');
-
-    // Cambio de Tipo de Inspección → cargar carrocerías + info
+    // Cambio de tipo inspección → cargar carrocerías e info
     $('#tipo_inspeccion_id').on('change', function () {
       const tipoInspeccionId = $(this).val();
       const $carroceria = $('#tipo_carroceria_id');
@@ -462,125 +454,93 @@ console.log('inspecciones.js cargado');
         return;
       }
 
-      // Cargar carrocerías
       $.ajax({
         url: '<?= base_url("inspecciones/carrocerias/") ?>' + encodeURIComponent(tipoInspeccionId),
         method: 'GET',
-        dataType: 'json',
-        success: function (response) {
-          if (response && response.success) {
-            let options = '<option value="">Seleccione carrocería</option>';
-            const entries = response.carrocerias || {};
-            if (Object.keys(entries).length > 0) {
-              $.each(entries, function (id, nombre) {
-                options += `<option value="${id}">${nombre}</option>`;
-              });
-              $carroceria.prop('disabled', false);
-            } else {
-              options = '<option value="">No hay carrocerías disponibles</option>';
-            }
-            $carroceria.html(options);
+        dataType: 'json'
+      }).done(function (response) {
+        if (response && response.success) {
+          let options = '<option value="">Seleccione carrocería</option>';
+          const entries = response.carrocerias || {};
+          if (Object.keys(entries).length > 0) {
+            $.each(entries, function (id, nombre) { options += `<option value="${id}">${nombre}</option>`; });
+            $carroceria.prop('disabled', false);
           } else {
-            $carroceria.html('<option value="">No se pudo cargar</option>');
+            options = '<option value="">No hay carrocerías disponibles</option>';
           }
-        },
-        error: function () {
-          $carroceria.html('<option value="">Error al cargar carrocerías</option>');
+          $carroceria.html(options);
+        } else {
+          $carroceria.html('<option value="">No se pudo cargar</option>');
         }
+      }).fail(function () {
+        $carroceria.html('<option value="">Error al cargar carrocerías</option>');
       });
 
-      // Cargar info del tipo de inspección
       $.ajax({
         url: '<?= base_url("inspecciones/tipo-inspeccion-info/") ?>' + encodeURIComponent(tipoInspeccionId),
         method: 'GET',
-        dataType: 'json',
-        success: function (response) {
-          if (response && response.success) {
-            const tipo = response.tipo || {};
-            const info = response.info_adicional || {};
-
-            $('#descripcionTipoInspeccion').text(tipo.tipo_inspeccion_descripcion || '');
-            $('#duracionEstimada').text(info.duracion_estimada || '');
-            $('#costoAproximado').text(info.costo_aproximado || '');
-
-            // Cambiar color del alert
-            const $alert = $info.find('.alert');
-            $alert.removeClass('alert-info alert-warning alert-success alert-danger');
-            $alert.addClass('alert-' + (info.color_badge || 'info'));
-
-            $info.show();
-          }
-        },
-        error: function () {
-          console.error('Error al cargar información del tipo de inspección');
+        dataType: 'json'
+      }).done(function (response) {
+        if (response && response.success) {
+          const tipo = response.tipo || {};
+          const info = response.info_adicional || {};
+          $('#descripcionTipoInspeccion').text(tipo.tipo_inspeccion_descripcion || '');
+          $('#duracionEstimada').text(info.duracion_estimada || '');
+          $('#costoAproximado').text(info.costo_aproximado || '');
+          const $alert = $info.find('.alert');
+          $alert.removeClass('alert-info alert-warning alert-success alert-danger');
+          $alert.addClass('alert-' + (info.color_badge || 'info'));
+          $info.show();
         }
       });
     });
 
-    // Formateo RUT
+    // Formateos y validaciones
     $('#inspecciones_rut').on('input', function () {
       let rut = $(this).val().replace(/[^0-9kK]/g, '');
-      if (rut.length > 1) {
-        rut = rut.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + rut.slice(-1);
-      }
+      if (rut.length > 1) rut = rut.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + rut.slice(-1);
       $(this).val(rut);
     });
 
-    // Celular (con prefijo +569 fijo, 8 dígitos visibles)
     $('#inspecciones_celular').on('input', function () {
-      let value = $(this).val().replace(/[^0-9]/g, '');
-      if (value.length > 8) value = value.substring(0, 8);
-      if (value.length > 4) value = value.substring(0, 4) + ' ' + value.substring(4);
-      $(this).val(value);
+      let v = $(this).val().replace(/[^0-9]/g, '');
+      if (v.length > 8) v = v.substring(0, 8);
+      if (v.length > 4) v = v.substring(0, 4) + ' ' + v.substring(4);
+      $(this).val(v);
     });
 
-    // Teléfono fijo
     $('#inspecciones_telefono').on('input', function () {
-      let value = $(this).val().replace(/[^0-9]/g, '');
-      if (value.length > 9) value = value.substring(0, 9);
-      if (value.length > 2) {
-        value = (value.length <= 6)
-          ? value.substring(0, 2) + ' ' + value.substring(2)
-          : value.substring(0, 2) + ' ' + value.substring(2, 5) + ' ' + value.substring(5);
+      let v = $(this).val().replace(/[^0-9]/g, '');
+      if (v.length > 9) v = v.substring(0, 9);
+      if (v.length > 2) {
+        v = (v.length <= 6) ? v.substring(0, 2) + ' ' + v.substring(2)
+                           : v.substring(0, 2) + ' ' + v.substring(2, 5) + ' ' + v.substring(5);
       }
-      $(this).val(value);
+      $(this).val(v);
     });
 
-    // Validación en blur con feedback correcto
     $('input[required], select[required]').on('blur', function () {
-      const $el = $(this);
-      const value = ($el.val() || '').toString().trim();
-      const $fb = getFeedback($el);
-      if (!value) {
-        $el.addClass('is-invalid');
-        $fb.text('Este campo es obligatorio');
-      } else {
-        $el.removeClass('is-invalid');
-        $fb.text('');
-      }
+      const $el = $(this), val = ($el.val() || '').toString().trim(), $fb = getFeedback($el);
+      if (!val) { $el.addClass('is-invalid'); $fb.text('Este campo es obligatorio'); }
+      else { $el.removeClass('is-invalid'); $fb.text(''); }
     });
 
     $('#inspecciones_rut').on('blur', function () {
-      const $el = $(this), rut = $el.val();
-      const $fb = getFeedback($el);
-      if (rut && !validarRUT(rut)) {
-        $el.addClass('is-invalid'); $fb.text('RUT inválido');
-      } else { $el.removeClass('is-invalid'); $fb.text(''); }
+      const $el = $(this), rut = $el.val(), $fb = getFeedback($el);
+      if (rut && !validarRUT(rut)) { $el.addClass('is-invalid'); $fb.text('RUT inválido'); }
+      else { $el.removeClass('is-invalid'); $fb.text(''); }
     });
 
     $('#inspecciones_email').on('blur', function () {
-      const $el = $(this), email = $el.val();
-      const $fb = getFeedback($el);
-      if (email && !isValidEmail(email)) {
-        $el.addClass('is-invalid'); $fb.text('Email inválido');
-      } else { $el.removeClass('is-invalid'); $fb.text(''); }
+      const $el = $(this), email = $el.val(), $fb = getFeedback($el);
+      if (email && !isValidEmail(email)) { $el.addClass('is-invalid'); $fb.text('Email inválido'); }
+      else { $el.removeClass('is-invalid'); $fb.text(''); }
     });
 
-    // Envío del formulario
+    // Submit
     $('#inspeccionForm').on('submit', function (e) {
       e.preventDefault();
 
-      // limpiar errores
       $('.is-invalid').removeClass('is-invalid');
       $('.invalid-feedback').text('');
 
@@ -589,37 +549,28 @@ console.log('inspecciones.js cargado');
         const $el = $(this);
         if (!($el.val() || '').toString().trim()) {
           const $fb = getFeedback($el);
-          $el.addClass('is-invalid');
-          $fb.text('Este campo es obligatorio');
-          hasErrors = true;
+          $el.addClass('is-invalid'); $fb.text('Este campo es obligatorio'); hasErrors = true;
         }
       });
 
       const rut = $('#inspecciones_rut').val();
       if (rut && !validarRUT(rut)) {
-        const $el = $('#inspecciones_rut');
-        getFeedback($el).text('RUT inválido');
+        const $el = $('#inspecciones_rut'); getFeedback($el).text('RUT inválido');
         $el.addClass('is-invalid'); hasErrors = true;
       }
 
       const email = $('#inspecciones_email').val();
       if (email && !isValidEmail(email)) {
-        const $el = $('#inspecciones_email');
-        getFeedback($el).text('Email inválido');
+        const $el = $('#inspecciones_email'); getFeedback($el).text('Email inválido');
         $el.addClass('is-invalid'); hasErrors = true;
       }
 
-      if (hasErrors) {
-        showAlert('error', 'Por favor corrija los errores en el formulario');
-        return;
-      }
+      if (hasErrors) { showAlert('error', 'Por favor corrija los errores en el formulario'); return; }
 
-      // spinner + submit
       $('#spinnerContainer').show();
       $('#btnGuardar').prop('disabled', true);
 
-      const form = document.getElementById('inspeccionForm');
-      const formData = new FormData(form);
+      const formData = new FormData(document.getElementById('inspeccionForm'));
 
       $.ajax({
         url: '<?= base_url("corredor/store") ?>',
@@ -627,44 +578,32 @@ console.log('inspecciones.js cargado');
         data: formData,
         processData: false,
         contentType: false,
-        dataType: 'json',
-        success: function (response) {
-          console.log('Respuesta exitosa:', response);
-          if (response && response.success) {
-            $('#inspeccionId').text('#' + response.id);
-            if (response.whatsapp_url) $('#whatsappBtn').attr('href', response.whatsapp_url);
-
-            // Bootstrap 5 Modal
-            const modal = new bootstrap.Modal(document.getElementById('successModal'));
-            modal.show();
-          } else {
-            handleErrors(response || {});
-          }
-        },
-        error: function (xhr) {
-          console.error('Error AJAX:', xhr);
-          let response = {};
-          try { response = JSON.parse(xhr.responseText); }
-          catch { response = { message: 'Error de conexión' }; }
-          handleErrors(response);
-        },
-        complete: function () {
-          $('#spinnerContainer').hide();
-          $('#btnGuardar').prop('disabled', false);
+        dataType: 'json'
+      }).done(function (response) {
+        if (response && response.success) {
+          $('#inspeccionId').text('#' + response.id);
+          if (response.whatsapp_url) $('#whatsappBtn').attr('href', response.whatsapp_url);
+          const modal = new bootstrap.Modal(document.getElementById('successModal'));
+          modal.show();
+        } else {
+          handleErrors(response || {});
         }
+      }).fail(function (xhr) {
+        let response = {};
+        try { response = JSON.parse(xhr.responseText); } catch { response = { message: 'Error de conexión' }; }
+        handleErrors(response);
+      }).always(function () {
+        $('#spinnerContainer').hide();
+        $('#btnGuardar').prop('disabled', false);
       });
-    });
 
-    function handleErrors(response) {
-      if (response.errors && Array.isArray(response.errors)) {
-        response.errors.forEach(err => showAlert('error', err));
-      } else if (response.message) {
-        showAlert('error', response.message);
-      } else {
-        showAlert('error', 'Error desconocido al crear la inspección');
+      function handleErrors(response) {
+        if (response.errors && Array.isArray(response.errors)) response.errors.forEach(err => showAlert('error', err));
+        else if (response.message) showAlert('error', response.message);
+        else showAlert('error', 'Error desconocido al crear la inspección');
       }
-    }
+    });
+    // ====== FIN TU CÓDIGO ======
   });
 })();
-</script> 
-<?= $this->endSection() ?>
+</script>

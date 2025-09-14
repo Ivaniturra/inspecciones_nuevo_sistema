@@ -92,7 +92,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     // ===================================================
     // INSPECCIONES - GESTIÓN ADMINISTRATIVA COMPLETA
     // ===================================================
-    $routes->group('inspecciones', static function($routes) {
+    $routes->group('inspecciones', ['filter' => 'role:3,7'], static function($routes) {
         $routes->get('/', 'Inspecciones::index');
         $routes->get('create', 'Inspecciones::create');
         $routes->post('store', 'Inspecciones::store');
@@ -105,17 +105,23 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->post('agregarComentario', 'Inspecciones::agregarComentario');
         $routes->post('cambiarEstado', 'Inspecciones::cambiarEstado');
         $routes->delete('eliminarComentario/(:num)', 'Inspecciones::eliminarComentario/$1');
-
-          $routes->get('api/carrocerias/(:num)', 'Inspecciones::getCarroceriasByTipo/$1');
-        $routes->get('api/tipo-inspeccion-info/(:num)', 'Inspecciones::getTipoInspeccionInfo/$1');
-        $routes->get('api/tipos-inspeccion', 'Inspecciones::getTiposInspeccion');
+ 
         
         // Reportes administrativos
         $routes->get('reportes', 'Inspecciones::reportes');
         $routes->get('estadisticas', 'Inspecciones::estadisticas');
         $routes->get('export/(:segment)', 'Inspecciones::export/$1');
     });
-
+    
+$routes->group('api', static function($routes) {
+    $routes->get('comunas/search', 'Api\ComunasController::search');
+    $routes->get('estados/list', 'Api\EstadosController::list');
+    $routes->get('cias/search', 'Api\CiasController::search');
+    $routes->post('inspecciones/status', 'Api\InspeccionesController::updateStatus');
+    $routes->get('api/tipos-inspeccion', 'Inspecciones::getTiposInspeccion'); 
+    $routes->get('tipos-inspeccion/(:num)', 'Corredor::getTipoInspeccionInfo/$1');
+    $routes->get('carrocerias/(:num)', 'Corredor::getCarroceriasByTipo/$1');
+});
     // ===================================================
     // COMPAÑÍAS DE SEGUROS (solo super admin)
     // ===================================================
@@ -230,22 +236,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->post('delete/(:num)', 'TipoVehiculos::delete/$1');
         $routes->post('toggleStatus/(:num)', 'TipoVehiculos::toggleStatus/$1');
         $routes->get('getSelect', 'TipoVehiculos::getSelect');
-    });
-
-    // ===================================================
-    // API ENDPOINTS (sin filtros de rol adicionales)
-    // ===================================================
-    $routes->group('api', static function($routes) {
-        $routes->get('comunas/search', 'Api\ComunasController::search');
-        $routes->get('estados/list', 'Api\EstadosController::list');
-        $routes->get('cias/search', 'Api\CiasController::search');
-        $routes->post('inspecciones/status', 'Api\InspeccionesController::updateStatus');
-    });
-
-    // ===================================================
-    // RUTAS DE REDIRECCIÓN Y COMPATIBILIDAD
-    // ===================================================
-    
+    }); 
     // Redirecciones para compatibilidad con URLs anteriores
     $routes->get('inspecciones-old', 'Corredor::index');
     $routes->get('dashboard-corredor', 'Corredor::index');

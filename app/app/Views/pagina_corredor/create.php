@@ -389,301 +389,282 @@
 
 <?= $this->section('js') ?>
 <script>
-$(document).ready(function() {
-    alert("aa")
-    // Manejar cambio de tipo de inspección
-    $('#tipo_inspeccion_id').on('change', function() {
-        const tipoInspeccionId = $(this).val();
-        const $carroceria = $('#tipo_carroceria_id');
-        const $info = $('#tipoInspeccionInfo');
-        
-        // Limpiar carrocerías
-        $carroceria.html('<option value="">Cargando...</option>').prop('disabled', true);
-        $info.hide();
-        
-        if (tipoInspeccionId) {
-            // Cargar carrocerías por AJAX
-            $.ajax({
-                url: '<?= base_url("inspecciones/carrocerias/") ?>' + tipoInspeccionId,
-                method: 'GET',
-                success: function(response) {
-                    if (response.success) {
-                        let options = '<option value="">Seleccione carrocería</option>';
-                        
-                        if (Object.keys(response.carrocerias).length > 0) {
-                            $.each(response.carrocerias, function(id, nombre) {
-                                options += `<option value="${id}">${nombre}</option>`;
-                            });
-                            $carroceria.prop('disabled', false);
-                        } else {
-                            options = '<option value="">No hay carrocerías disponibles</option>';
-                        }
-                        
-                        $carroceria.html(options);
-                    }
-                },
-                error: function() {
-                    $carroceria.html('<option value="">Error al cargar carrocerías</option>');
-                }
-            });
-            
-            // Cargar información del tipo de inspección
-            alert(tipoInspeccionId)
-            $.ajax({
-                url: '<?= base_url("inspecciones/tipo-inspeccion-info/") ?>' + tipoInspeccionId,
-                method: 'GET',
-                success: function(response) {
-                    if (response.success) {
-                        const tipo = response.tipo;
-                        const info = response.info_adicional;
-                        
-                        $('#descripcionTipoInspeccion').text(tipo.tipo_inspeccion_descripcion);
-                        $('#duracionEstimada').text(info.duracion_estimada);
-                        $('#costoAproximado').text(info.costo_aproximado);
-                        
-                        // Cambiar color del alert según el tipo
-                        const $alert = $info.find('.alert');
-                        $alert.removeClass('alert-info alert-warning alert-success');
-                        $alert.addClass('alert-' + info.color_badge);
-                        
-                        $info.show();
-                    }
-                },
-                error: function() {
-                    console.error('Error al cargar información del tipo de inspección');
-                }
-            });
-        } else {
-            $carroceria.html('<option value="">Primero seleccione tipo de inspección</option>').prop('disabled', true);
-        }
-    });
+/* Prueba mínima para confirmar que la sección js sí se renderiza */
+console.log('inspecciones.js cargado');
 
-    // Formatear RUT mientras se escribe
-    $('#inspecciones_rut').on('input', function() {
-        let rut = $(this).val().replace(/[^0-9kK]/g, '');
-        if (rut.length > 1) {
-            rut = rut.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + rut.slice(-1);
-        }
-        $(this).val(rut);
-    });
+(function () {
+  // Si no hay jQuery, salimos con aviso claro
+  if (typeof window.jQuery === 'undefined') {
+    console.error('jQuery no está cargado. Inclúyelo antes de este script.');
+    return;
+  }
 
-    // Formatear celular para que solo permita números
-    $('#inspecciones_celular').on('input', function() {
-        let value = $(this).val().replace(/[^0-9]/g, '');
-        if (value.length > 8) value = value.substring(0, 8);
-        
-        // Formatear con espacio
-        if (value.length > 4) {
-            value = value.substring(0, 4) + ' ' + value.substring(4);
-        }
-        $(this).val(value);
-    });
+  const $doc = $(document);
 
-    // Formatear teléfono fijo
-    $('#inspecciones_telefono').on('input', function() {
-        let value = $(this).val().replace(/[^0-9]/g, '');
-        if (value.length > 9) value = value.substring(0, 9);
-        
-        // Formatear según longitud
-        if (value.length > 2) {
-            if (value.length <= 6) {
-                value = value.substring(0, 2) + ' ' + value.substring(2);
+  // Helper: encuentra el div.invalid-feedback sin depender de la estructura
+  function getFeedback($el) {
+    // busca en el contenedor de la fila
+    let $fb = $el.siblings('.invalid-feedback');
+    if ($fb.length === 0) {
+      $fb = $el.closest('.mb-3, .form-group').find('> .invalid-feedback, .invalid-feedback');
+    }
+    return $fb.first();
+  }
+
+  // Validación RUT
+  function validarRUT(rut) {
+    rut = (rut || '').replace(/[^0-9kK]/g, '');
+    if (rut.length < 8 || rut.length > 9) return false;
+    const dv = rut.slice(-1).toLowerCase();
+    const numero = rut.slice(0, -1);
+    let suma = 0, mul = 2;
+    for (let i = numero.length - 1; i >= 0; i--) {
+      suma += parseInt(numero[i], 10) * mul;
+      mul = (mul === 7) ? 2 : mul + 1;
+    }
+    const resto = suma % 11;
+    const dvCalc = (resto === 0) ? '0' : (resto === 1 ? 'k' : String(11 - resto));
+    return dv === dvCalc;
+  }
+
+  // Validación email
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '');
+  }
+
+  function showAlert(type, message) {
+    const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
+    const icon = type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+    const html = `
+      <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+        <i class="${icon} me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>`;
+    $('.container-fluid').prepend(html);
+    setTimeout(() => $('.alert').fadeOut(), 5000);
+    $('html, body').animate({ scrollTop: 0 }, 500);
+  }
+
+  $doc.ready(function () {
+    console.log('DOM listo');
+
+    // Cambio de Tipo de Inspección → cargar carrocerías + info
+    $('#tipo_inspeccion_id').on('change', function () {
+      const tipoInspeccionId = $(this).val();
+      const $carroceria = $('#tipo_carroceria_id');
+      const $info = $('#tipoInspeccionInfo');
+
+      $carroceria.html('<option value="">Cargando...</option>').prop('disabled', true);
+      $info.hide();
+
+      if (!tipoInspeccionId) {
+        $carroceria.html('<option value="">Primero seleccione tipo de inspección</option>').prop('disabled', true);
+        return;
+      }
+
+      // Cargar carrocerías
+      $.ajax({
+        url: '<?= base_url("inspecciones/carrocerias/") ?>' + encodeURIComponent(tipoInspeccionId),
+        method: 'GET',
+        dataType: 'json',
+        success: function (response) {
+          if (response && response.success) {
+            let options = '<option value="">Seleccione carrocería</option>';
+            const entries = response.carrocerias || {};
+            if (Object.keys(entries).length > 0) {
+              $.each(entries, function (id, nombre) {
+                options += `<option value="${id}">${nombre}</option>`;
+              });
+              $carroceria.prop('disabled', false);
             } else {
-                value = value.substring(0, 2) + ' ' + value.substring(2, 5) + ' ' + value.substring(5);
+              options = '<option value="">No hay carrocerías disponibles</option>';
             }
+            $carroceria.html(options);
+          } else {
+            $carroceria.html('<option value="">No se pudo cargar</option>');
+          }
+        },
+        error: function () {
+          $carroceria.html('<option value="">Error al cargar carrocerías</option>');
         }
-        $(this).val(value);
+      });
+
+      // Cargar info del tipo de inspección
+      $.ajax({
+        url: '<?= base_url("inspecciones/tipo-inspeccion-info/") ?>' + encodeURIComponent(tipoInspeccionId),
+        method: 'GET',
+        dataType: 'json',
+        success: function (response) {
+          if (response && response.success) {
+            const tipo = response.tipo || {};
+            const info = response.info_adicional || {};
+
+            $('#descripcionTipoInspeccion').text(tipo.tipo_inspeccion_descripcion || '');
+            $('#duracionEstimada').text(info.duracion_estimada || '');
+            $('#costoAproximado').text(info.costo_aproximado || '');
+
+            // Cambiar color del alert
+            const $alert = $info.find('.alert');
+            $alert.removeClass('alert-info alert-warning alert-success alert-danger');
+            $alert.addClass('alert-' + (info.color_badge || 'info'));
+
+            $info.show();
+          }
+        },
+        error: function () {
+          console.error('Error al cargar información del tipo de inspección');
+        }
+      });
     });
 
-    // Validación y envío del formulario
-    $('#inspeccionForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        // Limpiar errores previos
-        $('.is-invalid').removeClass('is-invalid');
-        $('.invalid-feedback').text('');
-        
-        // Validación básica antes de enviar
-        let hasErrors = false;
-        
-        // Validar campos requeridos
-        $('input[required], select[required]').each(function() {
-            if (!$(this).val().trim()) {
-                $(this).addClass('is-invalid');
-                $(this).siblings('.invalid-feedback').text('Este campo es obligatorio');
-                hasErrors = true;
-            }
-        });
-        
-        // Validar RUT
-        const rut = $('#inspecciones_rut').val();
-        if (rut && !validarRUT(rut)) {
-            $('#inspecciones_rut').addClass('is-invalid');
-            $('#inspecciones_rut').siblings('.invalid-feedback').text('RUT inválido');
-            hasErrors = true;
-        }
-        
-        // Validar email si se ingresó
-        const email = $('#inspecciones_email').val();
-        if (email && !isValidEmail(email)) {
-            $('#inspecciones_email').addClass('is-invalid');
-            $('#inspecciones_email').siblings('.invalid-feedback').text('Email inválido');
-            hasErrors = true;
-        }
-        
-        if (hasErrors) {
-            showAlert('error', 'Por favor corrija los errores en el formulario');
-            return;
-        }
-        
-        // Mostrar spinner
-        $('#spinnerContainer').show();
-        $('#btnGuardar').prop('disabled', true);
-        
-        // Preparar datos
-        const formData = new FormData(this);
-        
-        // Enviar AJAX
-        $.ajax({
-            url: '<?= base_url("corredor/store") ?>',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                console.log('Respuesta exitosa:', response);
-                
-                if (response.success) {
-                    // Actualizar modal con información
-                    $('#inspeccionId').text('#' + response.id);
-                    if (response.whatsapp_url) {
-                        $('#whatsappBtn').attr('href', response.whatsapp_url);
-                    }
-                    
-                    // Mostrar modal
-                    $('#successModal').modal('show');
-                } else {
-                    handleErrors(response);
-                }
-            },
-            error: function(xhr) {
-                console.error('Error AJAX:', xhr);
-                let response = {};
-                try {
-                    response = JSON.parse(xhr.responseText);
-                } catch (e) {
-                    response = { message: 'Error de conexión' };
-                }
-                handleErrors(response);
-            },
-            complete: function() {
-                $('#spinnerContainer').hide();
-                $('#btnGuardar').prop('disabled', false);
-            }
-        });
+    // Formateo RUT
+    $('#inspecciones_rut').on('input', function () {
+      let rut = $(this).val().replace(/[^0-9kK]/g, '');
+      if (rut.length > 1) {
+        rut = rut.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + rut.slice(-1);
+      }
+      $(this).val(rut);
     });
-    
+
+    // Celular (con prefijo +569 fijo, 8 dígitos visibles)
+    $('#inspecciones_celular').on('input', function () {
+      let value = $(this).val().replace(/[^0-9]/g, '');
+      if (value.length > 8) value = value.substring(0, 8);
+      if (value.length > 4) value = value.substring(0, 4) + ' ' + value.substring(4);
+      $(this).val(value);
+    });
+
+    // Teléfono fijo
+    $('#inspecciones_telefono').on('input', function () {
+      let value = $(this).val().replace(/[^0-9]/g, '');
+      if (value.length > 9) value = value.substring(0, 9);
+      if (value.length > 2) {
+        value = (value.length <= 6)
+          ? value.substring(0, 2) + ' ' + value.substring(2)
+          : value.substring(0, 2) + ' ' + value.substring(2, 5) + ' ' + value.substring(5);
+      }
+      $(this).val(value);
+    });
+
+    // Validación en blur con feedback correcto
+    $('input[required], select[required]').on('blur', function () {
+      const $el = $(this);
+      const value = ($el.val() || '').toString().trim();
+      const $fb = getFeedback($el);
+      if (!value) {
+        $el.addClass('is-invalid');
+        $fb.text('Este campo es obligatorio');
+      } else {
+        $el.removeClass('is-invalid');
+        $fb.text('');
+      }
+    });
+
+    $('#inspecciones_rut').on('blur', function () {
+      const $el = $(this), rut = $el.val();
+      const $fb = getFeedback($el);
+      if (rut && !validarRUT(rut)) {
+        $el.addClass('is-invalid'); $fb.text('RUT inválido');
+      } else { $el.removeClass('is-invalid'); $fb.text(''); }
+    });
+
+    $('#inspecciones_email').on('blur', function () {
+      const $el = $(this), email = $el.val();
+      const $fb = getFeedback($el);
+      if (email && !isValidEmail(email)) {
+        $el.addClass('is-invalid'); $fb.text('Email inválido');
+      } else { $el.removeClass('is-invalid'); $fb.text(''); }
+    });
+
+    // Envío del formulario
+    $('#inspeccionForm').on('submit', function (e) {
+      e.preventDefault();
+
+      // limpiar errores
+      $('.is-invalid').removeClass('is-invalid');
+      $('.invalid-feedback').text('');
+
+      let hasErrors = false;
+      $('input[required], select[required]').each(function () {
+        const $el = $(this);
+        if (!($el.val() || '').toString().trim()) {
+          const $fb = getFeedback($el);
+          $el.addClass('is-invalid');
+          $fb.text('Este campo es obligatorio');
+          hasErrors = true;
+        }
+      });
+
+      const rut = $('#inspecciones_rut').val();
+      if (rut && !validarRUT(rut)) {
+        const $el = $('#inspecciones_rut');
+        getFeedback($el).text('RUT inválido');
+        $el.addClass('is-invalid'); hasErrors = true;
+      }
+
+      const email = $('#inspecciones_email').val();
+      if (email && !isValidEmail(email)) {
+        const $el = $('#inspecciones_email');
+        getFeedback($el).text('Email inválido');
+        $el.addClass('is-invalid'); hasErrors = true;
+      }
+
+      if (hasErrors) {
+        showAlert('error', 'Por favor corrija los errores en el formulario');
+        return;
+      }
+
+      // spinner + submit
+      $('#spinnerContainer').show();
+      $('#btnGuardar').prop('disabled', true);
+
+      const form = document.getElementById('inspeccionForm');
+      const formData = new FormData(form);
+
+      $.ajax({
+        url: '<?= base_url("corredor/store") ?>',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        success: function (response) {
+          console.log('Respuesta exitosa:', response);
+          if (response && response.success) {
+            $('#inspeccionId').text('#' + response.id);
+            if (response.whatsapp_url) $('#whatsappBtn').attr('href', response.whatsapp_url);
+
+            // Bootstrap 5 Modal
+            const modal = new bootstrap.Modal(document.getElementById('successModal'));
+            modal.show();
+          } else {
+            handleErrors(response || {});
+          }
+        },
+        error: function (xhr) {
+          console.error('Error AJAX:', xhr);
+          let response = {};
+          try { response = JSON.parse(xhr.responseText); }
+          catch { response = { message: 'Error de conexión' }; }
+          handleErrors(response);
+        },
+        complete: function () {
+          $('#spinnerContainer').hide();
+          $('#btnGuardar').prop('disabled', false);
+        }
+      });
+    });
+
     function handleErrors(response) {
-        if (response.errors && Array.isArray(response.errors)) {
-            // Mostrar errores específicos
-            response.errors.forEach(function(error) {
-                showAlert('error', error);
-            });
-        } else if (response.message) {
-            showAlert('error', response.message);
-        } else {
-            showAlert('error', 'Error desconocido al crear la inspección');
-        }
+      if (response.errors && Array.isArray(response.errors)) {
+        response.errors.forEach(err => showAlert('error', err));
+      } else if (response.message) {
+        showAlert('error', response.message);
+      } else {
+        showAlert('error', 'Error desconocido al crear la inspección');
+      }
     }
-    
-    function showAlert(type, message) {
-        const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
-        const icon = type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
-        
-        const alert = `
-            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                <i class="${icon} me-2"></i>${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
-        
-        $('.container-fluid').prepend(alert);
-        
-        // Auto-ocultar después de 5 segundos
-        setTimeout(function() {
-            $('.alert').fadeOut();
-        }, 5000);
-        
-        // Scroll al top
-        $('html, body').animate({ scrollTop: 0 }, 500);
-    }
-    
-    // Validación RUT
-    function validarRUT(rut) {
-        rut = rut.replace(/[^0-9kK]/g, '');
-        
-        if (rut.length < 8 || rut.length > 9) return false;
-        
-        const dv = rut.slice(-1).toLowerCase();
-        const numero = rut.slice(0, -1);
-        
-        let suma = 0;
-        let multiplicador = 2;
-        
-        for (let i = numero.length - 1; i >= 0; i--) {
-            suma += parseInt(numero[i]) * multiplicador;
-            multiplicador = (multiplicador === 7) ? 2 : multiplicador + 1;
-        }
-        
-        const resto = suma % 11;
-        const dvCalculado = (resto === 0) ? '0' : ((resto === 1) ? 'k' : String(11 - resto));
-        
-        return dv === dvCalculado;
-    }
-    
-    // Validación email
-    function isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-    
-    // Validación en tiempo real
-    $('input[required], select[required]').on('blur', function() {
-        const $this = $(this);
-        const value = $this.val().trim();
-        
-        if (!value) {
-            $this.addClass('is-invalid');
-            $this.siblings('.invalid-feedback').text('Este campo es obligatorio');
-        } else {
-            $this.removeClass('is-invalid');
-            $this.siblings('.invalid-feedback').text('');
-        }
-    });
-    
-    // Validación específica para RUT
-    $('#inspecciones_rut').on('blur', function() {
-        const rut = $(this).val();
-        if (rut && !validarRUT(rut)) {
-            $(this).addClass('is-invalid');
-            $(this).siblings('.invalid-feedback').text('RUT inválido');
-        } else if (rut) {
-            $(this).removeClass('is-invalid');
-            $(this).siblings('.invalid-feedback').text('');
-        }
-    });
-    
-    // Validación específica para email
-    $('#inspecciones_email').on('blur', function() {
-        const email = $(this).val();
-        if (email && !isValidEmail(email)) {
-            $(this).addClass('is-invalid');
-            $(this).siblings('.invalid-feedback').text('Email inválido');
-        } else if (email) {
-            $(this).removeClass('is-invalid');
-            $(this).siblings('.invalid-feedback').text('');
-        }
-    });
-});
-</script>
+  });
+})();
+</script> 
 <?= $this->endSection() ?>

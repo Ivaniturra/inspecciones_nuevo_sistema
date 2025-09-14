@@ -225,8 +225,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
        data-bs-title="Crear Nueva Inspección">
         <i class="icon fa-solid fa-plus-circle"></i>
         <span class="label">Nueva Inspección</span>
-    </a>
-</nav>
+    </a> 
  
 </aside>
 

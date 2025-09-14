@@ -384,8 +384,11 @@
             </div>
         </div>
     </div>
-</div> 
-<script>
+</div>
+<?= $this->endSection() ?>
+
+<?= $this->section('js') ?>
+<script> 
 console.log('inline JS alcanzado');
 
 (function waitForjQuery() {
@@ -606,4 +609,5 @@ console.log('inline JS alcanzado');
     // ====== FIN TU CÓDIGO ======
   });
 })();
-</script>
+</script> 
+<?= $this->endSection() ?>

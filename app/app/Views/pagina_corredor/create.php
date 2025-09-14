@@ -395,7 +395,7 @@ $(document).ready(function() {
         const tipoInspeccionId = $(this).val();
         const $carroceria = $('#tipo_carroceria_id');
         const $info = $('#tipoInspeccionInfo');
-        
+        alert(tipoInspeccionId)
         // Limpiar carrocerías
         $carroceria.html('<option value="">Cargando...</option>').prop('disabled', true);
         $info.hide();

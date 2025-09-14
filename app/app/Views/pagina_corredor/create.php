@@ -389,6 +389,45 @@
 
 <?= $this->section('js') ?>
 <script>
+    console.log('=== INICIO DEBUG ===');
+
+// Test 1: jQuery disponible?
+if (typeof $ !== 'undefined') {
+    console.log('✅ jQuery está disponible');
+    
+    // Test 2: Document ready
+    $(function() {
+        console.log('✅ Document ready ejecutado');
+        
+        // Test 3: Elemento existe?
+        const $select = $('#tipo_inspeccion_id');
+        console.log('Elemento encontrado:', $select.length);
+        
+        if ($select.length > 0) {
+            console.log('✅ Elemento encontrado');
+            console.log('Opciones disponibles:', $select.find('option').length);
+            
+            // Test 4: Evento change
+            $select.on('change', function() {
+                const valor = $(this).val();
+                console.log('✅ Change event disparado, valor:', valor);
+                alert('ÉXITO! Valor seleccionado: ' + valor);
+            });
+            
+            console.log('✅ Event listener agregado');
+        } else {
+            console.error('❌ Elemento NO encontrado');
+            console.log('Selects disponibles:', $('select').length);
+            $('select').each(function(i) {
+                console.log(`Select ${i}:`, this.id, this.name);
+            });
+        }
+    });
+} else {
+    console.error('❌ jQuery NO está disponible');
+}
+
+console.log('=== FIN DEBUG ===');
 $(document).ready(function() {
     // Manejar cambio de tipo de inspección
     $('#tipo_inspeccion_id').on('change', function() {

@@ -389,6 +389,8 @@
 
 <?= $this->section('js') ?>
 <script>
+    
+$(document).ready(function() {
     console.log('=== INICIO DEBUG ===');
 
 // Test 1: jQuery disponible?
@@ -428,7 +430,6 @@ if (typeof $ !== 'undefined') {
 }
 
 console.log('=== FIN DEBUG ===');
-$(document).ready(function() {
     // Manejar cambio de tipo de inspección
     $('#tipo_inspeccion_id').on('change', function() {
         const tipoInspeccionId = $(this).val();

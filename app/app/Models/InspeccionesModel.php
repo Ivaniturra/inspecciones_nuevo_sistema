@@ -120,20 +120,84 @@ class InspeccionesModel extends Model
     /**
      * Obtener inspecciones con datos de compañía y usuario
      */
-    public function getInspeccionesWithDetails()
+    public function searchInspeccionesWithEstados($filters = []): array
+    {
+        $builder = $this->select('
+            inspecciones.*,
+            cias.cia_nombre,
+            users.user_nombre,
+            comunas.comunas_nombre,
+            estados.estado_nombre,
+            estados.estado_color
+        ')
+        ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
+        ->join('users', 'users.user_id = inspecciones.user_id', 'left')
+        ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left')
+        ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left');
+
+        // Aplicar filtros
+        if (!empty($filters['estado_id'])) {
+            $builder->where('inspecciones.estado_id', $filters['estado_id']);
+        }
+        
+        if (!empty($filters['user_id'])) {
+            $builder->where('inspecciones.user_id', $filters['user_id']);
+        }
+        
+        if (!empty($filters['cia_id'])) {
+            $builder->where('inspecciones.cia_id', $filters['cia_id']);
+        }
+        
+        if (!empty($filters['fecha_desde'])) {
+            $builder->where('inspecciones.inspecciones_created_at >=', $filters['fecha_desde']);
+        }
+        
+        if (!empty($filters['fecha_hasta'])) {
+            $builder->where('inspecciones.inspecciones_created_at <=', $filters['fecha_hasta']);
+        }
+
+        return $builder->orderBy('inspecciones.inspecciones_created_at', 'DESC')
+                    ->findAll();
+    }
+    public function getInspeccionWithDetails($id): ?array
     {
         return $this->select('
             inspecciones.*,
             cias.cia_nombre,
+            cias.cia_logo,
             users.user_nombre,
-            comunas.comunas_nombre
+            users.user_email,
+            comunas.comunas_nombre,
+            estados.estado_nombre,
+            estados.estado_color
         ')
         ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
         ->join('users', 'users.user_id = inspecciones.user_id', 'left')
-        ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left') // ← Agregar
+        ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left')
+        ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left') // ← NUEVO
+        ->where('inspecciones.inspecciones_id', $id)
+        ->first();
+    }
+    public function getInspeccionesWithDetails(): array
+    {
+        return $this->select('
+            inspecciones.*,
+            cias.cia_nombre,
+            cias.cia_logo,
+            users.user_nombre,
+            users.user_email,
+            comunas.comunas_nombre,
+            estados.estado_nombre,
+            estados.estado_color
+        ')
+        ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
+        ->join('users', 'users.user_id = inspecciones.user_id', 'left')
+        ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left')
+        ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left') // ← NUEVO
         ->orderBy('inspecciones.inspecciones_created_at', 'DESC')
         ->findAll();
     }
+
 
     /**
      * Obtener inspecciones por compañía

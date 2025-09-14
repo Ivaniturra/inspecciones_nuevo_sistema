@@ -1,4 +1,4 @@
- <?= $this->extend('layouts/maincorredor') ?>
+<?= $this->extend('layouts/maincorredor') ?>
 
 <?= $this->section('title') ?>
 Inspección #<?= $inspeccion['inspecciones_id'] ?>
@@ -7,15 +7,13 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
 <?= $this->section('css') ?>
 <style>
     .status-badge {
-        font-size: 0.9rem;
+        font-size: 1rem;
         padding: 0.5rem 1rem;
         border-radius: 50px;
         font-weight: 600;
+        border: 2px solid rgba(255,255,255,0.3);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
-    .status-pendiente { background-color: #fff3cd; color: #856404; }
-    .status-en_proceso { background-color: #d1ecf1; color: #0c5460; }
-    .status-completada { background-color: #d4edda; color: #155724; }
-    .status-cancelada { background-color: #f8d7da; color: #721c24; }
     
     .info-card {
         border-left: 4px solid #0d6efd;
@@ -69,7 +67,7 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
         top: 0.5rem;
         width: 1rem;
         height: 1rem;
-        background: #0d6efd;
+        background: var(--estado-color, #0d6efd);
         border-radius: 50%;
         border: 3px solid #fff;
         box-shadow: 0 0 0 3px #dee2e6;
@@ -78,6 +76,36 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
     .btn-action {
         margin-right: 0.5rem;
         margin-bottom: 0.5rem;
+    }
+
+    .estado-flow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .estado-step {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border: 2px solid #e9ecef;
+        background: #f8f9fa;
+        color: #6c757d;
+        transition: all 0.2s ease;
+    }
+
+    .estado-step.active {
+        border-color: var(--estado-color);
+        background: var(--estado-color);
+        color: var(--estado-text-color);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .estado-arrow {
+        color: #dee2e6;
+        font-size: 0.8rem;
     }
 </style>
 <?= $this->endSection() ?>
@@ -98,13 +126,60 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
                     </p>
                 </div>
                 <div>
-                    <span class="badge status-badge status-<?= $inspeccion['inspecciones_estado'] ?>">
-                        <?= ucfirst(str_replace('_', ' ', $inspeccion['inspecciones_estado'])) ?>
-                    </span>
+                    <?php if (!empty($inspeccion['estado_color'])): ?>
+                        <?php 
+                        $bgColor = $inspeccion['estado_color'];
+                        $textColor = $this->getTextColorForBackground($bgColor);
+                        ?>
+                        <span class="status-badge" 
+                              style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>;">
+                            <i class="fas fa-tag me-2"></i>
+                            <?= esc($inspeccion['estado_nombre']) ?>
+                        </span>
+                    <?php else: ?>
+                        <span class="badge bg-secondary">Sin Estado</span>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Flujo de Estados -->
+    <?php if (!empty($estados)): ?>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-route me-2"></i>
+                        Flujo del Proceso
+                    </h6>
+                </div>
+                <div class="card-body py-3">
+                    <div class="estado-flow">
+                        <?php foreach ($estados as $index => $estado): ?>
+                            <?php 
+                            $isActive = ($estado['estado_id'] == $inspeccion['estado_id']);
+                            $bgColor = $estado['estado_color'] ?? '#6c757d';
+                            $textColor = $this->getTextColorForBackground($bgColor);
+                            ?>
+                            
+                            <div class="estado-step <?= $isActive ? 'active' : '' ?>"
+                                 <?= $isActive ? 'style="--estado-color: '.$bgColor.'; --estado-text-color: '.$textColor.';"' : '' ?>>
+                                <span class="badge bg-light text-dark me-1"><?= $estado['estado_id'] ?></span>
+                                <?= esc($estado['estado_nombre']) ?>
+                            </div>
+                            
+                            <?php if ($index < count($estados) - 1): ?>
+                                <i class="fas fa-chevron-right estado-arrow"></i>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- Acciones -->
     <div class="row mb-4">
@@ -251,41 +326,52 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
             </div>
             <?php endif; ?>
 
-            <!-- Timeline de estados (ejemplo) -->
+            <!-- Timeline de estados con colores -->
             <div class="card border-0 shadow-sm info-card mt-4">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-history me-2"></i>
-                        Historial
+                        Historial del Proceso
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="timeline">
-                        <div class="timeline-item">
+                        <div class="timeline-item" style="--estado-color: <?= $inspeccion['estado_color'] ?? '#17a2b8' ?>;">
                             <div class="info-label">
                                 <?= date('d/m/Y H:i', strtotime($inspeccion['inspecciones_created_at'])) ?>
                             </div>
                             <div class="info-value">Inspección creada</div>
-                            <small class="text-muted">Estado: Pendiente</small>
+                            <small class="text-muted">Estado inicial: Solicitud</small>
                         </div>
                         
                         <?php if (!empty($inspeccion['inspecciones_fecha_inspeccion'])): ?>
-                        <div class="timeline-item">
+                        <div class="timeline-item" style="--estado-color: #007bff;">
                             <div class="info-label">
                                 <?= date('d/m/Y H:i', strtotime($inspeccion['inspecciones_fecha_inspeccion'])) ?>
                             </div>
                             <div class="info-value">Fecha de inspección programada</div>
-                            <small class="text-muted">Estado: En proceso</small>
+                            <small class="text-muted">Asignado al coordinador</small>
                         </div>
                         <?php endif; ?>
                         
-                        <?php if ($inspeccion['inspecciones_estado'] === 'completada'): ?>
-                        <div class="timeline-item">
+                        <!-- Estado actual -->
+                        <?php if ($inspeccion['estado_id'] && $inspeccion['estado_id'] > 1): ?>
+                        <div class="timeline-item" style="--estado-color: <?= $inspeccion['estado_color'] ?? '#28a745' ?>;">
                             <div class="info-label">
                                 <?= date('d/m/Y H:i', strtotime($inspeccion['inspecciones_updated_at'])) ?>
                             </div>
-                            <div class="info-value">Inspección completada</div>
-                            <small class="text-muted">Estado: Completada</small>
+                            <div class="info-value">Estado actual: <?= esc($inspeccion['estado_nombre']) ?></div>
+                            <small class="text-muted">
+                                <?= match($inspeccion['estado_nombre']) {
+                                    'Coordinador' => 'Revisión y asignación de recursos',
+                                    'Es Control de Calidad' => 'Verificación de documentos y requisitos',
+                                    'En Inspector' => 'Inspección en proceso de ejecución',
+                                    'Terminada' => 'Inspección completada satisfactoriamente',
+                                    'Aceptada' => 'Proceso finalizado y aprobado',
+                                    'Rechazada' => 'Proceso rechazado, requiere correcciones',
+                                    default => 'Estado del sistema de inspecciones'
+                                } ?>
+                            </small>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -310,9 +396,19 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
                     <div class="mb-3">
                         <div class="info-label">Estado Actual</div>
                         <div class="info-value">
-                            <span class="badge status-badge status-<?= $inspeccion['inspecciones_estado'] ?>">
-                                <?= ucfirst(str_replace('_', ' ', $inspeccion['inspecciones_estado'])) ?>
-                            </span>
+                            <?php if (!empty($inspeccion['estado_color'])): ?>
+                                <?php 
+                                $bgColor = $inspeccion['estado_color'];
+                                $textColor = $this->getTextColorForBackground($bgColor);
+                                ?>
+                                <span class="status-badge" 
+                                      style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>;">
+                                    <span class="badge bg-light text-dark me-1"><?= $inspeccion['estado_id'] ?></span>
+                                    <?= esc($inspeccion['estado_nombre']) ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="badge bg-secondary">Sin Estado</span>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -337,9 +433,63 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
                     <?php endif; ?>
                 </div>
             </div>
+
+            <!-- Panel de Estados Disponibles -->
+            <?php if (!empty($estados)): ?>
+            <div class="card border-0 shadow-sm info-card mt-4">
+                <div class="card-header" 
+                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h6 class="mb-0">
+                        <i class="fas fa-sitemap me-2"></i>
+                        Estados del Sistema
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <?php foreach ($estados as $estado): ?>
+                            <?php 
+                            $isActive = ($estado['estado_id'] == $inspeccion['estado_id']);
+                            $bgColor = $estado['estado_color'] ?? '#6c757d';
+                            $textColor = $this->getTextColorForBackground($bgColor);
+                            ?>
+                            <div class="d-flex align-items-center mb-2 <?= $isActive ? 'fw-bold' : '' ?>">
+                                <span class="badge me-2" 
+                                      style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>;">
+                                    <?= $estado['estado_id'] ?>
+                                </span>
+                                <span class="<?= $isActive ? 'text-primary' : '' ?>">
+                                    <?= esc($estado['estado_nombre']) ?>
+                                </span>
+                                <?php if ($isActive): ?>
+                                    <i class="fas fa-check-circle text-success ms-auto"></i>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
+
+<?php
+// Helper function para calcular color de texto
+function getTextColorForBackground($hexColor) {
+    // Remover # si existe
+    $hex = ltrim($hexColor, '#');
+    
+    // Convertir a RGB
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    
+    // Calcular luminancia
+    $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
+    
+    return $luminance > 0.5 ? '#000000' : '#ffffff';
+}
+?>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>

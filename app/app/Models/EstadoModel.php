@@ -16,8 +16,36 @@ class EstadoModel extends Model
 
     protected $allowedFields = [
         'estado_nombre',
+        'estado_color',
     ];
+    public function getBootstrapClassForColor(string $hexColor): string
+    {
+        $colorMap = [
+            '#17a2b8' => 'info',
+            '#007bff' => 'primary',
+            '#ffc107' => 'warning', 
+            '#6c757d' => 'secondary',
+            '#28a745' => 'success',
+            '#198754' => 'success',
+            '#dc3545' => 'danger',
+        ];
+        
+        return $colorMap[$hexColor] ?? 'secondary';
+    }
 
+    // Método para obtener contraste de texto
+    public function getTextColorForBackground(string $hexColor): string
+    {
+        // Convertir hex a RGB
+        $r = hexdec(substr($hexColor, 1, 2));
+        $g = hexdec(substr($hexColor, 3, 2));
+        $b = hexdec(substr($hexColor, 5, 2));
+        
+        // Calcular luminancia
+        $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
+        
+        return $luminance > 0.5 ? '#000000' : '#ffffff';
+    }
     // Fechas - ACTUALIZADO con nomenclatura estado_XXXX
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
@@ -27,14 +55,23 @@ class EstadoModel extends Model
     // Validación
     protected $validationRules = [
         'estado_nombre' => 'required|min_length[2]|max_length[255]|is_unique[estados.estado_nombre,estado_id,{estado_id}]',
+        'estado_color'  => 'required|regex_match[/^#[a-fA-F0-9]{6}$/]',
     ];
-
+    public function getColorForEstado(int $estadoId): string
+    {
+        $estado = $this->find($estadoId);
+        return $estado['estado_color'] ?? '#6c757d';
+    }
     protected $validationMessages = [
         'estado_nombre' => [
             'required'    => 'El nombre del estado es obligatorio',
             'min_length'  => 'El nombre debe tener al menos 2 caracteres',
             'max_length'  => 'El nombre no puede exceder 255 caracteres',
             'is_unique'   => 'Ya existe un estado con ese nombre',
+        ],
+        'estado_color' => [ // ← NUEVO
+        'required'     => 'El color del estado es obligatorio',
+        'regex_match'  => 'El color debe ser un código hexadecimal válido (#RRGGBB)',
         ],
     ];
 

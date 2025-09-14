@@ -2,15 +2,20 @@
 namespace App\Controllers;
 
 use App\Models\InspeccionesModel;
+use App\Models\EstadoModel;
+
 
 class Corredor extends BaseController 
 {
     protected $inspeccionesModel;
+    protected $estadoModel; // ← NUEVO
     protected $db;
+
 
     public function __construct()
     {
         $this->inspeccionesModel = new InspeccionesModel();
+        $this->estadoModel = new EstadoModel(); // ← NUEVO
         $this->db = \Config\Database::connect();
         
         // Verificar autenticación
@@ -34,12 +39,23 @@ class Corredor extends BaseController
         // Calcular estadísticas reales
         $stats = $this->calcularEstadisticas($userId);
         
+        // ← NUEVO: Obtener estados con colores
+        $estados = $this->estadoModel->getAllEstados();
+        $estadosMap = [];
+        foreach ($estados as $estado) {
+            $estadosMap[$estado['estado_id']] = [
+                'nombre' => $estado['estado_nombre'],
+                'color' => $estado['estado_color'] ?? '#6c757d'
+            ];
+        }
+        
         $data = [
             'title' => 'Dashboard Corredor',
             'corredor_id' => session('corredor_id'),
             'corredor_nombre' => session('user_name') ?? session('user_nombre') ?? 'Corredor',
             'inspecciones' => $inspecciones,
             'stats' => $stats,
+            'estados' => $estadosMap, // ← NUEVO
             
             // Branding personalizado
             'brand_title' => session('brand_title') ?? 'Mi Dashboard',
@@ -85,6 +101,21 @@ class Corredor extends BaseController
             'total_inspecciones' => $pendientes + $enProceso + $completadas + $canceladas
         ];
     }
+    private function getTextColorForBackground($hexColor)
+    {
+        // Remover # si existe
+        $hex = ltrim($hexColor, '#');
+        
+        // Convertir a RGB
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+        
+        // Calcular luminancia
+        $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
+        
+        return $luminance > 0.5 ? '#000000' : '#ffffff';
+    }
 
     public function show($id)
     {
@@ -105,17 +136,24 @@ class Corredor extends BaseController
             cias.cia_nombre,  
             users.user_nombre,
             users.user_email,
-            comunas.comunas_nombre
+            comunas.comunas_nombre,
+            estados.estado_nombre,
+            estados.estado_color
         ')
         ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
         ->join('users', 'users.user_id = inspecciones.user_id', 'left')
         ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left')
+        ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left') // ← NUEVO
         ->where('inspecciones.inspecciones_id', $id)
         ->first();
+
+        // ← NUEVO: Obtener todos los estados para el flujo
+        $estados = $this->estadoModel->getEstadosPorFlujo();
 
         $data = [
             'title' => 'Detalle Inspección #' . $id,
             'inspeccion' => $inspeccion,
+            'estados' => $estados, // ← NUEVO
             'brand_title' => session('brand_title') ?? 'Detalle Inspección',
         ];
 

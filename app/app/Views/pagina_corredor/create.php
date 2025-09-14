@@ -403,7 +403,7 @@ $(document).ready(function() {
         if (tipoInspeccionId) {
             // Cargar carrocerías por AJAX
             $.ajax({
-                url: '<?= base_url("inspecciones/api/carrocerias/") ?>' + tipoInspeccionId,
+                url: '<?= base_url("inspecciones/carrocerias/") ?>' + tipoInspeccionId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -428,7 +428,7 @@ $(document).ready(function() {
             
             // Cargar información del tipo de inspección
             $.ajax({
-                url: '<?= base_url("inspecciones/api/tipo-inspeccion-info/") ?>' + tipoInspeccionId,
+                url: '<?= base_url("inspecciones/tipo-inspeccion-info/") ?>' + tipoInspeccionId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {

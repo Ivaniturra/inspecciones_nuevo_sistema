@@ -120,7 +120,7 @@ $routes->group('api', static function($routes) {
     $routes->post('inspecciones/status', 'Api\InspeccionesController::updateStatus');
     $routes->get('tipos-inspeccion', 'Inspecciones::getTiposInspeccion'); 
     $routes->get('tipos-inspeccion/(:num)', 'Inspecciones::getTipoInspeccionInfo/$1');
-    $routes->get('carrocerias/(:num)', 'Corredor::getCarroceriasByTipo/$1');
+    $routes->get('carrocerias/(:num)', 'Inspecciones::getCarroceriasByTipo/$1');
 });
     // ===================================================
     // COMPAÑÍAS DE SEGUROS (solo super admin)

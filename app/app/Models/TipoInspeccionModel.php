@@ -194,4 +194,17 @@ class TipoInspeccionModel extends Model
         $newStatus = (int) ($tipo['tipo_inspeccion_activo'] == 1 ? 0 : 1);
         return (bool) $this->update($id, ['tipo_inspeccion_activo' => $newStatus]);
     }
+       public function getListaActivos(): array
+    {
+        $tipos = $this->select('tipo_inspeccion_id, tipo_inspeccion_nombre')
+            ->where('tipo_inspeccion_activo', 1)
+            ->orderBy('tipo_inspeccion_nombre', 'ASC')
+            ->findAll();
+        
+        $result = [];
+        foreach ($tipos as $tipo) {
+            $result[$tipo['tipo_inspeccion_id']] = $tipo['tipo_inspeccion_nombre'];
+        }
+        return $result;
+    }
 }

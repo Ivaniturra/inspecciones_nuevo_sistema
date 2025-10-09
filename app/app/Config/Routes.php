@@ -43,15 +43,16 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     // CORREDORES - GESTIÓN ADMINISTRATIVA (solo super admin)
     // ===================================================
     $routes->group('corredores', ['filter' => 'role:7'], static function($routes) {
-        $routes->get('/', 'Corredores::index');
+       routes->get('/', 'Corredores::index');
         $routes->get('create', 'Corredores::create');
         $routes->post('store', 'Corredores::store');
         $routes->get('show/(:num)', 'Corredores::show/$1');
         $routes->get('edit/(:num)', 'Corredores::edit/$1');
-        $routes->match(['POST','PUT'], 'update/(:num)', 'Corredores::update/$1');
-        $routes->match(['POST','DELETE'], 'delete/(:num)', 'Corredores::delete/$1');
+        $routes->post('update/(:num)', 'Corredores::update/$1');
+        $routes->put('update/(:num)', 'Corredores::update/$1');
+        $routes->post('delete/(:num)', 'Corredores::delete/$1');
+        $routes->delete('delete/(:num)', 'Corredores::delete/$1');
         $routes->post('toggleStatus/(:num)', 'Corredores::toggleStatus/$1');
-        
     });
 
     // ===================================================

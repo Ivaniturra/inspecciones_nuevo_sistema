@@ -234,13 +234,27 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
     <i class="icon fa-solid fa-dollar-sign"></i>
     <span class="label">Valores Comuna</span>
   </a> 
-<a class="nav-link <?= url_is('tipos-inspeccion') || url_is('tipos-inspeccion/*') ? 'active' : '' ?>" 
-   href="<?= base_url('tipos-inspeccion') ?>" 
-   data-bs-toggle="tooltip" 
-   data-bs-title="Tipos de Inspección">
-    <i class="icon fa-solid fa-car"></i>
-    <span class="label">Tipos Inspeccióssn</span>
-</a>
+ <a class="nav-link <?= url_is('regiones') || url_is('regiones/*') ? 'active' : '' ?>" 
+       href="<?= base_url('regiones') ?>" 
+       data-bs-toggle="tooltip" 
+       data-bs-title="Regiones">
+        <i class="icon fa-solid fa-globe-americas"></i>
+        <span class="label">Regiones</span>
+    </a>
+      <a class="nav-link <?= url_is('provincias') || url_is('provincias/*') ? 'active' : '' ?>" 
+       href="<?= base_url('provincias') ?>" 
+       data-bs-toggle="tooltip" 
+       data-bs-title="Provincias">
+        <i class="icon fa-solid fa-map"></i>
+        <span class="label">Provincias</span>
+    </a>
+       <a class="nav-link <?= url_is('comunas') || url_is('comunas/*') ? 'active' : '' ?>" 
+       href="<?= base_url('comunas') ?>" 
+       data-bs-toggle="tooltip" 
+       data-bs-title="Comunas">
+        <i class="icon fa-solid fa-map-marker-alt"></i>
+        <span class="label">Comunas</span>
+    </a>
 <a class="nav-link <?= url_is('corredores') || url_is('corredores/*') ? 'active' : '' ?>" 
    href="<?= base_url('corredores') ?>" 
    data-bs-toggle="tooltip" 

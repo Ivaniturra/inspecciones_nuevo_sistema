@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main') ?>
+<?= $this->extend('layouts/maincorredor') ?>
 
 <?= $this->section('title') ?>
 Dashboard Corredor

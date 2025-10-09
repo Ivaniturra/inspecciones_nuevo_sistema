@@ -222,9 +222,9 @@ Detalles del Tipo de Vehículo
                             <?= $tipo['tipo_vehiculo_activo'] ? 'Desactivar' : 'Activar' ?>
                         </button>
 
-                        <button type="button" class="btn btn-outline-info" onclick="duplicateType()">
+                        <!--<button type="button" class="btn btn-outline-info" onclick="duplicateType()">
                             <i class="fas fa-copy me-2"></i> Duplicar Tipo
-                        </button>
+                        </button>-->
 
                         <a href="<?= base_url('vehiculos/create?tipo=' . $tipo['tipo_vehiculo_id']) ?>" class="btn btn-outline-primary">
                             <i class="fas fa-plus me-2"></i> Crear Vehículo de este Tipo

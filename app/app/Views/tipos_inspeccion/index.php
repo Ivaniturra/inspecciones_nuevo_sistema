@@ -261,7 +261,7 @@ Gestión de Tipos de Inspección
                                                title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <form action="<?= base_url('tipos-inspeccion/delete/' . $tipo['tipo_inspeccion_id']) ?>" 
+                                            <!--<form action="<?= base_url('tipos-inspeccion/delete/' . $tipo['tipo_inspeccion_id']) ?>" 
                                                   method="post" class="d-inline">
                                                 <?= csrf_field() ?>
                                                 <button type="button" 
@@ -270,7 +270,7 @@ Gestión de Tipos de Inspección
                                                         title="Eliminar">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                            </form>
+                                            </form>-->
                                         </div>
                                     </td>
                                 </tr>

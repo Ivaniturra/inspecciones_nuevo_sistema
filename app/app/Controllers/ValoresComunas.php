@@ -53,7 +53,7 @@ class ValoresComunas extends BaseController
             'comunas_id'           => 'required',
             'cia_id'               => 'required|integer',
             'tipo_usuario'         => 'required',
-            'tipo_vehiculo_id'     => 'required|integer',
+            'tipo_inspeccion_id'     => 'required|integer',
             'unidad_medida'        => 'required',
             'valor'                => 'required|decimal',
             'fecha_vigencia_desde' => 'required|valid_date',
@@ -69,7 +69,7 @@ class ValoresComunas extends BaseController
             $this->request->getPost('comunas_id'),
             $this->request->getPost('cia_id'),
             $this->request->getPost('tipo_usuario'),
-            $this->request->getPost('tipo_vehiculo_id'),
+            $this->request->getPost('tipo_inspeccion_id'),
             $this->request->getPost('unidad_medida')
         )) {
             return redirect()->back()->withInput()->with('error', 'Ya existe un valor activo para esta combinación específica');
@@ -78,7 +78,7 @@ class ValoresComunas extends BaseController
         $data = [
             'comunas_id'                     => (string)$this->request->getPost('comunas_id'),
             'cia_id'                         => (int)$this->request->getPost('cia_id'),
-            'tipo_vehiculo_id'               => (int)$this->request->getPost('tipo_vehiculo_id'),
+            'tipo_inspeccion_id'               => (int)$this->request->getPost('tipo_inspeccion_id'),
             'valores_tipo_usuario'           => (string)$this->request->getPost('tipo_usuario'),
             'valores_unidad_medida'          => (string)$this->request->getPost('unidad_medida'),
             'valores_valor'                  => (float)$this->request->getPost('valor'),
@@ -168,7 +168,7 @@ class ValoresComunas extends BaseController
             'comunas_id'           => 'required',
             'cia_id'               => 'required|integer',
             'tipo_usuario'         => 'required',
-            'tipo_vehiculo_id'     => 'required|integer',
+            'tipo_inspeccion_id'     => 'required|integer',
             'valor'                => 'required|decimal',
             'fecha_vigencia_desde' => 'required|valid_date',
             'fecha_vigencia_hasta' => 'permit_empty|valid_date',
@@ -183,7 +183,7 @@ class ValoresComunas extends BaseController
             $this->request->getPost('comunas_id'),
             $this->request->getPost('cia_id'),
             $this->request->getPost('tipo_usuario'),
-            $this->request->getPost('tipo_vehiculo_id'),
+            $this->request->getPost('tipo_inspeccion_id'),
             $this->request->getPost('unidad_medida'),
             $id // Excluir el registro actual
         )) {
@@ -193,7 +193,7 @@ class ValoresComunas extends BaseController
         $data = [
             'comunas_id'                     => (string)$this->request->getPost('comunas_id'),
             'cia_id'                         => (int)$this->request->getPost('cia_id'),
-            'tipo_vehiculo_id'               => (int)$this->request->getPost('tipo_vehiculo_id'),
+            'tipo_inspeccion_id'               => (int)$this->request->getPost('tipo_inspeccion_id'),
             'valores_tipo_usuario'           => (string)$this->request->getPost('tipo_usuario'),
             'valores_unidad_medida'          => (string)$this->request->getPost('unidad_medida'),
             'valores_valor'                  => (float)$this->request->getPost('valor'),
@@ -287,7 +287,7 @@ class ValoresComunas extends BaseController
             ->join('provincias', 'provincias.provincias_id = comunas.provincias_id', 'left')
             ->join('regiones', 'regiones.region_id = provincias.regiones_id', 'left')
             ->join('cias', 'cias.cia_id = valores_comunas.cia_id', 'left')
-            ->join('tipo_vehiculo tv', 'tv.tipo_vehiculo_id = valores_comunas.tipo_vehiculo_id', 'left');
+            ->join('tipo_vehiculo tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left');
 
         if ($ciaId) {
             $valores->where('valores_comunas.cia_id', $ciaId);
@@ -476,7 +476,7 @@ class ValoresComunas extends BaseController
         $db = \Config\Database::connect();
         
         $tipos = $db->table('tipo_vehiculo')
-                   ->select('tipo_vehiculo_id, tipo_vehiculo_nombre')
+                   ->select('tipo_inspeccion_id, tipo_vehiculo_nombre')
                    ->where('tipo_vehiculo_activo', 1)
                    ->orderBy('tipo_vehiculo_nombre', 'ASC')
                    ->get()
@@ -484,7 +484,7 @@ class ValoresComunas extends BaseController
 
         $result = [];
         foreach ($tipos as $tipo) {
-            $result[$tipo['tipo_vehiculo_id']] = $tipo['tipo_vehiculo_nombre'];
+            $result[$tipo['tipo_inspeccion_id']] = $tipo['tipo_vehiculo_nombre'];
         }
 
         return $result;

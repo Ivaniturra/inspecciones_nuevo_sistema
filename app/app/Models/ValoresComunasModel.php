@@ -255,7 +255,7 @@ class ValoresComunasModel extends Model
             ->join('provincias',      'provincias.provincias_id = comunas.provincias_id', 'left')
             ->join('regiones',        'regiones.region_id = provincias.regiones_id', 'left')
             ->join('cias',            'cias.cia_id = valores_comunas.cia_id', 'left')
-            ->join('tipo_vehiculo tv', 'tv.tipo_vehiculo_id = valores_comunas.tipo_vehiculo_id', 'left')
+            ->join('tipos_inspeccion tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left')
             ->find($id);
     }
 }

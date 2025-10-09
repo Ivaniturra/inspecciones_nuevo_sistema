@@ -7,7 +7,7 @@ use App\Models\CiaModel;
 use App\Models\ComunasModel;
 use App\Models\ProvinciasModel;
 use App\Models\RegionesModel;
-use App\Models\TiposInspeccionModel;
+use App\Models\TipoInspeccionModel;
 
 class ValoresComunas extends BaseController
 {
@@ -25,7 +25,7 @@ class ValoresComunas extends BaseController
         $this->comunasModel         = new ComunasModel();
         $this->provinciasModel      = new ProvinciasModel();
         $this->regionesModel        = new RegionesModel();
-        $this->tiposInspeccionModel = new TiposInspeccionModel();
+        $this->tiposInspeccionModel = new TipoInspeccionModel();
         
         helper(['url', 'text', 'form']);
     }

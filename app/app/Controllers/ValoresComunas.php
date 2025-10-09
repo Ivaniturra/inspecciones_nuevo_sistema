@@ -476,15 +476,15 @@ class ValoresComunas extends BaseController
         $db = \Config\Database::connect();
         
         $tipos = $db->table('tipo_inspeccion_id')
-                   ->select('tipo_inspeccion_id, tipo_inspeccion_id_nombre')
+                   ->select('tipo_inspeccion_id, tipo_inspeccion_nombre')
                    ->where('tipo_inspeccion_id_activo', 1)
-                   ->orderBy('tipo_inspeccion_id_nombre', 'ASC')
+                   ->orderBy('tipos_inspeccion', 'ASC')
                    ->get()
                    ->getResultArray();
 
         $result = [];
         foreach ($tipos as $tipo) {
-            $result[$tipo['tipo_inspeccion_id']] = $tipo['tipo_inspeccion_id_nombre'];
+            $result[$tipo['tipo_inspeccion_id']] = $tipo['tipo_inspeccion_nombre'];
         }
 
         return $result;

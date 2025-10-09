@@ -25,7 +25,7 @@ class Users extends BaseController
         $this->userModel     = new UserModel();
         $this->ciaModel      = new CiaModel();
         $this->perfilModel   = new PerfilModel();
-        $this->corredorModel = new CorredorModel(); // ← Agregar esta línea
+        $this->corredorModel = new CorredorModel();  
         $this->auditModel    = new AuditLogModel();
         $this->session       = session();
     }

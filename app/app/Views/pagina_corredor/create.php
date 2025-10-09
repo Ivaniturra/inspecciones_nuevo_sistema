@@ -387,27 +387,21 @@
 </div>
 <?= $this->endSection() ?>
 <?= $this->section('scripts') ?>
-<script>
-/** ========================
- *  Config & helpers
- *  ======================== */
+<script> 
 const URLS = {
-  carrocerias: '/api/carrocerias/',          // GET /api/carrocerias/{tipo_inspeccion_id}
-  tipoInfo:    '/api/tipos-inspeccion/',     // GET /api/tipos-inspeccion/{id}
-  store:       '/corredor/store'             // POST (si tu store no está en /api)
+  carrocerias: '/api/carrocerias/',         
+  tipoInfo:    '/api/tipos-inspeccion/',      
+  store:       '/corredor/store'              
 };
-const DEBUG = false; // pon true para ver logs de depuración
-
-// CSRF desde <meta> del layout
+const DEBUG = false;  
+ 
 const CSRF = {
   name: document.querySelector('meta[name="csrf-name"]')?.getAttribute('content'),
   hash: document.querySelector('meta[name="csrf-hash"]')?.getAttribute('content')
 };
-
-// Log condicional
+ 
 function dlog(...args){ if (DEBUG) console.log(...args); }
-
-// Encuentra el div.invalid-feedback más cercano aunque la estructura varíe
+ 
 function getFeedback($el){
   let $fb = $el.siblings('.invalid-feedback');
   if (!$fb.length) $fb = $el.closest('.mb-3, .form-group').find('> .invalid-feedback, .invalid-feedback');
@@ -467,8 +461,7 @@ $(function(){
   // Smoke test de elementos clave:
   ['#tipo_inspeccion_id','#tipo_carroceria_id','#inspeccionForm','#successModal','#spinnerContainer','#btnGuardar']
     .forEach(sel => dlog('SMOKE', sel, document.querySelector(sel) ? 'OK' : 'NO ENCONTRADO'));
-
-  // ==== Cambio de Tipo de Inspección -> cargar Carrocerías + Info ====
+ 
   $('#tipo_inspeccion_id').on('change', function(){
     const id = this.value;
     const $car = $('#tipo_carroceria_id');
@@ -481,8 +474,7 @@ $(function(){
       $car.html('<option value="">Primero seleccione tipo de inspección</option>');
       return;
     }
-
-    // Carrocerías
+ 
     $.ajax({
       url: URLS.carrocerias + encodeURIComponent(id),
       method: 'GET',

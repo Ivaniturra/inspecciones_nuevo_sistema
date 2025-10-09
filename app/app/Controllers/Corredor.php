@@ -5,6 +5,7 @@ use App\Models\InspeccionesModel;
 use App\Models\EstadoModel;
 use App\Models\TipoInspeccionModel;
 use App\Models\TipoCarroceriaModel;
+use App\Models\CiasModel;
 
 class Corredor extends BaseController 
 {
@@ -12,6 +13,7 @@ class Corredor extends BaseController
     protected $estadoModel;
     protected $tipoInspeccionModel;
     protected $tipoCarroceriaModel;
+    protected $ciasModel;
     protected $db;
 
     public function __construct()
@@ -20,6 +22,7 @@ class Corredor extends BaseController
         $this->estadoModel = new EstadoModel();
         $this->tipoInspeccionModel = new TipoInspeccionModel();
         $this->tipoCarroceriaModel = new TipoCarroceriaModel();
+        $this->ciasModel = new CiasModel();
         $this->db = \Config\Database::connect();
         
         // Verificar autenticación
@@ -32,10 +35,15 @@ class Corredor extends BaseController
     {
         $userId = session('user_id');
         
+        // Obtener parámetros de búsqueda
+        $search = $this->request->getGet('search') ?? '';
+        $ciaId = $this->request->getGet('cia_id') ?? '';
+        
         // Obtener inspecciones del usuario con JOIN a las tablas relacionadas
-        $inspecciones = $this->inspeccionesModel->select('
+        $query = $this->inspeccionesModel->select('
             inspecciones.*,
             cias.cia_nombre,
+            cias.cia_display_name,
             users.user_nombre,
             comunas.comunas_nombre,
             estados.estado_nombre,
@@ -48,9 +56,25 @@ class Corredor extends BaseController
         ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left') 
         ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = inspecciones.tipo_inspeccion_id', 'left')
         ->join('tipo_carroceria tc', 'tc.tipo_carroceria_id = inspecciones.tipo_carroceria_id', 'left')
-        ->where('inspecciones.user_id', $userId)
-        ->orderBy('inspecciones.inspecciones_created_at', 'DESC')
-        ->findAll();
+        ->where('inspecciones.user_id', $userId);
+        
+        // Aplicar filtros de búsqueda
+        if (!empty($search)) {
+            $query->groupStart()
+                  ->like('inspecciones.inspecciones_asegurado', $search)
+                  ->orLike('inspecciones.inspecciones_patente', $search)
+                  ->orLike('inspecciones.inspecciones_rut', $search)
+                  ->orLike('inspecciones.inspecciones_email', $search)
+                  ->orLike('inspecciones.inspecciones_n_poliza', $search)
+                  ->groupEnd();
+        }
+        
+        if (!empty($ciaId)) {
+            $query->where('inspecciones.cia_id', $ciaId);
+        }
+        
+        $inspecciones = $query->orderBy('inspecciones.inspecciones_created_at', 'DESC')
+                             ->findAll();
         
         // Calcular estadísticas reales
         $stats = $this->calcularEstadisticas($userId);
@@ -65,6 +89,9 @@ class Corredor extends BaseController
             ];
         }
         
+        // Obtener compañías del corredor
+        $cias = $this->getCiasDelUsuarioCorredor($userId);
+        
         $data = [
             'title' => 'Dashboard Corredor',
             'corredor_id' => session('corredor_id'),
@@ -72,6 +99,9 @@ class Corredor extends BaseController
             'inspecciones' => $inspecciones,
             'stats' => $stats,
             'estados' => $estadosMap,
+            'cias' => $cias,
+            'search' => $search,
+            'ciaId' => $ciaId,
             'brand_title' => session('brand_title') ?? 'Mi Dashboard',
             'brand_logo' => session('brand_logo'),
             'nav_bg' => session('nav_bg'),
@@ -80,8 +110,53 @@ class Corredor extends BaseController
         return view('pagina_corredor/index', $data);
     }
 
-    // ACTUALIZAR MÉTODO DE ESTADÍSTICAS
-    private function calcularEstadisticas($userId)
+    /**
+     * Obtiene las compañías asociadas al usuario corredor
+     */
+    private function getCiasDelUsuarioCorredor($userId): array
+    {
+        // Opción 1: Si el usuario tiene un corredor_id asociado
+        $corredorId = session('corredor_id');
+        
+        if (!empty($corredorId)) {
+            // Obtener compañías del corredor específico
+            $ciasDelCorredor = $this->db->table('corredor_cias cc')
+                ->select('c.cia_id, c.cia_nombre, c.cia_display_name, c.cia_logo, c.cia_habil')
+                ->join('cias c', 'c.cia_id = cc.cia_id', 'inner')
+                ->where('cc.corredor_id', $corredorId)
+                ->where('cc.corredor_cia_activo', 1)
+                ->where('c.cia_habil', 1)
+                ->orderBy('c.cia_nombre', 'ASC')
+                ->get()
+                ->getResultArray();
+            
+            if (!empty($ciasDelCorredor)) {
+                return $ciasDelCorredor;
+            }
+        }
+        
+        // Opción 2: Si no hay corredor_id, obtener compañías de las inspecciones del usuario
+        $ciasFromInspecciones = $this->db->table('inspecciones i')
+            ->select('DISTINCT c.cia_id, c.cia_nombre, c.cia_display_name, c.cia_logo')
+            ->join('cias c', 'c.cia_id = i.cia_id', 'inner')
+            ->where('i.user_id', $userId)
+            ->where('c.cia_habil', 1)
+            ->orderBy('c.cia_nombre', 'ASC')
+            ->get()
+            ->getResultArray();
+        
+        if (!empty($ciasFromInspecciones)) {
+            return $ciasFromInspecciones;
+        }
+        
+        // Opción 3: Fallback - todas las compañías activas
+        return $this->ciasModel->getActiveCias();
+    }
+
+    /**
+     * Calcula estadísticas de inspecciones por estado
+     */
+    private function calcularEstadisticas($userId): array
     {
         // Usar estado_id en lugar de enum
         $pendientes = $this->inspeccionesModel->where('user_id', $userId)
@@ -116,9 +191,14 @@ class Corredor extends BaseController
 
     public function create()
     {
+        $userId = session('user_id');
+        
         // Obtener datos para formulario
-        $companias = $this->db->table('cias')->where('cia_habil', 1)->get()->getResultArray();
-        $comunas = $this->db->table('comunas')->get()->getResultArray();
+        $companias = $this->getCiasDelUsuarioCorredor($userId);
+        $comunas = $this->db->table('comunas')
+                            ->orderBy('comunas_nombre', 'ASC')
+                            ->get()
+                            ->getResultArray();
         
         // Usar el modelo de tipos de inspección
         $tiposInspeccion = $this->tipoInspeccionModel->getTiposForSelect();
@@ -159,7 +239,7 @@ class Corredor extends BaseController
             'tipo_inspeccion_id' => (int)($postData['tipo_inspeccion_id'] ?? 0),
             'tipo_carroceria_id' => (int)($postData['tipo_carroceria_id'] ?? 0),
             'user_id' => (int)session('user_id'),
-            'estado_id' => 1, // Estado inicial
+            'estado_id' => 1, // Estado inicial: Solicitud
         ];
         
         // Validación
@@ -196,6 +276,7 @@ class Corredor extends BaseController
             }
             
         } catch (\Exception $e) {
+            log_message('error', 'Error en Corredor::store - ' . $e->getMessage());
             return $this->response->setStatusCode(500)->setJSON([
                 'success' => false,
                 'message' => 'Excepción: ' . $e->getMessage()
@@ -210,7 +291,8 @@ class Corredor extends BaseController
         // Obtener inspección con todos los datos relacionados
         $inspeccion = $this->inspeccionesModel->select('
             inspecciones.*,
-            cias.cia_nombre,  
+            cias.cia_nombre,
+            cias.cia_display_name,
             users.user_nombre,
             users.user_email,
             comunas.comunas_nombre,
@@ -261,8 +343,11 @@ class Corredor extends BaseController
         }
 
         // Obtener datos para formulario
-        $companias = $this->db->table('cias')->where('cia_habil', 1)->get()->getResultArray();
-        $comunas = $this->db->table('comunas')->get()->getResultArray();
+        $companias = $this->getCiasDelUsuarioCorredor($userId);
+        $comunas = $this->db->table('comunas')
+                            ->orderBy('comunas_nombre', 'ASC')
+                            ->get()
+                            ->getResultArray();
         $tiposInspeccion = $this->tipoInspeccionModel->getTiposForSelect();
         
         // Obtener carrocerías del tipo actual
@@ -334,10 +419,14 @@ class Corredor extends BaseController
                 ->set($data)
                 ->update();
 
-            return redirect()->to(base_url('corredor/show/' . $id))->with('success', 'Inspección actualizada correctamente');
+            return redirect()->to(base_url('corredor/show/' . $id))
+                ->with('success', 'Inspección actualizada correctamente');
 
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Error al actualizar: ' . $e->getMessage())->withInput();
+            log_message('error', 'Error en Corredor::update - ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error al actualizar: ' . $e->getMessage())
+                ->withInput();
         }
     }
 
@@ -354,7 +443,8 @@ class Corredor extends BaseController
         }
 
         if ($this->inspeccionesModel->delete($id)) {
-            return redirect()->to(base_url('corredor'))->with('success', 'Inspección eliminada correctamente');
+            return redirect()->to(base_url('corredor'))
+                ->with('success', 'Inspección eliminada correctamente');
         } else {
             return redirect()->back()->with('error', 'Error al eliminar la inspección');
         }
@@ -366,44 +456,71 @@ class Corredor extends BaseController
             return $this->response->setStatusCode(403);
         }
 
-        $estado_id = $this->request->getGet('estado_id'); // ← CAMBIO: ahora es estado_id
+        $estado_id = $this->request->getGet('estado_id');
         $userId = session('user_id');
 
-        $query = $this->inspeccionesModel->where('user_id', $userId);
+        $query = $this->inspeccionesModel
+            ->select('
+                inspecciones.*,
+                cias.cia_nombre,
+                cias.cia_display_name,
+                estados.estado_nombre,
+                estados.estado_color,
+                ti.tipo_inspeccion_nombre,
+                tc.tipo_carroceria_nombre
+            ')
+            ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
+            ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left')
+            ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = inspecciones.tipo_inspeccion_id', 'left')
+            ->join('tipo_carroceria tc', 'tc.tipo_carroceria_id = inspecciones.tipo_carroceria_id', 'left')
+            ->where('inspecciones.user_id', $userId);
         
-        if ($estado_id !== 'all') {
-            $query->where('estado_id', $estado_id); // ← CAMBIO: usar estado_id
+        if ($estado_id !== 'all' && !empty($estado_id)) {
+            $query->where('inspecciones.estado_id', $estado_id);
         }
         
-        $inspecciones = $query->orderBy('inspecciones_created_at', 'DESC')->findAll();
+        $inspecciones = $query->orderBy('inspecciones.inspecciones_created_at', 'DESC')
+                             ->findAll();
 
         return $this->response->setJSON([
             'success' => true,
             'data' => $inspecciones
         ]);
     }
+
     /* ===== MÉTODOS PRIVADOS ===== */ 
+    
+    /**
+     * Normaliza números de teléfono al formato WhatsApp (+56...)
+     */
     private function normalizarTelefono($telefono): string
     {
         if (empty($telefono)) return '';
         
         $solo_numeros = preg_replace('/[^0-9]/', '', $telefono);
         
+        // Si ya tiene código de país
         if (substr($solo_numeros, 0, 2) === '56') {
             return '+' . $solo_numeros;
         }
         
+        // Si empieza con 9 y tiene 9 dígitos (celular chileno)
         if (substr($solo_numeros, 0, 1) === '9' && strlen($solo_numeros) === 9) {
             return '+56' . $solo_numeros;
         }
         
+        // Si tiene 8 dígitos, asumir que es celular sin el 9
         if (strlen($solo_numeros) === 8) {
             return '+569' . $solo_numeros;
         }
         
+        // Por defecto, agregar código de país
         return '+56' . $solo_numeros;
     }
 
+    /**
+     * Valida los datos de una inspección
+     */
     private function validarDatosInspeccion($data): array
     {
         $errores = [];
@@ -452,6 +569,9 @@ class Corredor extends BaseController
         return $errores;
     }
 
+    /**
+     * Valida RUT chileno con dígito verificador
+     */
     private function validarRUT($rut): bool
     {
         $rut = preg_replace('/[^0-9kK]/', '', $rut);
@@ -475,10 +595,16 @@ class Corredor extends BaseController
         return $dv === $dv_calculado;
     }
 
+    /**
+     * Genera URL de WhatsApp con mensaje predefinido
+     */
     private function generarWhatsAppURL($data): string
     {
         $numero = str_replace('+', '', $data['inspecciones_celular']);
-        $mensaje = "Hola {$data['inspecciones_asegurado']}, su solicitud de inspección para el vehículo patente {$data['inspecciones_patente']} ha sido registrada exitosamente. Nos contactaremos pronto para coordinar la fecha de inspección.";
+        $asegurado = $data['inspecciones_asegurado'];
+        $patente = $data['inspecciones_patente'];
+        
+        $mensaje = "Hola {$asegurado}, su solicitud de inspección para el vehículo patente {$patente} ha sido registrada exitosamente. Nos contactaremos pronto para coordinar la fecha de inspección.";
         
         return "https://wa.me/{$numero}?text=" . urlencode($mensaje);
     }

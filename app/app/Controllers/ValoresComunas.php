@@ -78,7 +78,7 @@ class ValoresComunas extends BaseController
         $data = [
             'comunas_id'                     => (string)$this->request->getPost('comunas_id'),
             'cia_id'                         => (int)$this->request->getPost('cia_id'),
-            'tipo_inspeccion_id'               => (int)$this->request->getPost('tipo_inspeccion_id'),
+            'tipo_vehiculo_id'               => (int)$this->request->getPost('tipo_vehiculo_id'),
             'valores_tipo_usuario'           => (string)$this->request->getPost('tipo_usuario'),
             'valores_unidad_medida'          => (string)$this->request->getPost('unidad_medida'),
             'valores_valor'                  => (float)$this->request->getPost('valor'),

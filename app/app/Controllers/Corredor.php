@@ -5,7 +5,7 @@ use App\Models\InspeccionesModel;
 use App\Models\EstadoModel;
 use App\Models\TipoInspeccionModel;
 use App\Models\TipoCarroceriaModel;
-use App\Models\CiasModel;
+use App\Models\CiaModel;
 
 class Corredor extends BaseController 
 {

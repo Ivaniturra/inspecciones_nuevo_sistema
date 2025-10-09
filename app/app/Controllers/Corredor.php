@@ -1,330 +1,485 @@
 <?php
 namespace App\Controllers;
 
-use App\Models\CorredorModel;
-use App\Models\CiasModel;
+use App\Models\InspeccionesModel;
+use App\Models\EstadoModel;
+use App\Models\TipoInspeccionModel;
+use App\Models\TipoCarroceriaModel;
 
-class Corredores extends BaseController
+class Corredor extends BaseController 
 {
-    protected $corredorModel;
-    protected $ciasModel;
+    protected $inspeccionesModel;
+    protected $estadoModel;
+    protected $tipoInspeccionModel;
+    protected $tipoCarroceriaModel;
+    protected $db;
 
     public function __construct()
     {
-        $this->corredorModel = new CorredorModel();
-        $this->ciasModel = new CiasModel();
+        $this->inspeccionesModel = new InspeccionesModel();
+        $this->estadoModel = new EstadoModel();
+        $this->tipoInspeccionModel = new TipoInspeccionModel();
+        $this->tipoCarroceriaModel = new TipoCarroceriaModel();
+        $this->db = \Config\Database::connect();
         
-        // Verificar autenticación y permisos
+        // Verificar autenticación
         if (!session('logged_in')) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Acceso denegado');
         }
-        
-        // Opcional: verificar permisos específicos
-        // if (!can('gestionar_corredores')) {
-        //     throw new \CodeIgniter\Exceptions\PageNotFoundException('Sin permisos');
-        // }
     }
 
     public function index()
     {
-        // Obtener parámetros de búsqueda
-        $search = $this->request->getGet('search') ?? '';
-        $ciaId = $this->request->getGet('cia_id') ?? '';
-
-        // Obtener corredores con búsqueda
-        if (!empty($search) || !empty($ciaId)) {
-            $corredores = $this->corredorModel->searchCorredores($search, $ciaId);
-        } else {
-            $corredores = $this->corredorModel->getCorredoresWithCias();
+        $userId = session('user_id');
+        
+        // Obtener inspecciones del usuario con JOIN a las tablas relacionadas
+        $inspecciones = $this->inspeccionesModel->select('
+            inspecciones.*,
+            cias.cia_nombre,
+            users.user_nombre,
+            comunas.comunas_nombre,
+            estados.estado_nombre,
+            estados.estado_color,
+            ti.tipo_inspeccion_nombre,
+            tc.tipo_corroceria_nombre')
+        ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
+        ->join('users', 'users.user_id = inspecciones.user_id', 'left')
+        ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left')
+        ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left') 
+        ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = inspecciones.tipo_inspeccion_id', 'left')
+        ->join('tipo_carroceria tc', 'tc.tipo_carroceria_id = inspecciones.tipo_carroceria_id', 'left')
+        ->where('inspecciones.user_id', $userId)
+        ->orderBy('inspecciones.inspecciones_created_at', 'DESC')
+        ->findAll();
+        
+        // Calcular estadísticas reales
+        $stats = $this->calcularEstadisticas($userId);
+        
+        // Obtener estados con colores
+        $estados = $this->estadoModel->getAllEstados();
+        $estadosMap = [];
+        foreach ($estados as $estado) {
+            $estadosMap[$estado['estado_id']] = [
+                'nombre' => $estado['estado_nombre'],
+                'color' => $estado['estado_color'] ?? '#6c757d'
+            ];
         }
-
-        // Obtener todas las compañías activas para el filtro
-        $cias = $this->ciasModel->getActiveCias();
-
+        
         $data = [
-            'title' => 'Gestión de Corredores',
-            'corredores' => $corredores,
-            'cias' => $cias,
-            'search' => $search,
-            'ciaId' => $ciaId,
+            'title' => 'Dashboard Corredor',
+            'corredor_id' => session('corredor_id'),
+            'corredor_nombre' => session('user_name') ?? session('user_nombre') ?? 'Corredor',
+            'inspecciones' => $inspecciones,
+            'stats' => $stats,
+            'estados' => $estadosMap,
+            'brand_title' => session('brand_title') ?? 'Mi Dashboard',
+            'brand_logo' => session('brand_logo'),
+            'nav_bg' => session('nav_bg'),
         ];
 
-        return view('corredores/index', $data);
+        return view('pagina_corredor/index', $data);
     }
 
-    public function show($id)
+    // ACTUALIZAR MÉTODO DE ESTADÍSTICAS
+    private function calcularEstadisticas($userId)
     {
-        $corredor = $this->corredorModel->find($id);
+        // Usar estado_id en lugar de enum
+        $pendientes = $this->inspeccionesModel->where('user_id', $userId)
+                        ->where('estado_id', 1) // Solicitud
+                        ->countAllResults();
         
-        if (!$corredor) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Corredor no encontrado');
-        }
-
-        // Obtener compañías del corredor
-        $cias = $this->corredorModel->getCiasDelCorredor($id);
-
-        $data = [
-            'title' => 'Detalle de Corredor',
-            'corredor' => $corredor,
-            'cias' => $cias,
+        $enProceso = $this->inspeccionesModel->where('user_id', $userId)
+                        ->whereIn('estado_id', [2, 3, 4]) // Coordinador, Control Calidad, En Inspector
+                        ->countAllResults();
+        
+        $completadas = $this->inspeccionesModel->where('user_id', $userId)
+                            ->where('estado_id', 5) // Terminada
+                            ->countAllResults();
+        
+        $aceptadas = $this->inspeccionesModel->where('user_id', $userId)
+                            ->where('estado_id', 6) // Aceptada
+                            ->countAllResults();
+        
+        $rechazadas = $this->inspeccionesModel->where('user_id', $userId)
+                            ->where('estado_id', 7) // Rechazada
+                            ->countAllResults();
+        
+        return [
+            'solicitudes_pendientes' => $pendientes,
+            'en_proceso' => $enProceso,
+            'completadas_mes' => $completadas,
+            'aceptadas' => $aceptadas,
+            'rechazadas' => $rechazadas,
+            'total_inspecciones' => $pendientes + $enProceso + $completadas + $aceptadas + $rechazadas
         ];
-
-        return view('corredores/show', $data);
     }
 
     public function create()
     {
-        // Obtener todas las compañías activas
-        $cias = $this->ciasModel->getActiveCias();
+        // Obtener datos para formulario
+        $companias = $this->db->table('cias')->where('cia_habil', 1)->get()->getResultArray();
+        $comunas = $this->db->table('comunas')->get()->getResultArray();
+        
+        // Usar el modelo de tipos de inspección
+        $tiposInspeccion = $this->tipoInspeccionModel->getTiposForSelect();
 
         $data = [
-            'title' => 'Nuevo Corredor',
-            'cias' => $cias,
+            'title' => 'Nueva Inspección',
+            'companias' => $companias,
+            'comunas' => $comunas,
+            'tipos_inspeccion' => $tiposInspeccion,
+            'brand_title' => session('brand_title') ?? 'Nueva Inspección',
         ];
 
-        return view('corredores/create', $data);
+        return view('pagina_corredor/create', $data);
     }
 
     public function store()
     {
-        // Validar datos
-        $rules = [
-            'corredor_nombre' => 'required|min_length[3]|max_length[255]',
-            'corredor_email' => 'permit_empty|valid_email',
-            'corredor_rut' => 'permit_empty|max_length[20]',
-            'cias' => 'required', // Al menos una compañía
+        $postData = $this->request->getPost();
+        
+        // Normalizar teléfono a formato WhatsApp
+        $telefono = $this->normalizarTelefono($postData['inspecciones_celular'] ?? '');
+        
+        // Mapear campos según tu tabla real
+        $data = [
+            'inspecciones_asegurado' => trim($postData['inspecciones_asegurado'] ?? ''),
+            'inspecciones_rut' => strtoupper(trim($postData['inspecciones_rut'] ?? '')),
+            'inspecciones_email' => strtolower(trim($postData['inspecciones_email'] ?? '')),
+            'inspecciones_patente' => strtoupper(trim($postData['inspecciones_patente'] ?? '')),
+            'inspecciones_marca' => trim($postData['inspecciones_marca'] ?? ''),
+            'inspecciones_modelo' => trim($postData['inspecciones_modelo'] ?? ''),
+            'inspecciones_n_poliza' => trim($postData['inspecciones_n_poliza'] ?? ''),
+            'inspecciones_direccion' => trim($postData['inspecciones_direccion'] ?? ''),
+            'inspecciones_celular' => $telefono,
+            'inspecciones_telefono' => $this->normalizarTelefono($postData['inspecciones_telefono'] ?? '') ?: null,
+            'inspecciones_observaciones' => trim($postData['inspecciones_observaciones'] ?? '') ?: null,
+            'cia_id' => (int)($postData['cia_id'] ?? 0),
+            'comunas_id' => (int)($postData['comunas_id'] ?? 0),
+            'tipo_inspeccion_id' => (int)($postData['tipo_inspeccion_id'] ?? 0),
+            'tipo_carroceria_id' => (int)($postData['tipo_carroceria_id'] ?? 0),
+            'user_id' => (int)session('user_id'),
+            'estado_id' => 1, // Estado inicial
+        ];
+        
+        // Validación
+        $errores = $this->validarDatosInspeccion($data);
+        
+        if (!empty($errores)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'Datos incompletos o inválidos',
+                'errors' => $errores
+            ]);
+        }
+        
+        try {
+            $db = \Config\Database::connect();
+            $builder = $db->table('inspecciones');
+            
+            $result = $builder->insert($data);
+            
+            if ($result) {
+                $insertId = $db->insertID();
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Inspección creada exitosamente',
+                    'id' => $insertId,
+                    'whatsapp_url' => $this->generarWhatsAppURL($data)
+                ]);
+            } else {
+                $error = $db->error();
+                return $this->response->setStatusCode(500)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de BD: ' . $error['message']
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Excepción: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function show($id)
+    {
+        $userId = session('user_id');
+        
+        // Obtener inspección con todos los datos relacionados
+        $inspeccion = $this->inspeccionesModel->select('
+            inspecciones.*,
+            cias.cia_nombre,  
+            users.user_nombre,
+            users.user_email,
+            comunas.comunas_nombre,
+            estados.estado_nombre,
+            estados.estado_color,
+            ti.tipo_inspeccion_nombre,
+            ti.tipo_inspeccion_codigo,
+            tc.tipo_carroceria_nombre
+        ')
+        ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
+        ->join('users', 'users.user_id = inspecciones.user_id', 'left')
+        ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left')
+        ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left')
+        ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = inspecciones.tipo_inspeccion_id', 'left')
+        ->join('tipo_carroceria tc', 'tc.tipo_carroceria_id = inspecciones.tipo_carroceria_id', 'left')
+        ->where('inspecciones.inspecciones_id', $id)
+        ->where('inspecciones.user_id', $userId)
+        ->first();
+
+        if (!$inspeccion) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Inspección no encontrada');
+        }
+
+        // Obtener todos los estados para el flujo
+        $estados = $this->estadoModel->getEstadosPorFlujo();
+
+        $data = [
+            'title' => 'Detalle Inspección #' . $id,
+            'inspeccion' => $inspeccion,
+            'estados' => $estados,
+            'brand_title' => session('brand_title') ?? 'Detalle Inspección',
         ];
 
-        if (!$this->validate($rules)) {
-            return redirect()->back()
-                ->withInput()
-                ->with('errors', $this->validator->getErrors());
-        }
-
-        $db = \Config\Database::connect();
-        $db->transStart();
-
-        try {
-            // Preparar datos del corredor
-            $data = [
-                'corredor_nombre' => $this->request->getPost('corredor_nombre'),
-                'corredor_display_name' => $this->request->getPost('corredor_display_name'),
-                'corredor_email' => $this->request->getPost('corredor_email') ?: null,
-                'corredor_telefono' => $this->request->getPost('corredor_telefono') ?: null,
-                'corredor_rut' => $this->request->getPost('corredor_rut') ?: null,
-                'corredor_direccion' => $this->request->getPost('corredor_direccion') ?: null,
-                'corredor_habil' => (int)$this->request->getPost('corredor_habil'),
-                'corredor_brand_nav_bg' => $this->request->getPost('corredor_brand_nav_bg') ?: '#0D6EFD',
-                'corredor_brand_nav_text' => $this->request->getPost('corredor_brand_nav_text') ?: '#FFFFFF',
-                'corredor_brand_side_start' => $this->request->getPost('corredor_brand_side_start') ?: '#667EEA',
-                'corredor_brand_side_end' => $this->request->getPost('corredor_brand_side_end') ?: '#764BA2',
-            ];
-
-            // Manejar logo
-            $logo = $this->request->getFile('corredor_logo');
-            if ($logo && $logo->isValid() && !$logo->hasMoved()) {
-                $newName = $logo->getRandomName();
-                $logo->move(WRITEPATH . '../public/uploads/corredores', $newName);
-                $data['corredor_logo'] = $newName;
-            }
-
-            // Insertar corredor
-            $corredorId = $this->corredorModel->insert($data);
-
-            if (!$corredorId) {
-                throw new \Exception('Error al crear el corredor');
-            }
-
-            // Asignar compañías
-            $ciaIds = $this->request->getPost('cias') ?? [];
-            if (!empty($ciaIds)) {
-                $this->corredorModel->updateCorredorCias($corredorId, $ciaIds);
-            }
-
-            $db->transComplete();
-
-            if ($db->transStatus() === false) {
-                throw new \Exception('Error en la transacción');
-            }
-
-            return redirect()->to(base_url('corredores'))
-                ->with('success', 'Corredor creado exitosamente');
-
-        } catch (\Exception $e) {
-            $db->transRollback();
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Error al crear el corredor: ' . $e->getMessage());
-        }
+        return view('pagina_corredor/show', $data);
     }
 
     public function edit($id)
     {
-        $corredor = $this->corredorModel->find($id);
+        $userId = session('user_id');
         
-        if (!$corredor) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Corredor no encontrado');
+        // Verificar que la inspección pertenece al usuario
+        $inspeccion = $this->inspeccionesModel->where('inspecciones_id', $id)
+                           ->where('user_id', $userId)
+                           ->first();
+        
+        if (!$inspeccion) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Inspección no encontrada');
         }
 
-        // Obtener todas las compañías activas
-        $cias = $this->ciasModel->getActiveCias();
-
-        // Obtener compañías del corredor (IDs)
-        $ciasDelCorredor = array_column(
-            $this->corredorModel->getCiasDelCorredor($id),
-            'cia_id'
-        );
+        // Obtener datos para formulario
+        $companias = $this->db->table('cias')->where('cia_habil', 1)->get()->getResultArray();
+        $comunas = $this->db->table('comunas')->get()->getResultArray();
+        $tiposInspeccion = $this->tipoInspeccionModel->getTiposForSelect();
+        
+        // Obtener carrocerías del tipo actual
+        $carrocerias = [];
+        if (!empty($inspeccion['tipo_inspeccion_id'])) {
+            $carrocerias = $this->tipoCarroceriaModel->getCarroceriasForSelect($inspeccion['tipo_inspeccion_id']);
+        }
 
         $data = [
-            'title' => 'Editar Corredor',
-            'corredor' => $corredor,
-            'cias' => $cias,
-            'ciasDelCorredor' => $ciasDelCorredor,
+            'title' => 'Editar Inspección #' . $id,
+            'inspeccion' => $inspeccion,
+            'companias' => $companias,
+            'comunas' => $comunas,
+            'tipos_inspeccion' => $tiposInspeccion,
+            'carrocerias' => $carrocerias,
+            'brand_title' => session('brand_title') ?? 'Editar Inspección',
         ];
 
-        return view('corredores/edit', $data);
+        return view('pagina_corredor/edit', $data);
     }
 
     public function update($id)
     {
-        $corredor = $this->corredorModel->find($id);
-        
-        if (!$corredor) {
-            return redirect()->back()->with('error', 'Corredor no encontrado');
+        $userId = session('user_id');
+
+        // Verificar pertenencia
+        $inspeccion = $this->inspeccionesModel
+            ->where('inspecciones_id', $id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$inspeccion) {
+            return redirect()->back()->with('error', 'Inspección no encontrada');
         }
 
-        // Validar
-        $rules = [
-            'corredor_nombre' => 'required|min_length[3]|max_length[255]',
-            'corredor_email' => 'permit_empty|valid_email',
-            'cias' => 'required',
+        $post = $this->request->getPost() ?? [];
+
+        // Normalizaciones
+        $data = [
+            'inspecciones_asegurado' => trim($post['inspecciones_asegurado'] ?? ''),
+            'inspecciones_rut' => strtoupper(trim($post['inspecciones_rut'] ?? '')),
+            'inspecciones_email' => strtolower(trim($post['inspecciones_email'] ?? '')) ?: null,
+            'inspecciones_patente' => strtoupper(trim($post['inspecciones_patente'] ?? '')),
+            'inspecciones_marca' => trim($post['inspecciones_marca'] ?? ''),
+            'inspecciones_modelo' => trim($post['inspecciones_modelo'] ?? ''),
+            'inspecciones_n_poliza' => trim($post['inspecciones_n_poliza'] ?? ''),
+            'inspecciones_direccion' => trim($post['inspecciones_direccion'] ?? ''),
+            'inspecciones_celular' => $this->normalizarTelefono($post['inspecciones_celular'] ?? ''),
+            'inspecciones_telefono' => $this->normalizarTelefono($post['inspecciones_telefono'] ?? '') ?: null,
+            'inspecciones_observaciones' => trim($post['inspecciones_observaciones'] ?? '') ?: null,
+            'cia_id' => (int)($post['cia_id'] ?? 0),
+            'comunas_id' => (int)($post['comunas_id'] ?? 0),
+            'tipo_inspeccion_id' => (int)($post['tipo_inspeccion_id'] ?? 0),
+            'tipo_carroceria_id' => (int)($post['tipo_carroceria_id'] ?? 0),
         ];
 
-        if (!$this->validate($rules)) {
-            return redirect()->back()
-                ->withInput()
-                ->with('errors', $this->validator->getErrors());
+        // Validación
+        $errores = $this->validarDatosInspeccion($data);
+
+        if (!empty($errores)) {
+            return redirect()->back()->with('errors', $errores)->withInput();
         }
 
-        $db = \Config\Database::connect();
-        $db->transStart();
-
+        // Update
         try {
-            // Preparar datos
-            $data = [
-                'corredor_nombre' => $this->request->getPost('corredor_nombre'),
-                'corredor_display_name' => $this->request->getPost('corredor_display_name'),
-                'corredor_email' => $this->request->getPost('corredor_email') ?: null,
-                'corredor_telefono' => $this->request->getPost('corredor_telefono') ?: null,
-                'corredor_rut' => $this->request->getPost('corredor_rut') ?: null,
-                'corredor_direccion' => $this->request->getPost('corredor_direccion') ?: null,
-                'corredor_habil' => (int)$this->request->getPost('corredor_habil'),
-                'corredor_brand_nav_bg' => $this->request->getPost('corredor_brand_nav_bg'),
-                'corredor_brand_nav_text' => $this->request->getPost('corredor_brand_nav_text'),
-                'corredor_brand_side_start' => $this->request->getPost('corredor_brand_side_start'),
-                'corredor_brand_side_end' => $this->request->getPost('corredor_brand_side_end'),
-            ];
+            $this->inspeccionesModel
+                ->where('inspecciones_id', $id)
+                ->where('user_id', $userId)
+                ->set($data)
+                ->update();
 
-            // Manejar logo nuevo
-            $logo = $this->request->getFile('corredor_logo');
-            if ($logo && $logo->isValid() && !$logo->hasMoved()) {
-                // Eliminar logo anterior
-                if (!empty($corredor['corredor_logo'])) {
-                    $oldPath = WRITEPATH . '../public/uploads/corredores/' . $corredor['corredor_logo'];
-                    if (file_exists($oldPath)) {
-                        @unlink($oldPath);
-                    }
-                }
+            return redirect()->to(base_url('corredor/show/' . $id))->with('success', 'Inspección actualizada correctamente');
 
-                $newName = $logo->getRandomName();
-                $logo->move(WRITEPATH . '../public/uploads/corredores', $newName);
-                $data['corredor_logo'] = $newName;
-            }
-
-            // Actualizar corredor
-            $this->corredorModel->update($id, $data);
-
-            // Actualizar compañías
-            $ciaIds = $this->request->getPost('cias') ?? [];
-            $this->corredorModel->updateCorredorCias($id, $ciaIds);
-
-            $db->transComplete();
-
-            return redirect()->to(base_url('corredores/show/' . $id))
-                ->with('success', 'Corredor actualizado exitosamente');
-
-        } catch (\Exception $e) {
-            $db->transRollback();
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Error al actualizar: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Error al actualizar: ' . $e->getMessage())->withInput();
         }
     }
 
     public function delete($id)
     {
-        $corredor = $this->corredorModel->find($id);
+        $userId = session('user_id');
         
-        if (!$corredor) {
-            return redirect()->back()->with('error', 'Corredor no encontrado');
+        $inspeccion = $this->inspeccionesModel->where('inspecciones_id', $id)
+                           ->where('user_id', $userId)
+                           ->first();
+        
+        if (!$inspeccion) {
+            return redirect()->back()->with('error', 'Inspección no encontrada');
         }
 
-        // Eliminar logo si existe
-        if (!empty($corredor['corredor_logo'])) {
-            $logoPath = WRITEPATH . '../public/uploads/corredores/' . $corredor['corredor_logo'];
-            if (file_exists($logoPath)) {
-                @unlink($logoPath);
-            }
-        }
-
-        if ($this->corredorModel->delete($id)) {
-            return redirect()->to(base_url('corredores'))
-                ->with('success', 'Corredor eliminado exitosamente');
+        if ($this->inspeccionesModel->delete($id)) {
+            return redirect()->to(base_url('corredor'))->with('success', 'Inspección eliminada correctamente');
         } else {
-            return redirect()->back()
-                ->with('error', 'Error al eliminar el corredor');
+            return redirect()->back()->with('error', 'Error al eliminar la inspección');
         }
     }
-
-    public function toggleStatus($id)
+ 
+    public function filterByStatus()
     {
         if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(403)->setJSON([
-                'success' => false,
-                'message' => 'Acceso denegado'
-            ]);
+            return $this->response->setStatusCode(403);
         }
 
-        try {
-            $corredor = $this->corredorModel->find($id);
+        $estado_id = $this->request->getGet('estado_id'); // ← CAMBIO: ahora es estado_id
+        $userId = session('user_id');
 
-            if (!$corredor) {
-                return $this->response->setStatusCode(404)->setJSON([
-                    'success' => false,
-                    'message' => 'Corredor no encontrado'
-                ]);
-            }
+        $query = $this->inspeccionesModel->where('user_id', $userId);
+        
+        if ($estado_id !== 'all') {
+            $query->where('estado_id', $estado_id); // ← CAMBIO: usar estado_id
+        }
+        
+        $inspecciones = $query->orderBy('inspecciones_created_at', 'DESC')->findAll();
 
-            $nuevoEstado = $corredor['corredor_habil'] == 1 ? 0 : 1;
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $inspecciones
+        ]);
+    }
+    /* ===== MÉTODOS PRIVADOS ===== */ 
+    private function normalizarTelefono($telefono): string
+    {
+        if (empty($telefono)) return '';
+        
+        $solo_numeros = preg_replace('/[^0-9]/', '', $telefono);
+        
+        if (substr($solo_numeros, 0, 2) === '56') {
+            return '+' . $solo_numeros;
+        }
+        
+        if (substr($solo_numeros, 0, 1) === '9' && strlen($solo_numeros) === 9) {
+            return '+56' . $solo_numeros;
+        }
+        
+        if (strlen($solo_numeros) === 8) {
+            return '+569' . $solo_numeros;
+        }
+        
+        return '+56' . $solo_numeros;
+    }
+
+    private function validarDatosInspeccion($data): array
+    {
+        $errores = [];
+        
+        if (empty($data['inspecciones_asegurado'])) 
+            $errores[] = 'El nombre del asegurado es obligatorio';
             
-            if ($this->corredorModel->update($id, ['corredor_habil' => $nuevoEstado])) {
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Estado actualizado correctamente',
-                    'enabled' => $nuevoEstado
-                ]);
-            } else {
-                return $this->response->setStatusCode(500)->setJSON([
-                    'success' => false,
-                    'message' => 'Error al actualizar el estado'
-                ]);
-            }
-        } catch (\Exception $e) {
-            log_message('error', 'Error en toggleStatus: ' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'Error del servidor: ' . $e->getMessage()
-            ]);
+        if (empty($data['inspecciones_rut'])) 
+            $errores[] = 'El RUT es obligatorio';
+        elseif (!$this->validarRUT($data['inspecciones_rut']))
+            $errores[] = 'El RUT ingresado no es válido';
+            
+        if (!empty($data['inspecciones_email']) && !filter_var($data['inspecciones_email'], FILTER_VALIDATE_EMAIL))
+            $errores[] = 'El email ingresado no es válido';
+            
+        if (empty($data['inspecciones_patente'])) 
+            $errores[] = 'La patente es obligatoria';
+            
+        if (empty($data['inspecciones_marca'])) 
+            $errores[] = 'La marca es obligatoria';
+            
+        if (empty($data['inspecciones_modelo'])) 
+            $errores[] = 'El modelo es obligatorio';
+            
+        if ($data['tipo_inspeccion_id'] <= 0) 
+            $errores[] = 'Debe seleccionar un tipo de inspección';
+            
+        if ($data['tipo_carroceria_id'] <= 0) 
+            $errores[] = 'Debe seleccionar un tipo de carrocería';
+            
+        if (empty($data['inspecciones_n_poliza'])) 
+            $errores[] = 'El número de póliza es obligatorio';
+            
+        if (empty($data['inspecciones_direccion'])) 
+            $errores[] = 'La dirección es obligatoria';
+            
+        if (empty($data['inspecciones_celular'])) 
+            $errores[] = 'El celular es obligatorio';
+            
+        if ($data['cia_id'] <= 0) 
+            $errores[] = 'Debe seleccionar una compañía de seguros';
+            
+        if ($data['comunas_id'] <= 0) 
+            $errores[] = 'Debe seleccionar una comuna';
+        
+        return $errores;
+    }
+
+    private function validarRUT($rut): bool
+    {
+        $rut = preg_replace('/[^0-9kK]/', '', $rut);
+        
+        if (strlen($rut) < 8 || strlen($rut) > 9) return false;
+        
+        $dv = strtolower(substr($rut, -1));
+        $numero = substr($rut, 0, -1);
+        
+        $suma = 0;
+        $multiplicador = 2;
+        
+        for ($i = strlen($numero) - 1; $i >= 0; $i--) {
+            $suma += $numero[$i] * $multiplicador;
+            $multiplicador = ($multiplicador == 7) ? 2 : $multiplicador + 1;
         }
+        
+        $resto = $suma % 11;
+        $dv_calculado = ($resto == 0) ? '0' : (($resto == 1) ? 'k' : (string)(11 - $resto));
+        
+        return $dv === $dv_calculado;
+    }
+
+    private function generarWhatsAppURL($data): string
+    {
+        $numero = str_replace('+', '', $data['inspecciones_celular']);
+        $mensaje = "Hola {$data['inspecciones_asegurado']}, su solicitud de inspección para el vehículo patente {$data['inspecciones_patente']} ha sido registrada exitosamente. Nos contactaremos pronto para coordinar la fecha de inspección.";
+        
+        return "https://wa.me/{$numero}?text=" . urlencode($mensaje);
     }
 }

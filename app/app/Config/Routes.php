@@ -43,7 +43,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     // CORREDORES - GESTIÓN ADMINISTRATIVA (solo super admin)
     // ===================================================
     $routes->group('corredores', ['filter' => 'role:7'], static function($routes) {
-       routes->get('/', 'Corredores::index');
+       $routes->get('/', 'Corredores::index');
         $routes->get('create', 'Corredores::create');
         $routes->post('store', 'Corredores::store');
         $routes->get('show/(:num)', 'Corredores::show/$1');

@@ -281,13 +281,13 @@ class ValoresComunas extends BaseController
                 comunas.comunas_nombre, 
                 regiones.region_nombre, 
                 cias.cia_nombre,
-                tv.tipo_vehiculo_nombre
+                tv.tipo_inspeccion_id_nombre
             ')
             ->join('comunas', 'comunas.comunas_id = valores_comunas.comunas_id', 'left')
             ->join('provincias', 'provincias.provincias_id = comunas.provincias_id', 'left')
             ->join('regiones', 'regiones.region_id = provincias.regiones_id', 'left')
             ->join('cias', 'cias.cia_id = valores_comunas.cia_id', 'left')
-            ->join('tipo_vehiculo tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left');
+            ->join('tipo_inspeccion_id tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left');
 
         if ($ciaId) {
             $valores->where('valores_comunas.cia_id', $ciaId);
@@ -475,16 +475,16 @@ class ValoresComunas extends BaseController
     {
         $db = \Config\Database::connect();
         
-        $tipos = $db->table('tipo_vehiculo')
-                   ->select('tipo_inspeccion_id, tipo_vehiculo_nombre')
-                   ->where('tipo_vehiculo_activo', 1)
-                   ->orderBy('tipo_vehiculo_nombre', 'ASC')
+        $tipos = $db->table('tipo_inspeccion_id')
+                   ->select('tipo_inspeccion_id, tipo_inspeccion_id_nombre')
+                   ->where('tipo_inspeccion_id_activo', 1)
+                   ->orderBy('tipo_inspeccion_id_nombre', 'ASC')
                    ->get()
                    ->getResultArray();
 
         $result = [];
         foreach ($tipos as $tipo) {
-            $result[$tipo['tipo_inspeccion_id']] = $tipo['tipo_vehiculo_nombre'];
+            $result[$tipo['tipo_inspeccion_id']] = $tipo['tipo_inspeccion_id_nombre'];
         }
 
         return $result;

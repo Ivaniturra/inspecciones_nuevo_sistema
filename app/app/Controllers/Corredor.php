@@ -13,7 +13,7 @@ class Corredor extends BaseController
     protected $estadoModel;
     protected $tipoInspeccionModel;
     protected $tipoCarroceriaModel;
-    protected $ciasModel;
+    protected $CiaModel;
     protected $db;
 
     public function __construct()
@@ -22,7 +22,7 @@ class Corredor extends BaseController
         $this->estadoModel = new EstadoModel();
         $this->tipoInspeccionModel = new TipoInspeccionModel();
         $this->tipoCarroceriaModel = new TipoCarroceriaModel();
-        $this->ciasModel = new CiasModel();
+        $this->CiaModel = new CiaModel();
         $this->db = \Config\Database::connect();
         
         // Verificar autenticación
@@ -150,7 +150,7 @@ class Corredor extends BaseController
         }
         
         // Opción 3: Fallback - todas las compañías activas
-        return $this->ciasModel->getActiveCias();
+        return $this->CiaModel->getActiveCias();
     }
 
     /**

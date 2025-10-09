@@ -35,13 +35,13 @@ class ValoresComunas extends BaseController
     public function create()
     {
         $data = [
-            'title'             => 'Nuevo Valor por Comuna',
-            'cias'              => $this->CiaModel->getListaActivas(),
+            'title'             => 'Nuevo Valor por Comuna', 
             'tipos_usuario'     => [
                 'Inspector' => 'Inspector',
                 'Compañía'  => 'Compañía'
             ],
-            'regiones'          => $this->regionesModel->getListaActivas(),
+            'cias'            => $this->getCiasForSelect(),
+            'regiones'        => $this->getRegionesForSelect(),
             'tipos_inspeccion'  => $this->tiposInspeccionModel->getListaActivos(), // CAMBIADO
             'validation'        => session('validation') ?? \Config\Services::validation(),
         ];

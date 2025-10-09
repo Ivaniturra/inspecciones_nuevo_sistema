@@ -43,53 +43,32 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     // CORREDORES - GESTIÓN ADMINISTRATIVA (solo super admin)
     // ===================================================
     $routes->group('corredores', ['filter' => 'role:7'], static function($routes) {
-       $routes->get('/', 'Corredores::index');
+        $routes->get('/', 'Corredores::index');
         $routes->get('create', 'Corredores::create');
         $routes->post('store', 'Corredores::store');
         $routes->get('show/(:num)', 'Corredores::show/$1');
         $routes->get('edit/(:num)', 'Corredores::edit/$1');
-        $routes->post('update/(:num)', 'Corredores::update/$1');
-        $routes->put('update/(:num)', 'Corredores::update/$1');
-        $routes->post('delete/(:num)', 'Corredores::delete/$1');
-        $routes->delete('delete/(:num)', 'Corredores::delete/$1');
+        $routes->match(['POST','PUT'], 'update/(:num)', 'Corredores::update/$1');
+        $routes->match(['POST','DELETE'], 'delete/(:num)', 'Corredores::delete/$1');
         $routes->post('toggleStatus/(:num)', 'Corredores::toggleStatus/$1');
+        
     });
 
     // ===================================================
     // CORREDOR - DASHBOARD Y OPERACIONES (corredores y admins)
     // ===================================================
      $routes->group('corredor', ['filter' => 'role:9,10'], static function($routes) {
-        // Dashboard principal
-        $routes->get('/', 'Corredor::index');
-        $routes->get('dashboard', 'Corredor::index');
-        
-        // CRUD de Inspecciones
+         $routes->get('/', 'Corredor::index');
         $routes->get('create', 'Corredor::create');
         $routes->post('store', 'Corredor::store');
         $routes->get('show/(:num)', 'Corredor::show/$1');
         $routes->get('edit/(:num)', 'Corredor::edit/$1');
-        $routes->post('update/(:num)', 'Corredor::update/$1'); 
-        $routes->get('filter-status', 'Corredor::filterByStatus');
-
-
-        $routes->get('delete/(:num)', 'Corredor::delete/$1');
-        
-        // Rutas AJAX
-        $routes->get('filter-status', 'Corredor::filterByStatus');
-        $routes->get('stats', 'Corredor::getStats');
-        
-        // Rutas de perfil del corredor
-        $routes->get('perfil', 'Corredor::perfil');
-        $routes->post('actualizar-perfil', 'Corredor::actualizarPerfil');
-        $routes->post('actualizar-branding', 'Corredor::actualizarBranding');
-        
-        // Reportes del corredor
-        $routes->get('reportes', 'Corredor::reportes');
-        $routes->get('reporte-mensual/(:num)/(:num)', 'Corredor::reporteMensual/$1/$2');
-        $routes->get('export-excel', 'Corredor::exportExcel');
-        $routes->get('export-pdf/(:num)', 'Corredor::exportPdf/$1');
+        $routes->post('update/(:num)', 'Corredor::update/$1');
+        $routes->put('update/(:num)', 'Corredor::update/$1');
+        $routes->match(['post', 'delete'], 'delete/(:num)', 'Corredor::delete/$1');
+        $routes->get('filterByStatus', 'Corredor::filterByStatus');
     });
-
+ 
     // ===================================================
     // INSPECCIONES - GESTIÓN ADMINISTRATIVA COMPLETA
     // ===================================================

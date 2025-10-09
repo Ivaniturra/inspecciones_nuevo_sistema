@@ -36,7 +36,7 @@ class ValoresComunas extends BaseController
     {
         $data = [
             'title'             => 'Nuevo Valor por Comuna',
-            'cias'              => $this->ciasModel->getListaActivas(),
+            'cias'              => $this->CiaModel->getListaActivas(),
             'tipos_usuario'     => [
                 'Inspector' => 'Inspector',
                 'Compañía'  => 'Compañía'

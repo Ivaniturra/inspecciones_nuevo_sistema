@@ -118,18 +118,17 @@ class ValoresComunas extends BaseController
             'title' => 'Detalles del Valor',
             'valor' => $valor
         ]);
-    }
-
-    /** Formulario de edición */
+    } 
     public function edit($id)
     {
-        $id = (int) $id; // por si acaso
+        $id = (int) $id;
 
         $db = \Config\Database::connect();
 
         $builder = $db->table('valores_comunas AS vc');
         $builder->select('
             vc.*,
+            vc.tipo_inspeccion_id,
             c.comunas_nombre,
             p.provincias_id,
             p.provincias_nombre,
@@ -138,7 +137,6 @@ class ValoresComunas extends BaseController
         ');
         $builder->join('comunas      AS c', 'c.comunas_id      = vc.comunas_id',   'left');
         $builder->join('provincias   AS p', 'p.provincias_id   = c.provincias_id', 'left');
-        // OJO acá: usar p.regiones_id (no p.region_id)
         $builder->join('regiones     AS r', 'r.region_id       = p.regiones_id',   'left');
 
         $builder->where('vc.valores_id', $id);
@@ -150,73 +148,87 @@ class ValoresComunas extends BaseController
         }
 
         $data = [
-            'title'          => 'Editar Valor por Comuna',
-            'valor'          => $valor,
-            'regiones'       => $this->getRegionesForSelect(),
-            'provincias'     => $this->getProvinciasByRegionHelper($valor['region_id']),
-            'comunas'        => $this->getComunasByProvinciaHelper($valor['provincias_id']),
-            'cias'           => $this->getCiasForSelect(),
-            'tipos_usuario'  => $this->getTiposUsuarioForSelect(),
-            'tipos_inspeccion' => $this->getTiposVehiculoForSelect(),
-            'validation'     => \Config\Services::validation(),
+            'title'             => 'Editar Valor por Comuna',
+            'valor'             => $valor,
+            'regiones'          => $this->getRegionesForSelect(),
+            'provincias'        => $this->getProvinciasByRegionHelper($valor['region_id']),
+            'comunas'           => $this->getComunasByProvinciaHelper($valor['provincias_id']),
+            'cias'              => $this->getCiasForSelect(),
+            'tipos_usuario'     => $this->getTiposUsuarioForSelect(),
+            'tipos_inspeccion'  => $this->getTiposInspeccionForSelect(), // CORREGIDO
+            'validation'        => \Config\Services::validation(),
         ];
 
         return view('valores_comunas/edit', $data);
     }
+    private function getTiposInspeccionForSelect(): array
+    {
+        $tipos = $this->tiposInspeccionModel->select('tipo_inspeccion_id, tipo_inspeccion_nombre')
+            ->where('tipo_inspeccion_activo', 1)
+            ->orderBy('tipo_inspeccion_nombre', 'ASC')
+            ->findAll();
+        
+        $result = [];
+        foreach ($tipos as $tipo) {
+            $result[$tipo['tipo_inspeccion_id']] = $tipo['tipo_inspeccion_nombre'];
+        }
+        return $result;
+    }
 
-
-    /** Actualizar */
     public function update($id)
     {
-        $valor = $this->valoresComunasModel->find($id);
-        if (! $valor) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Valor no encontrado');
-        }
-
         $rules = [
             'comunas_id'           => 'required',
             'cia_id'               => 'required|integer',
-            'tipo_usuario'         => 'required',
-            'tipo_inspeccion_id'     => 'required|integer',
+            'tipo_usuario'         => 'required|in_list[Inspector,Compañía]',
+            'tipo_inspeccion_id'   => 'required|integer', // CORREGIDO
+            'unidad_medida'        => 'required|in_list[UF,CLP,UTM]',
             'valor'                => 'required|decimal',
             'fecha_vigencia_desde' => 'required|valid_date',
             'fecha_vigencia_hasta' => 'permit_empty|valid_date',
         ];
 
-        if (! $this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if (!$this->validate($rules)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('validation', $this->validator);
         }
 
-        // Verificar si ya existe otro valor activo para estos parámetros (excluyendo el actual)
+        // Verificar duplicados (excluyendo el registro actual)
         if ($this->valoresComunasModel->existeValorCompleto(
             $this->request->getPost('comunas_id'),
             $this->request->getPost('cia_id'),
             $this->request->getPost('tipo_usuario'),
-            $this->request->getPost('tipo_inspeccion_id'),
+            $this->request->getPost('tipo_inspeccion_id'), // CORREGIDO
             $this->request->getPost('unidad_medida'),
             $id // Excluir el registro actual
         )) {
-            return redirect()->back()->withInput()->with('error', 'Ya existe otro valor activo para esta combinación');
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ya existe un valor activo para esta combinación específica');
         }
 
         $data = [
-            'comunas_id'                     => (string)$this->request->getPost('comunas_id'),
+            'comunas_id'                     => $this->request->getPost('comunas_id'),
             'cia_id'                         => (int)$this->request->getPost('cia_id'),
-            'tipo_inspeccion_id'               => (int)$this->request->getPost('tipo_inspeccion_id'),
-            'valores_tipo_usuario'           => (string)$this->request->getPost('tipo_usuario'),
-            'valores_unidad_medida'          => (string)$this->request->getPost('unidad_medida'),
+            'tipo_inspeccion_id'             => (int)$this->request->getPost('tipo_inspeccion_id'), // CORREGIDO
+            'valores_tipo_usuario'           => $this->request->getPost('tipo_usuario'),
+            'valores_unidad_medida'          => $this->request->getPost('unidad_medida'),
             'valores_valor'                  => (float)$this->request->getPost('valor'),
-            'valores_moneda'                 => (string)($this->request->getPost('moneda') ?: 'CLP'),
-            'valores_descripcion'            => (string)$this->request->getPost('descripcion'),
-            'valores_fecha_vigencia_desde'   => (string)$this->request->getPost('fecha_vigencia_desde'),
+            'valores_moneda'                 => $this->request->getPost('moneda') ?: $this->request->getPost('unidad_medida'),
+            'valores_descripcion'            => $this->request->getPost('descripcion'),
+            'valores_fecha_vigencia_desde'   => $this->request->getPost('fecha_vigencia_desde'),
             'valores_fecha_vigencia_hasta'   => $this->request->getPost('fecha_vigencia_hasta') ?: null,
         ];
 
         if ($this->valoresComunasModel->update($id, $data)) {
-            return redirect()->to('/valores-comunas')->with('success', 'Valor actualizado exitosamente');
+            return redirect()->to('/valores-comunas')
+                ->with('success', 'Valor actualizado exitosamente');
         }
 
-        return redirect()->back()->withInput()->with('error', 'Error al actualizar el valor');
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'Error al actualizar el valor');
     }
 
     /** Eliminar */

@@ -108,26 +108,26 @@
                 <?php endif; ?>
               </div>
 
-              <!-- Tipo de Vehículo -->
+              <!-- Tipo de Inspección -->
               <div class="col-md-6 mb-4">
-                <label for="tipo_vehiculo_id" class="form-label fw-bold">
-                  <i class="fas fa-car text-primary me-1"></i>
-                  Tipo de Vehículo <span class="text-danger">*</span>
-                </label>
-                <select class="form-select <?= !empty($validation) && $validation->hasError('tipo_vehiculo_id') ? 'is-invalid' : '' ?>"
-                        id="tipo_vehiculo_id" name="tipo_vehiculo_id" required>
-                  <option value="">Seleccionar tipo...</option>
-                  <?php if (!empty($tipos_vehiculo)): ?>
-                    <?php foreach ($tipos_vehiculo as $id => $nombre): ?>
-                      <option value="<?= $id ?>" <?= (old('tipo_vehiculo_id', $valor['tipo_vehiculo_id'] ?? 0) == $id) ? 'selected' : '' ?>>
-                        <?= esc($nombre) ?>
-                      </option>
-                    <?php endforeach; ?>
+                  <label for="tipo_inspeccion_id" class="form-label fw-bold">
+                      <i class="fas fa-car text-primary me-1"></i>
+                      Tipo de Inspección <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select <?= !empty($validation) && $validation->hasError('tipo_inspeccion_id') ? 'is-invalid' : '' ?>"
+                          id="tipo_inspeccion_id" name="tipo_inspeccion_id" required>
+                      <option value="">Seleccionar tipo...</option>
+                      <?php if (!empty($tipos_inspeccion)): ?>
+                          <?php foreach ($tipos_inspeccion as $id => $nombre): ?>
+                              <option value="<?= $id ?>" <?= (old('tipo_inspeccion_id', $valor['tipo_inspeccion_id'] ?? 0) == $id) ? 'selected' : '' ?>>
+                                  <?= esc($nombre) ?>
+                              </option>
+                          <?php endforeach; ?>
+                      <?php endif; ?>
+                  </select>
+                  <?php if (!empty($validation) && $validation->hasError('tipo_inspeccion_id')): ?>
+                      <div class="invalid-feedback"><?= esc($validation->getError('tipo_inspeccion_id')) ?></div>
                   <?php endif; ?>
-                </select>
-                <?php if (!empty($validation) && $validation->hasError('tipo_vehiculo_id')): ?>
-                  <div class="invalid-feedback"><?= esc($validation->getError('tipo_vehiculo_id')) ?></div>
-                <?php endif; ?>
               </div>
 
               <!-- Región -->

@@ -2,22 +2,31 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
 use App\Models\ValoresComunasModel;
 use App\Models\CiaModel;
-use App\Models\tiposInspeccionModel;
-
+use App\Models\ComunasModel;
+use App\Models\ProvinciasModel;
+use App\Models\RegionesModel;
+use App\Models\TiposInspeccionModel;
 
 class ValoresComunas extends BaseController
 {
     protected $valoresComunasModel;
     protected $ciaModel;
+    protected $comunasModel;
+    protected $provinciasModel;
+    protected $regionesModel;
+    protected $tiposInspeccionModel;
 
     public function __construct()
     {
-         $this->tiposInspeccionModel = new tiposInspeccionModel();
-        $this->valoresComunasModel = new ValoresComunasModel();
-        $this->ciaModel = new CiaModel();
+        $this->valoresComunasModel  = new ValoresComunasModel();
+        $this->ciaModel             = new CiaModel();
+        $this->comunasModel         = new ComunasModel();
+        $this->provinciasModel      = new ProvinciasModel();
+        $this->regionesModel        = new RegionesModel();
+        $this->tiposInspeccionModel = new TiposInspeccionModel();
+        
         helper(['url', 'text', 'form']);
     }
 
@@ -38,14 +47,11 @@ class ValoresComunas extends BaseController
     public function create()
     {
         $data = [
-            'title'             => 'Nuevo Valor por Comuna', 
-            'tipos_usuario'     => [
-                'Inspector' => 'Inspector',
-                'Compañía'  => 'Compañía'
-            ],
-            'cias'            => $this->getCiasForSelect(),
-            'regiones'        => $this->getRegionesForSelect(),
-            'tipos_inspeccion'  => $this->getTiposVehiculoForSelect(), 
+            'title'             => 'Nuevo Valor por Comuna',
+            'tipos_usuario'     => $this->getTiposUsuarioForSelect(),
+            'cias'              => $this->getCiasForSelect(),
+            'regiones'          => $this->getRegionesForSelect(),
+            'tipos_inspeccion'  => $this->getTiposInspeccionForSelect(),
             'validation'        => session('validation') ?? \Config\Services::validation(),
         ];
 
@@ -57,7 +63,7 @@ class ValoresComunas extends BaseController
         $rules = [
             'comunas_id'           => 'required',
             'cia_id'               => 'required|integer',
-            'tipo_usuario'         => 'required|in_list[Inspector,Compañía]',
+            'tipo_usuario'         => 'required',
             'tipo_inspeccion_id'   => 'required|integer',
             'unidad_medida'        => 'required|in_list[UF,CLP,UTM]',
             'valor'                => 'required|decimal',
@@ -113,7 +119,7 @@ class ValoresComunas extends BaseController
     {
         $valor = $this->valoresComunasModel->getValorWithFullDetails($id);
 
-        if (! $valor) {
+        if (!$valor) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Valor no encontrado');
         }
 
@@ -121,7 +127,9 @@ class ValoresComunas extends BaseController
             'title' => 'Detalles del Valor',
             'valor' => $valor
         ]);
-    } 
+    }
+
+    /** Editar valor */
     public function edit($id)
     {
         $id = (int) $id;
@@ -158,33 +166,21 @@ class ValoresComunas extends BaseController
             'comunas'           => $this->getComunasByProvinciaHelper($valor['provincias_id']),
             'cias'              => $this->getCiasForSelect(),
             'tipos_usuario'     => $this->getTiposUsuarioForSelect(),
-            'tipos_inspeccion'  => $this->getTiposInspeccionForSelect(), // CORREGIDO
+            'tipos_inspeccion'  => $this->getTiposInspeccionForSelect(),
             'validation'        => \Config\Services::validation(),
         ];
 
         return view('valores_comunas/edit', $data);
     }
-    private function getTiposInspeccionForSelect(): array
-    {
-        $tipos = $this->tiposInspeccionModel->select('tipo_inspeccion_id, tipo_inspeccion_nombre')
-            ->where('tipo_inspeccion_activo', 1)
-            ->orderBy('tipo_inspeccion_nombre', 'ASC')
-            ->findAll();
-        
-        $result = [];
-        foreach ($tipos as $tipo) {
-            $result[$tipo['tipo_inspeccion_id']] = $tipo['tipo_inspeccion_nombre'];
-        }
-        return $result;
-    }
 
+    /** Actualizar valor */
     public function update($id)
     {
         $rules = [
             'comunas_id'           => 'required',
             'cia_id'               => 'required|integer',
-            'tipo_usuario'         => 'required|in_list[Inspector,Compañía]',
-            'tipo_inspeccion_id'   => 'required|integer', // CORREGIDO
+            'tipo_usuario'         => 'required',
+            'tipo_inspeccion_id'   => 'required|integer',
             'unidad_medida'        => 'required|in_list[UF,CLP,UTM]',
             'valor'                => 'required|decimal',
             'fecha_vigencia_desde' => 'required|valid_date',
@@ -202,9 +198,9 @@ class ValoresComunas extends BaseController
             $this->request->getPost('comunas_id'),
             $this->request->getPost('cia_id'),
             $this->request->getPost('tipo_usuario'),
-            $this->request->getPost('tipo_inspeccion_id'), // CORREGIDO
+            $this->request->getPost('tipo_inspeccion_id'),
             $this->request->getPost('unidad_medida'),
-            $id // Excluir el registro actual
+            $id
         )) {
             return redirect()->back()
                 ->withInput()
@@ -214,7 +210,7 @@ class ValoresComunas extends BaseController
         $data = [
             'comunas_id'                     => $this->request->getPost('comunas_id'),
             'cia_id'                         => (int)$this->request->getPost('cia_id'),
-            'tipo_inspeccion_id'             => (int)$this->request->getPost('tipo_inspeccion_id'), // CORREGIDO
+            'tipo_inspeccion_id'             => (int)$this->request->getPost('tipo_inspeccion_id'),
             'valores_tipo_usuario'           => $this->request->getPost('tipo_usuario'),
             'valores_unidad_medida'          => $this->request->getPost('unidad_medida'),
             'valores_valor'                  => (float)$this->request->getPost('valor'),
@@ -238,7 +234,7 @@ class ValoresComunas extends BaseController
     public function delete($id)
     {
         $valor = $this->valoresComunasModel->find($id);
-        if (! $valor) {
+        if (!$valor) {
             return redirect()->to('/valores-comunas')->with('error', 'Valor no encontrado');
         }
 
@@ -247,12 +243,64 @@ class ValoresComunas extends BaseController
         }
 
         return redirect()->to('/valores-comunas')->with('error', 'Error al eliminar el valor');
-    } 
+    }
+
+    /** Toggle status AJAX */
+    public function toggleStatus($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to('/valores-comunas')->with('error', 'Método no permitido');
+        }
+
+        $id = (int) $id;
+        
+        $valor = $this->valoresComunasModel->find($id);
+        
+        if (!$valor) {
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Valor no encontrado'
+                ])->setStatusCode(404);
+        }
+
+        $oldStatus = (int) ($valor['valores_activo'] ?? 1);
+        $newStatus = $oldStatus === 1 ? 0 : 1;
+
+        try {
+            if ($this->valoresComunasModel->update($id, ['valores_activo' => $newStatus])) {
+                log_message('info', "ValorComuna {$id} cambió estado: {$oldStatus} -> {$newStatus}");
+                
+                return $this->response
+                    ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                    ->setJSON([
+                        'success'     => true,
+                        'message'     => 'Estado del valor actualizado correctamente',
+                        'new_status'  => $newStatus,
+                        'status_text' => $newStatus ? 'Activo' : 'Inactivo',
+                        'valor_id'    => $id
+                    ]);
+            }
+
+            throw new \Exception('Error al actualizar en la base de datos');
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error en toggleStatus valor: ' . $e->getMessage());
+            
+            return $this->response
+                ->setHeader('X-CSRF-TOKEN', csrf_hash())
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Error interno al actualizar el estado del valor'
+                ])->setStatusCode(500);
+        }
+    }
 
     /** Obtener provincias por región (AJAX) */
     public function getProvinciasByRegion($regionId)
     {
-        if (! $this->request->isAJAX() && ! is_numeric($regionId)) {
+        if (!$this->request->isAJAX() && !is_numeric($regionId)) {
             return redirect()->to('/valores-comunas');
         }
 
@@ -263,34 +311,12 @@ class ValoresComunas extends BaseController
     /** Obtener comunas por provincia (AJAX) */
     public function getComunasByProvincia($provinciaId)
     {
-        if (! $this->request->isAJAX() && ! is_numeric($provinciaId)) {
+        if (!$this->request->isAJAX() && !is_numeric($provinciaId)) {
             return redirect()->to('/valores-comunas');
         }
 
         $rows = $this->getComunasByProvinciaHelper($provinciaId);
         return $this->response->setJSON($rows);
-    }
-
-    /** Obtener comunas por región (método legacy para backward compatibility) */
-    public function getComunasByRegion($regionId)
-    {
-        if (! $this->request->isAJAX()) {
-            return redirect()->to('/valores-comunas');
-        }
-
-        $db = \Config\Database::connect();
-        
-        $comunas = $db->table('comunas c')
-                     ->select('c.comunas_id, c.comunas_nombre, p.provincias_nombre')
-                     ->join('provincias p', 'p.provincias_id = c.provincias_id', 'left')
-                     ->join('regiones r', 'r.region_id = p.region_id', 'left')
-                     ->where('r.region_id', $regionId)
-                     ->orderBy('p.provincias_nombre', 'ASC')
-                     ->orderBy('c.comunas_nombre', 'ASC')
-                     ->get()
-                     ->getResultArray();
-        
-        return $this->response->setJSON($comunas);
     }
 
     /** Filtrar valores */
@@ -305,13 +331,13 @@ class ValoresComunas extends BaseController
                 comunas.comunas_nombre, 
                 regiones.region_nombre, 
                 cias.cia_nombre,
-                tv.tipo_inspeccion_id_nombre
+                ti.tipo_inspeccion_nombre
             ')
             ->join('comunas', 'comunas.comunas_id = valores_comunas.comunas_id', 'left')
             ->join('provincias', 'provincias.provincias_id = comunas.provincias_id', 'left')
             ->join('regiones', 'regiones.region_id = provincias.regiones_id', 'left')
             ->join('cias', 'cias.cia_id = valores_comunas.cia_id', 'left')
-            ->join('tipos_inspeccion tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left');
+            ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left');
 
         if ($ciaId) {
             $valores->where('valores_comunas.cia_id', $ciaId);
@@ -359,13 +385,9 @@ class ValoresComunas extends BaseController
 
     private function getRegionesForSelect(): array
     {
-        $db = \Config\Database::connect();
-        
-        $regiones = $db->table('regiones')
-                      ->select('region_id, region_nombre')
+        $regiones = $this->regionesModel->select('region_id, region_nombre')
                       ->orderBy('region_id', 'ASC')
-                      ->get()
-                      ->getResultArray();
+                      ->findAll();
 
         $result = [];
         foreach ($regiones as $region) {
@@ -374,137 +396,33 @@ class ValoresComunas extends BaseController
 
         return $result;
     }
-    public function toggleStatus($id)
-    {
-        // Validar que sea petición AJAX
-        if (!$this->request->isAJAX()) {
-            return redirect()->to('/valores-comunas')->with('error', 'Método no permitido');
-        }
 
-        // Validar permisos (ajustar según tu sistema)
-        // if (!$this->hasPermission('gestionar_valores')) {
-        //     return $this->response->setJSON([
-        //         'success' => false,
-        //         'message' => 'No tienes permisos para cambiar estados de valores'
-        //     ])->setStatusCode(403);
-        // }
-
-        // Rate limit básico (opcional)
-        // if (!$this->checkRateLimit('toggle_valor', 20, 60)) {
-        //     return $this->response->setJSON([
-        //         'success' => false,
-        //         'message' => 'Demasiados intentos. Intenta más tarde.'
-        //     ])->setStatusCode(429);
-        // }
-
-        $id = (int) $id;
-        
-        // Buscar valor
-        $valor = $this->valoresComunasModel->find($id);
-        
-        if (!$valor) {
-            return $this->response
-                ->setHeader('X-CSRF-TOKEN', csrf_hash())
-                ->setJSON([
-                    'success' => false,
-                    'message' => 'Valor no encontrado'
-                ])->setStatusCode(404);
-        }
-
-        // Obtener estado actual
-        $oldStatus = (int) ($valor['valores_activo'] ?? 1);
-        $newStatus = $oldStatus === 1 ? 0 : 1;
-
-        try {
-            // Actualizar estado
-            if ($this->valoresComunasModel->update($id, ['valores_activo' => $newStatus])) {
-                
-                // Log opcional de auditoría
-                log_message('info', "ValorComuna {$id} cambió estado: {$oldStatus} -> {$newStatus}");
-                
-                // Si tienes sistema de auditoría:
-                // $this->logAuditAction('valor_status_changed', [
-                //     'valor_id'      => $id,
-                //     'old_status'    => $oldStatus,
-                //     'new_status'    => $newStatus,
-                //     'changed_by'    => $this->session->get('user_id') ?? 'system',
-                //     'ip_address'    => $this->request->getIPAddress(),
-                // ]);
-
-                // ✅ RESPUESTA EXITOSA con nuevo token CSRF
-                return $this->response
-                    ->setHeader('X-CSRF-TOKEN', csrf_hash()) // Nuevo token
-                    ->setJSON([
-                        'success'     => true,
-                        'message'     => 'Estado del valor actualizado correctamente',
-                        'new_status'  => $newStatus,
-                        'status_text' => $newStatus ? 'Activo' : 'Inactivo',
-                        'valor_id'    => $id
-                    ]);
-            }
-
-            throw new \Exception('Error al actualizar en la base de datos');
-            
-        } catch (\Exception $e) {
-            log_message('error', 'Error en toggleStatus valor: ' . $e->getMessage());
-            
-            return $this->response
-                ->setHeader('X-CSRF-TOKEN', csrf_hash()) // Token incluso en error
-                ->setJSON([
-                    'success' => false,
-                    'message' => 'Error interno al actualizar el estado del valor'
-                ])->setStatusCode(500);
-        }
-    }
-
-    /**
-     * Rate limit helper (opcional)
-     */
-    private function checkRateLimit(string $action, int $maxAttempts = 5, int $windowSeconds = 900): bool
-    {
-        $ip  = $this->request->getIPAddress();
-        $key = 'rl_' . md5($action . '|' . $ip);
-        return service('throttler')->check($key, $maxAttempts, $windowSeconds);
-    }
-    /** Helper para provincias */
     private function getProvinciasByRegionHelper($regionId): array
     {
         if (!$regionId) return [];
 
-        $db = \Config\Database::connect();
-        return $db->table('provincias')
-            ->select('provincias_id, provincias_nombre')
+        return $this->provinciasModel->select('provincias_id, provincias_nombre')
             ->where('regiones_id', (int)$regionId)
             ->orderBy('provincias_nombre', 'ASC')
-            ->get()
-            ->getResultArray();
+            ->findAll();
     }
 
-    /** Helper para comunas */
     private function getComunasByProvinciaHelper($provinciaId): array
     {
         if (!$provinciaId) return [];
 
-        $db = \Config\Database::connect();
-        return $db->table('comunas')
-            ->select('comunas_id, comunas_nombre')
+        return $this->comunasModel->select('comunas_id, comunas_nombre')
             ->where('provincias_id', (int)$provinciaId)
             ->orderBy('comunas_nombre', 'ASC')
-            ->get()
-            ->getResultArray();
+            ->findAll();
     }
 
-    /** Helper para tipos de vehículo */
-    private function getTiposVehiculoForSelect(): array
+    private function getTiposInspeccionForSelect(): array
     {
-        $db = \Config\Database::connect();
-        
-        $tipos = $db->table('tipos_inspeccion')
-                   ->select('tipo_inspeccion_id, tipo_inspeccion_nombre')
+        $tipos = $this->tiposInspeccionModel->select('tipo_inspeccion_id, tipo_inspeccion_nombre')
                    ->where('tipo_inspeccion_activo', 1)
-                   ->orderBy('tipo_inspeccion_id', 'ASC')
-                   ->get()
-                   ->getResultArray();
+                   ->orderBy('tipo_inspeccion_nombre', 'ASC')
+                   ->findAll();
 
         $result = [];
         foreach ($tipos as $tipo) {
@@ -516,13 +434,10 @@ class ValoresComunas extends BaseController
 
     private function getTiposUsuarioForSelect(): array
     {
-        $tipos = $this->valoresComunasModel->getTiposUsuario();
-        
-        // Agregar tipos predefinidos si no existen
-        $tiposDefault = ['general', 'inspector', 'compania', 'supervisor', 'administrador'];
-        $tipos = array_unique(array_merge($tipos, $tiposDefault));
-        sort($tipos);
-
-        return array_combine($tipos, array_map('ucfirst', $tipos));
+        return [
+            'Inspector' => 'Inspector',
+            'Compañía'  => 'Compañía',
+            'general'   => 'General'
+        ];
     }
 }

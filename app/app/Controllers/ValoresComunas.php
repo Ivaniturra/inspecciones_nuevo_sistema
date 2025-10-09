@@ -35,12 +35,15 @@ class ValoresComunas extends BaseController
     public function create()
     {
         $data = [
-            'title'           => 'Nuevo Valor por Comuna',
-            'validation'      => \Config\Services::validation(),
-            'cias'            => $this->getCiasForSelect(),
-            'regiones'        => $this->getRegionesForSelect(),
-            'tipos_usuario'   => $this->getTiposUsuarioForSelect(),
-            'tipos_inspeccion'  => $this->getTiposVehiculoForSelect(),
+            'title'             => 'Nuevo Valor por Comuna',
+            'cias'              => $this->ciasModel->getListaActivas(),
+            'tipos_usuario'     => [
+                'Inspector' => 'Inspector',
+                'Compañía'  => 'Compañía'
+            ],
+            'regiones'          => $this->regionesModel->getListaActivas(),
+            'tipos_inspeccion'  => $this->tiposInspeccionModel->getListaActivos(), // CAMBIADO
+            'validation'        => session('validation') ?? \Config\Services::validation(),
         ];
 
         return view('valores_comunas/create', $data);
@@ -52,7 +55,7 @@ class ValoresComunas extends BaseController
             'comunas_id'           => 'required',
             'cia_id'               => 'required|integer',
             'tipo_usuario'         => 'required|in_list[Inspector,Compañía]',
-            'tipo_inspeccion_id'   => 'required|integer', // CORREGIDO
+            'tipo_inspeccion_id'   => 'required|integer',
             'unidad_medida'        => 'required|in_list[UF,CLP,UTM]',
             'valor'                => 'required|decimal',
             'fecha_vigencia_desde' => 'required|valid_date',
@@ -70,7 +73,7 @@ class ValoresComunas extends BaseController
             $this->request->getPost('comunas_id'),
             $this->request->getPost('cia_id'),
             $this->request->getPost('tipo_usuario'),
-            $this->request->getPost('tipo_inspeccion_id'), // CORREGIDO
+            $this->request->getPost('tipo_inspeccion_id'),
             $this->request->getPost('unidad_medida')
         )) {
             return redirect()->back()
@@ -81,7 +84,7 @@ class ValoresComunas extends BaseController
         $data = [
             'comunas_id'                     => $this->request->getPost('comunas_id'),
             'cia_id'                         => (int)$this->request->getPost('cia_id'),
-            'tipo_inspeccion_id'             => (int)$this->request->getPost('tipo_inspeccion_id'), // CORREGIDO
+            'tipo_inspeccion_id'             => (int)$this->request->getPost('tipo_inspeccion_id'),
             'valores_tipo_usuario'           => $this->request->getPost('tipo_usuario'),
             'valores_unidad_medida'          => $this->request->getPost('unidad_medida'),
             'valores_valor'                  => (float)$this->request->getPost('valor'),

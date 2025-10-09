@@ -15,6 +15,9 @@ class TiposInspeccion extends BaseController
         helper(['url', 'text']);
     }
 
+    /**
+     * Listado de tipos de inspección
+     */
     public function index()
     {
         $perPage = (int)($this->request->getGet('per_page') ?? 10);
@@ -57,6 +60,9 @@ class TiposInspeccion extends BaseController
         return view('tipos_inspeccion/index', $data);
     }
 
+    /**
+     * Formulario de creación
+     */
     public function create()
     {
         $data = [
@@ -67,6 +73,9 @@ class TiposInspeccion extends BaseController
         return view('tipos_inspeccion/create', $data);
     }
 
+    /**
+     * Guardar nuevo tipo de inspección
+     */
     public function store()
     {
         $rules = [
@@ -93,9 +102,32 @@ class TiposInspeccion extends BaseController
         return redirect()->back()->withInput()->with('error', 'Error al crear el tipo de inspección');
     }
 
+    /**
+     * Ver detalle de tipo de inspección
+     */
+    public function show($id)
+    {
+        $tipo = $this->tiposInspeccionModel->find($id);
+        
+        if (!$tipo) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Tipo de inspección no encontrado');
+        }
+
+        $data = [
+            'title' => 'Detalles del Tipo de Inspección',
+            'tipo'  => $tipo
+        ];
+
+        return view('tipos_inspeccion/show', $data);
+    }
+
+    /**
+     * Formulario de edición
+     */
     public function edit($id)
     {
         $tipo = $this->tiposInspeccionModel->find($id);
+        
         if (!$tipo) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Tipo de inspección no encontrado');
         }
@@ -107,9 +139,13 @@ class TiposInspeccion extends BaseController
         ]);
     }
 
+    /**
+     * Actualizar tipo de inspección
+     */
     public function update($id)
     {
         $tipo = $this->tiposInspeccionModel->find($id);
+        
         if (!$tipo) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Tipo de inspección no encontrado');
         }
@@ -138,24 +174,31 @@ class TiposInspeccion extends BaseController
         return redirect()->back()->withInput()->with('error', 'Error al actualizar el tipo de inspección');
     }
 
+    /**
+     * Eliminar tipo de inspección (soft delete)
+     */
     public function delete($id)
     {
         $tipo = $this->tiposInspeccionModel->find($id);
+        
         if (!$tipo) {
             return redirect()->to('/tipos-inspeccion')->with('error', 'Tipo de inspección no encontrado');
         }
 
         if (!$this->tiposInspeccionModel->canDelete($id)) {
-            return redirect()->to('/tipos-inspeccion')->with('error', 'No se puede eliminar porque está siendo utilizado');
+            return redirect()->to('/tipos-inspeccion')->with('error', 'No se puede eliminar el tipo de inspección porque está siendo utilizado');
         }
 
         if ($this->tiposInspeccionModel->delete($id)) {
             return redirect()->to('/tipos-inspeccion')->with('success', 'Tipo de inspección eliminado exitosamente');
         }
 
-        return redirect()->to('/tipos-inspeccion')->with('error', 'Error al eliminar');
+        return redirect()->to('/tipos-inspeccion')->with('error', 'Error al eliminar el tipo de inspección');
     }
 
+    /**
+     * Toggle estado (AJAX)
+     */
     public function toggleStatus($id)
     {
         if (!$this->request->isAJAX()) {
@@ -166,14 +209,18 @@ class TiposInspeccion extends BaseController
 
         try {
             $tipo = $this->tiposInspeccionModel->find($id);
+            
             if (!$tipo) {
-                return $this->response->setJSON(['success' => false, 'message' => 'Tipo no encontrado']);
+                return $this->response->setJSON([
+                    'success' => false, 
+                    'message' => 'Tipo de inspección no encontrado'
+                ]);
             }
 
             $newStatus = (int)($tipo['tipo_inspeccion_activo'] == 1 ? 0 : 1);
             
             if ($this->tiposInspeccionModel->update($id, ['tipo_inspeccion_activo' => $newStatus])) {
-                $message = $newStatus ? 'Tipo activado correctamente' : 'Tipo desactivado correctamente';
+                $message = $newStatus ? 'Tipo de inspección activado correctamente' : 'Tipo de inspección desactivado correctamente';
                 
                 return $this->response
                     ->setHeader('X-CSRF-TOKEN', csrf_hash())
@@ -184,14 +231,23 @@ class TiposInspeccion extends BaseController
                     ]);
             }
 
-            return $this->response->setJSON(['success' => false, 'message' => 'No se pudo actualizar']);
+            return $this->response->setJSON([
+                'success' => false, 
+                'message' => 'No se pudo actualizar el estado'
+            ]);
 
         } catch (\Exception $e) {
             log_message('error', 'Error en toggleStatus tipos_inspeccion: ' . $e->getMessage());
-            return $this->response->setJSON(['success' => false, 'message' => 'Error interno']);
+            return $this->response->setJSON([
+                'success' => false, 
+                'message' => 'Error interno del servidor'
+            ]);
         }
     }
 
+    /**
+     * Obtener tipos para select (AJAX)
+     */
     public function getSelect()
     {
         if (!$this->request->isAJAX()) {
@@ -200,20 +256,5 @@ class TiposInspeccion extends BaseController
 
         $tipos = $this->tiposInspeccionModel->getListaActivos();
         return $this->response->setJSON($tipos);
-    }
-    public function show($id)
-    {
-        $tipo = $this->tiposInspeccionModel->find($id);
-        
-        if (!$tipo) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Tipo de inspección no encontrado');
-        }
-
-        $data = [
-            'title' => 'Detalles del Tipo de Inspección',
-            'tipo'  => $tipo
-        ];
-
-        return view('tipos_inspeccion/show', $data);
     }
 }

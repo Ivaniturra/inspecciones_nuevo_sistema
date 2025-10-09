@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\ValoresComunasModel;
 use App\Models\CiaModel;
+use App\Models\tiposInspeccionModel;
+
 
 class ValoresComunas extends BaseController
 {
@@ -13,6 +15,7 @@ class ValoresComunas extends BaseController
 
     public function __construct()
     {
+         $this->tiposInspeccionModel = new tiposInspeccionModel();
         $this->valoresComunasModel = new ValoresComunasModel();
         $this->ciaModel = new CiaModel();
         helper(['url', 'text', 'form']);

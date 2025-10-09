@@ -1,356 +1,369 @@
-<?= $this->extend('layouts/maincorredor') ?>
+<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
-<?= $title ?>
-<?= $this->endSection() ?>
-
-<?= $this->section('css') ?>
-<link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-<style>
-    .status-badge {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 50px;
-        font-weight: 600;
-        border: 1px solid rgba(255,255,255,0.2);
-        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-    
-    .table-actions {
-        white-space: nowrap;
-    }
-    
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-    }
-
-    .stats-card {
-        transition: transform 0.2s;
-        border-left: 4px solid var(--bs-primary);
-    }
-    
-    .stats-card:hover {
-        transform: translateY(-2px);
-    }
-
-    .estado-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        display: inline-block;
-        border: 2px solid rgba(255,255,255,0.8);
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-
-    .filter-estado {
-        border: 2px solid transparent;
-        transition: all 0.2s ease;
-    }
-
-    .filter-estado.active {
-        border-color: var(--bs-primary);
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-    }
-</style>
+Gestión de Corredores
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <div class="container-fluid">
-    <!-- Mensajes Flash -->
-    <?php if (session('success')): ?>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle me-2"></i>
-        <?= session('success') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <?php endif; ?>
-
-    <?php if (session('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        <?= session('error') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <?php endif; ?>
-
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h3 mb-0">
-                        <i class="fas fa-tachometer-alt me-2 text-primary"></i>
-                        <?= esc($title) ?>
-                    </h1>
-                    <p class="text-muted mb-0">Bienvenido, <?= esc($corredor_nombre) ?></p>
+                    <h1 class="h3 mb-0">Gestión de Corredores</h1>
+                    <p class="text-muted">Administra los corredores del sistema</p>
                 </div>
-                <div>
-                    <a href="<?= base_url('corredor/create') ?>" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Nueva Inspección
+
+                <?php if (function_exists('can') ? can('gestionar_corredores') : true): ?>
+                <a href="<?= base_url('corredores/create') ?>" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Corredor
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Buscar</label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="search" 
+                           name="search" 
+                           value="<?= esc($search ?? '') ?>" 
+                           placeholder="Nombre, email o RUT...">
+                </div>
+                <div class="col-md-3">
+                    <label for="cia_id" class="form-label">Compañía</label>
+                    <select class="form-select" id="cia_id" name="cia_id">
+                        <option value="">Todas las compañías</option>
+                        <?php foreach ($cias as $cia): ?>
+                            <option value="<?= $cia['cia_id'] ?>" <?= ($ciaId ?? '') == $cia['cia_id'] ? 'selected' : '' ?>>
+                                <?= esc($cia['cia_display_name'] ?: $cia['cia_nombre']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-5 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                    <a href="<?= base_url('corredores') ?>" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Limpiar
                     </a>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body py-3">
-                    <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-primary btn-sm filter-estado active" data-filter="all">
-                            <i class="fas fa-list me-1"></i>Todas (<?= count($inspecciones) ?>)
-                        </button>
-                        
-                        <?php if (!empty($estados)): ?>
-                            <?php foreach ($estados as $estadoId => $estadoData): ?>
-                                <?php 
-                                // Contar inspecciones por estado_id ← CAMBIO AQUÍ
-                                $count = count(array_filter($inspecciones, function($insp) use ($estadoId) {
-                                    return $insp['estado_id'] == $estadoId; // ← CAMBIO: usar estado_id
-                                }));
-                                
-                                // Obtener color de texto apropiado
-                                $bgColor = $estadoData['color'];
-                                $textColor = $this->getTextColorForBackground($bgColor);
-                                ?>
-                                <button class="btn btn-sm filter-estado" 
-                                        data-filter="<?= $estadoId ?>"
-                                        style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>; border-color: <?= $bgColor ?>;">
-                                    <span class="estado-dot me-1" style="background-color: <?= $textColor ?>; opacity: 0.8;"></span>
-                                    <?= esc($estadoData['nombre']) ?> (<?= $count ?>)
-                                </button>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
+    <!-- Alerts -->
+    <?php if (session()->getFlashdata('success')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <?= session()->getFlashdata('success') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <?= session()->getFlashdata('error') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <!-- Table Card -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-user-tie text-primary me-2"></i>
+                Listado de Corredores 
+                <span class="badge bg-light text-dark ms-2"><?= count($corredores) ?></span>
+            </h5>
+        </div>
+
+        <div class="card-body p-0">
+            <?php if (empty($corredores)): ?>
+                <div class="text-center py-5">
+                    <i class="fas fa-user-tie fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay corredores registrados</h5>
+                    <p class="text-muted">Comienza creando tu primer corredor</p>
+                    <?php if (function_exists('can') ? can('gestionar_corredores') : true): ?>
+                    <a href="<?= base_url('corredores/create') ?>" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Crear Corredor
+                    </a>
+                    <?php endif; ?>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Filtros por Estados del Sistema -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body py-3">
-                    <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-primary btn-sm filter-estado active" data-filter="all">
-                            <i class="fas fa-list me-1"></i>Todas (<?= count($inspecciones) ?>)
-                        </button>
-                        
-                        <?php if (!empty($estados)): ?>
-                            <?php foreach ($estados as $estadoId => $estadoData): ?>
-                                <?php 
-                                // Contar inspecciones por estado
-                                $count = count(array_filter($inspecciones, function($insp) use ($estadoId) {
-                                    return $insp['estado_id'] == $estadoId;
-                                }));
-                                
-                                // Obtener color de texto apropiado
-                                $bgColor = $estadoData['color'];
-                                $textColor = $this->getTextColorForBackground($bgColor);
-                                ?>
-                                <button class="btn btn-sm filter-estado" 
-                                        data-filter="<?= $estadoId ?>"
-                                        style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>; border-color: <?= $bgColor ?>;">
-                                    <span class="estado-dot me-1" style="background-color: <?= $textColor ?>; opacity: 0.8;"></span>
-                                    <?= esc($estadoData['nombre']) ?> (<?= $count ?>)
-                                </button>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabla -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <?php if (empty($inspecciones)): ?>
-                    <div class="text-center py-5">
-                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No hay inspecciones registradas</h5>
-                        <p class="text-muted">Comienza creando tu primera inspección</p>
-                        <a href="<?= base_url('corredor/create') ?>" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Nueva Inspección
-                        </a>
-                    </div>
-                    <?php else: ?>
-                    <div class="table-responsive">
-                        <table id="inspeccionesTable" class="table table-hover">
-                            <thead class="table-light">
+            <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">Logo</th>
+                                <th>Nombre/Email</th>
+                                <th style="width: 140px;">RUT</th>
+                                <th style="width: 140px;">Teléfono</th>
+                                <th style="width: 200px;">Compañías</th>
+                                <th class="text-center" style="width: 100px;">Estado</th>
+                                <th class="text-end" style="width: 150px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($corredores as $corredor): ?>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Asegurado</th>
-                                    <th>RUT</th>
-                                    <th>Patente</th>
-                                    <th>Vehículo</th>
-                                    <th>Compañía</th>
-                                    <th>Estado</th>
-                                    <th>Fecha Creación</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($inspecciones as $inspeccion): ?>
-                                    <tr data-estado="<?= $inspeccion['estado_id'] ?? 'sin-estado' ?>"> <!-- ← CAMBIO AQUÍ -->
-                                    <td><strong>#<?= $inspeccion['inspecciones_id'] ?></strong></td>
-                                    <td><?= esc($inspeccion['inspecciones_asegurado']) ?></td>
-                                    <td><code><?= esc($inspeccion['inspecciones_rut']) ?></code></td>
-                                    <td><span class="badge bg-secondary"><?= esc($inspeccion['inspecciones_patente']) ?></span></td>
                                     <td>
-                                        <small class="text-muted d-block"><?= esc($inspeccion['inspecciones_marca'] ?? 'N/A') ?></small>
-                                        <strong><?= esc($inspeccion['inspecciones_modelo'] ?? 'N/A') ?></strong>
-                                    </td>
-                                    <td><?= esc($inspeccion['cia_nombre'] ?? 'N/A') ?></td>
-                                    <td>
-                                        <?php 
-                                        $estadoId = $inspeccion['estado_id'] ?? null; // ← CAMBIO AQUÍ
-                                        if ($estadoId && isset($estados[$estadoId])):
-                                            $estadoInfo = $estados[$estadoId];
-                                            $bgColor = $estadoInfo['color'];
-                                            $textColor = $this->getTextColorForBackground($bgColor);
-                                        ?>
-                                            <span class="status-badge" 
-                                                style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>;">
-                                                <span class="estado-dot me-1" style="background-color: <?= $textColor ?>; opacity: 0.7;"></span>
-                                                <?= esc($estadoInfo['nombre']) ?>
-                                            </span>
+                                        <?php if (!empty($corredor['corredor_logo'])): ?>
+                                            <img src="<?= base_url('uploads/corredores/' . $corredor['corredor_logo']) ?>"
+                                                 alt="<?= esc($corredor['corredor_nombre']) ?>"
+                                                 class="rounded"
+                                                 style="width: 50px; height: 50px; object-fit: cover;">
                                         <?php else: ?>
-                                            <span class="badge bg-secondary">Sin Estado</span>
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                 style="width: 50px; height: 50px;">
+                                                <i class="fas fa-user-tie text-muted"></i>
+                                            </div>
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <small><?= date('d/m/Y H:i', strtotime($inspeccion['inspecciones_created_at'])) ?></small>
+                                        <div>
+                                            <a class="fw-medium text-decoration-none" href="<?= base_url('corredores/show/' . $corredor['corredor_id']) ?>">
+                                                <?= esc($corredor['corredor_nombre']) ?>
+                                            </a>
+                                            <?php if (!empty($corredor['corredor_display_name'])): ?>
+                                                <br><small class="text-muted"><?= esc($corredor['corredor_display_name']) ?></small>
+                                            <?php endif; ?>
+                                            <?php if (!empty($corredor['corredor_email'])): ?>
+                                                <br><small class="text-info">
+                                                    <i class="fas fa-envelope me-1"></i><?= esc($corredor['corredor_email']) ?>
+                                                </small>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
-                                    <td class="table-actions">
+                                    <td>
+                                        <?php if (!empty($corredor['corredor_rut'])): ?>
+                                            <span class="font-monospace"><?= esc($corredor['corredor_rut']) ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">Sin RUT</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($corredor['corredor_telefono'])): ?>
+                                            <span class="font-monospace"><?= esc($corredor['corredor_telefono']) ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">Sin teléfono</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <?php
+                                            // CORRECCIÓN: usar 'cias' en lugar de 'companias'
+                                            $lista = [];
+                                            if (!empty($corredor['cias'])) {
+                                                $lista = is_array($corredor['cias'])
+                                                        ? $corredor['cias']
+                                                        : array_filter(explode('|', $corredor['cias']));
+                                            } 
+                                            $max = 3;
+                                            $total = count($lista);
+                                            foreach (array_slice($lista, 0, $max) as $nom): ?>
+                                                <span class="badge bg-primary"><?= esc($nom) ?></span>
+                                            <?php endforeach; ?>
+                                            <?php if ($total > $max): ?>
+                                                <span class="badge bg-secondary" title="<?= $total - $max ?> más">+<?= $total - $max ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+
+                                    <!-- Estado con switch AJAX -->
+                                    <td class="text-center">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input class="form-check-input corredor-status-toggle"
+                                                   type="checkbox"
+                                                   role="switch"
+                                                   <?= $corredor['corredor_habil'] ? 'checked' : '' ?>
+                                                   data-id="<?= $corredor['corredor_id'] ?>"
+                                                   title="Cambiar estado">
+                                        </div>
+                                    </td>
+
+                                    <td class="text-end">
                                         <div class="btn-group" role="group">
-                                            <a href="<?= base_url('corredor/show/' . $inspeccion['inspecciones_id']) ?>" 
-                                               class="btn btn-outline-primary btn-sm" 
+                                            <a href="<?= base_url('corredores/show/' . $corredor['corredor_id']) ?>"
+                                               class="btn btn-sm btn-outline-primary"
                                                title="Ver detalles">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <?php if (in_array($inspeccion['inspecciones_estado'], ['pendiente', 'en_proceso'])): ?>
-                                            <a href="<?= base_url('corredor/edit/' . $inspeccion['inspecciones_id']) ?>" 
-                                               class="btn btn-outline-secondary btn-sm" 
+
+                                            <?php if (function_exists('can') ? can('gestionar_corredores') : true): ?>
+                                            <a href="<?= base_url('corredores/edit/' . $corredor['corredor_id']) ?>"
+                                               class="btn btn-sm btn-outline-warning"
                                                title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <?php endif; ?>
-                                            <?php if ($inspeccion['inspecciones_estado'] === 'pendiente'): ?>
-                                            <button type="button" 
-                                                    class="btn btn-outline-danger btn-sm" 
-                                                    title="Eliminar"
-                                                    onclick="confirmarEliminacion(<?= $inspeccion['inspecciones_id'] ?>)">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <?php endif; ?>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
-
-<?php
-// Helper function para calcular color de texto
-function getTextColorForBackground($hexColor) {
-    // Remover # si existe
-    $hex = ltrim($hexColor, '#');
-    
-    // Convertir a RGB
-    $r = hexdec(substr($hex, 0, 2));
-    $g = hexdec(substr($hex, 2, 2));
-    $b = hexdec(substr($hex, 4, 2));
-    
-    // Calcular luminancia
-    $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
-    
-    return $luminance > 0.5 ? '#000000' : '#ffffff';
-}
-?>
 <?= $this->endSection() ?>
 
-<?= $this->section('js') ?>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
+<?= $this->section('scripts') ?>
 <script>
-$(document).ready(function() {
-    // Solo inicializar DataTable si hay datos
-    <?php if (!empty($inspecciones)): ?>
-    var table = $('#inspeccionesTable').DataTable({
-        language: {
-            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-        },
-        responsive: true,
-        order: [[7, 'desc']], // Ordenar por fecha de creación descendente
-        pageLength: 25,
-        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-    });
+$(function() {
+    // Estado global del CSRF - se actualiza después de cada petición
+    let csrfToken = {
+        name: '<?= csrf_token() ?>',
+        hash: '<?= csrf_hash() ?>'
+    };
 
-    // Filtros por estado
-    $('.filter-estado').on('click', function() {
-        var filter = $(this).data('filter');
+    // Control de peticiones en vuelo para evitar race conditions
+    const requestsInFlight = new Set();
+
+    // Manejador del toggle de estado
+    function handleCorredorToggle() {
+        const $toggle = $(this);
         
-        // Actualizar apariencia de botones
-        $('.filter-estado').removeClass('active');
-        $(this).addClass('active');
-        
-        // Aplicar filtro
-        if (filter === 'all') {
-            // Mostrar todas las filas
-            $('#inspeccionesTable tbody tr').show();
-            if (typeof table !== 'undefined') {
-                table.draw();
-            }
-        } else {
-            // Filtrar por estado_id ← CAMBIO AQUÍ
-            $('#inspeccionesTable tbody tr').hide();
-            $('#inspeccionesTable tbody tr[data-estado="' + filter + '"]').show();
-            if (typeof table !== 'undefined') {
-                table.draw();
-            }
+        // Si estamos revirtiendo programáticamente, ignorar
+        if ($toggle.data('reverting')) {
+            return;
         }
-    });
-    <?php endif; ?>
 
-    // Auto-ocultar alertas después de 5 segundos
-    setTimeout(function() {
-        $('.alert').fadeOut();
-    }, 5000);
-});
+        const corredorId = $toggle.data('id');
+        const isChecked = $toggle.is(':checked');
 
-function confirmarEliminacion(id) {
-    if (confirm('¿Estás seguro de que deseas eliminar esta inspección?\n\nEsta acción no se puede deshacer.')) {
-        // Mostrar loader
-        $('body').append('<div id="loader" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.5); z-index: 9999;"><div class="spinner-border text-light" role="status"></div></div>');
-        
-        window.location.href = '<?= base_url('corredor/delete/') ?>' + id;
+        // Prevenir múltiples peticiones simultáneas para el mismo corredor
+        if (requestsInFlight.has(corredorId)) {
+            // Revertir el cambio visual
+            $toggle.data('reverting', true)
+                   .prop('checked', !isChecked)
+                   .data('reverting', false);
+            return;
+        }
+
+        // Marcar como en proceso
+        requestsInFlight.add(corredorId);
+        $toggle.prop('disabled', true);
+
+        // Realizar petición AJAX
+        $.ajax({
+            url: '<?= base_url('corredores/toggleStatus') ?>/' + corredorId,
+            type: 'POST',
+            data: {
+                [csrfToken.name]: csrfToken.hash
+            },
+            headers: {
+                'X-CSRF-TOKEN': csrfToken.hash
+            },
+            dataType: 'json'
+        })
+        .done(function(response, textStatus, xhr) {
+            // Actualizar token CSRF si viene en la respuesta
+            const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+            if (newToken) {
+                csrfToken.hash = newToken;
+            }
+
+            if (response && response.success) {
+                // Éxito - mostrar mensaje
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Estado actualizado',
+                    text: response.message || 'El estado del corredor ha sido actualizado',
+                    timer: 1600,
+                    showConfirmButton: false
+                });
+            } else {
+                // Error en la respuesta - revertir toggle
+                $toggle.data('reverting', true)
+                       .prop('checked', !isChecked)
+                       .data('reverting', false);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response?.message || 'No se pudo actualizar el estado del corredor'
+                });
+            }
+        })
+        .fail(function(xhr, textStatus, errorThrown) {
+            // Error de conexión - intentar obtener token de todos modos
+            const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
+            if (newToken) {
+                csrfToken.hash = newToken;
+            }
+
+            // Revertir toggle
+            $toggle.data('reverting', true)
+                   .prop('checked', !isChecked)
+                   .data('reverting', false);
+            
+            // Mostrar error
+            let errorMessage = 'No se pudo conectar con el servidor';
+            
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            } else if (xhr.status === 403) {
+                errorMessage = 'No tienes permisos para realizar esta acción';
+            } else if (xhr.status === 404) {
+                errorMessage = 'Corredor no encontrado';
+            }
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: errorMessage
+            });
+
+            console.error('Error en toggleStatus:', {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                responseText: xhr.responseText
+            });
+        })
+        .always(function() {
+            // Limpiar estado
+            requestsInFlight.delete(corredorId);
+            $toggle.prop('disabled', false);
+        });
     }
-}
 
-// Función para recargar estadísticas (opcional)
-function recargarEstadisticas() {
-    $.get('<?= base_url('corredor/stats') ?>', function(data) {
-        if (data.success) {
-            // Actualizar valores de estadísticas
-            $('.stats-card .text-warning').text(data.stats.solicitudes_pendientes);
-            $('.stats-card .text-info').text(data.stats.en_proceso);
-            $('.stats-card .text-success').text(data.stats.completadas_mes);
-        }
+    // Vincular evento a todos los toggles
+    $('.corredor-status-toggle').on('change', handleCorredorToggle);
+
+    // Confirmación de eliminación (si se reactiva el botón de eliminar)
+    $('.btn-delete').on('click', function(e) {
+        e.preventDefault();
+        const form = $(this).closest('form');
+        const mensaje = $(this).data('confirm') || '¿Estás seguro de eliminar este corredor?';
+
+        Swal.fire({
+            title: 'Confirmar eliminación',
+            text: mensaje,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
     });
-}
+});
 </script>
 <?= $this->endSection() ?>

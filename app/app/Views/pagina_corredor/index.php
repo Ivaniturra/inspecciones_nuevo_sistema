@@ -1,66 +1,157 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
-Gestión de Corredores
+Dashboard Corredor
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+
+<?php
+// FALLBACK DE SEGURIDAD
+if (!isset($cias) || !is_array($cias)) {
+    $cias = [];
+}
+$search = $search ?? '';
+$ciaId = $ciaId ?? '';
+$inspecciones = $inspecciones ?? [];
+$stats = $stats ?? [];
+?>
+
 <div class="container-fluid">
-    <!-- Header -->
+    <!-- Header con Estadísticas -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1 class="h3 mb-0">Gestión de Corredores</h1>
-                    <p class="text-muted">Administra los corredores del sistema</p>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                        Dashboard de Corredor
+                    </h1>
+                    <p class="text-muted mb-0">Bienvenido, <?= esc($corredor_nombre) ?></p>
+                </div>
+                <a href="<?= base_url('corredor/create') ?>" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Nueva Inspección
+                </a>
+            </div>
+
+            <!-- Cards de Estadísticas -->
+            <div class="row g-3">
+                <div class="col-md-4 col-lg-2">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-clock fa-2x text-warning"></i>
+                            </div>
+                            <h3 class="mb-0"><?= $stats['solicitudes_pendientes'] ?? 0 ?></h3>
+                            <small class="text-muted">Pendientes</small>
+                        </div>
+                    </div>
                 </div>
 
-                <?php if (function_exists('can') ? can('gestionar_corredores') : true): ?>
-                <a href="<?= base_url('corredores/create') ?>" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nuevo Corredor
-                </a>
-                <?php endif; ?>
+                <div class="col-md-4 col-lg-2">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-spinner fa-2x text-info"></i>
+                            </div>
+                            <h3 class="mb-0"><?= $stats['en_proceso'] ?? 0 ?></h3>
+                            <small class="text-muted">En Proceso</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-lg-2">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                            </div>
+                            <h3 class="mb-0"><?= $stats['completadas_mes'] ?? 0 ?></h3>
+                            <small class="text-muted">Completadas</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-lg-2">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-thumbs-up fa-2x text-primary"></i>
+                            </div>
+                            <h3 class="mb-0"><?= $stats['aceptadas'] ?? 0 ?></h3>
+                            <small class="text-muted">Aceptadas</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-lg-2">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-times-circle fa-2x text-danger"></i>
+                            </div>
+                            <h3 class="mb-0"><?= $stats['rechazadas'] ?? 0 ?></h3>
+                            <small class="text-muted">Rechazadas</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-lg-2">
+                    <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-clipboard-list fa-2x"></i>
+                            </div>
+                            <h3 class="mb-0"><?= $stats['total_inspecciones'] ?? 0 ?></h3>
+                            <small>Total</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Filtros -->
+    <!-- Filtros de Búsqueda -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <form method="GET" class="row g-3">
-                <div class="col-md-4">
+            <form method="GET" action="<?= base_url('corredor') ?>" class="row g-3">
+                <div class="col-md-5">
                     <label for="search" class="form-label">Buscar</label>
                     <input type="text" 
                            class="form-control" 
                            id="search" 
                            name="search" 
-                           value="<?= esc($search ?? '') ?>" 
-                           placeholder="Nombre, email o RUT...">
+                           value="<?= esc($search) ?>" 
+                           placeholder="Asegurado, patente, RUT, email...">
                 </div>
                 <div class="col-md-3">
                     <label for="cia_id" class="form-label">Compañía</label>
                     <select class="form-select" id="cia_id" name="cia_id">
                         <option value="">Todas las compañías</option>
-                        <?php foreach ($cias as $cia): ?>
-                            <option value="<?= $cia['cia_id'] ?>" <?= ($ciaId ?? '') == $cia['cia_id'] ? 'selected' : '' ?>>
-                                <?= esc($cia['cia_display_name'] ?: $cia['cia_nombre']) ?>
-                            </option>
-                        <?php endforeach; ?>
+                        <?php if (!empty($cias)): ?>
+                            <?php foreach ($cias as $cia): ?>
+                                <option value="<?= $cia['cia_id'] ?>" <?= $ciaId == $cia['cia_id'] ? 'selected' : '' ?>>
+                                    <?= esc($cia['cia_display_name'] ?: $cia['cia_nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <option value="" disabled>No hay compañías disponibles</option>
+                        <?php endif; ?>
                     </select>
                 </div>
-                <div class="col-md-5 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-outline-primary">
-                        <i class="fas fa-search"></i> Buscar
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i> Buscar
                     </button>
-                    <a href="<?= base_url('corredores') ?>" class="btn btn-outline-secondary">
-                        <i class="fas fa-times"></i> Limpiar
+                    <a href="<?= base_url('corredor') ?>" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Limpiar
                     </a>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Alerts -->
+    <!-- Alertas -->
     <?php if (session()->getFlashdata('success')): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle me-2"></i>
@@ -77,134 +168,98 @@ Gestión de Corredores
         </div>
     <?php endif; ?>
 
-    <!-- Table Card -->
+    <!-- Tabla de Inspecciones -->
     <div class="card shadow-sm">
         <div class="card-header bg-white py-3">
             <h5 class="card-title mb-0">
-                <i class="fas fa-user-tie text-primary me-2"></i>
-                Listado de Corredores 
-                <span class="badge bg-light text-dark ms-2"><?= count($corredores) ?></span>
+                <i class="fas fa-clipboard-list text-primary me-2"></i>
+                Mis Inspecciones
+                <span class="badge bg-light text-dark ms-2"><?= count($inspecciones) ?></span>
             </h5>
         </div>
 
         <div class="card-body p-0">
-            <?php if (empty($corredores)): ?>
+            <?php if (empty($inspecciones)): ?>
                 <div class="text-center py-5">
-                    <i class="fas fa-user-tie fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">No hay corredores registrados</h5>
-                    <p class="text-muted">Comienza creando tu primer corredor</p>
-                    <?php if (function_exists('can') ? can('gestionar_corredores') : true): ?>
-                    <a href="<?= base_url('corredores/create') ?>" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Crear Corredor
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay inspecciones registradas</h5>
+                    <p class="text-muted">Comienza creando tu primera inspección</p>
+                    <a href="<?= base_url('corredor/create') ?>" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Nueva Inspección
                     </a>
-                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 80px;">Logo</th>
-                                <th>Nombre/Email</th>
-                                <th style="width: 140px;">RUT</th>
-                                <th style="width: 140px;">Teléfono</th>
-                                <th style="width: 200px;">Compañías</th>
-                                <th class="text-center" style="width: 100px;">Estado</th>
-                                <th class="text-end" style="width: 150px;">Acciones</th>
+                                <th style="width: 80px;">ID</th>
+                                <th>Asegurado</th>
+                                <th>Patente</th>
+                                <th>Compañía</th>
+                                <th>Tipo</th>
+                                <th>Comuna</th>
+                                <th class="text-center">Estado</th>
+                                <th>Fecha</th>
+                                <th class="text-end">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($corredores as $corredor): ?>
+                            <?php foreach ($inspecciones as $insp): ?>
                                 <tr>
-                                    <td>
-                                        <?php if (!empty($corredor['corredor_logo'])): ?>
-                                            <img src="<?= base_url('uploads/corredores/' . $corredor['corredor_logo']) ?>"
-                                                 alt="<?= esc($corredor['corredor_nombre']) ?>"
-                                                 class="rounded"
-                                                 style="width: 50px; height: 50px; object-fit: cover;">
-                                        <?php else: ?>
-                                            <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                                                 style="width: 50px; height: 50px;">
-                                                <i class="fas fa-user-tie text-muted"></i>
-                                            </div>
-                                        <?php endif; ?>
-                                    </td>
+                                    <td class="fw-bold">#<?= $insp['inspecciones_id'] ?></td>
                                     <td>
                                         <div>
-                                            <a class="fw-medium text-decoration-none" href="<?= base_url('corredores/show/' . $corredor['corredor_id']) ?>">
-                                                <?= esc($corredor['corredor_nombre']) ?>
+                                            <a href="<?= base_url('corredor/show/' . $insp['inspecciones_id']) ?>" 
+                                               class="text-decoration-none fw-medium">
+                                                <?= esc($insp['inspecciones_asegurado']) ?>
                                             </a>
-                                            <?php if (!empty($corredor['corredor_display_name'])): ?>
-                                                <br><small class="text-muted"><?= esc($corredor['corredor_display_name']) ?></small>
-                                            <?php endif; ?>
-                                            <?php if (!empty($corredor['corredor_email'])): ?>
-                                                <br><small class="text-info">
-                                                    <i class="fas fa-envelope me-1"></i><?= esc($corredor['corredor_email']) ?>
-                                                </small>
+                                            <?php if (!empty($insp['inspecciones_rut'])): ?>
+                                                <br><small class="text-muted"><?= esc($insp['inspecciones_rut']) ?></small>
                                             <?php endif; ?>
                                         </div>
                                     </td>
                                     <td>
-                                        <?php if (!empty($corredor['corredor_rut'])): ?>
-                                            <span class="font-monospace"><?= esc($corredor['corredor_rut']) ?></span>
-                                        <?php else: ?>
-                                            <span class="text-muted">Sin RUT</span>
-                                        <?php endif; ?>
+                                        <span class="badge bg-secondary font-monospace">
+                                            <?= esc($insp['inspecciones_patente']) ?>
+                                        </span>
                                     </td>
                                     <td>
-                                        <?php if (!empty($corredor['corredor_telefono'])): ?>
-                                            <span class="font-monospace"><?= esc($corredor['corredor_telefono']) ?></span>
-                                        <?php else: ?>
-                                            <span class="text-muted">Sin teléfono</span>
-                                        <?php endif; ?>
+                                        <small><?= esc($insp['cia_display_name'] ?: $insp['cia_nombre']) ?></small>
                                     </td>
                                     <td>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            <?php
-                                            // CORRECCIÓN: usar 'cias' en lugar de 'companias'
-                                            $lista = [];
-                                            if (!empty($corredor['cias'])) {
-                                                $lista = is_array($corredor['cias'])
-                                                        ? $corredor['cias']
-                                                        : array_filter(explode('|', $corredor['cias']));
-                                            } 
-                                            $max = 3;
-                                            $total = count($lista);
-                                            foreach (array_slice($lista, 0, $max) as $nom): ?>
-                                                <span class="badge bg-primary"><?= esc($nom) ?></span>
-                                            <?php endforeach; ?>
-                                            <?php if ($total > $max): ?>
-                                                <span class="badge bg-secondary" title="<?= $total - $max ?> más">+<?= $total - $max ?></span>
-                                            <?php endif; ?>
-                                        </div>
+                                        <small><?= esc($insp['tipo_inspeccion_nombre'] ?? 'N/A') ?></small>
                                     </td>
-
-                                    <!-- Estado con switch AJAX -->
+                                    <td>
+                                        <small><?= esc($insp['comunas_nombre'] ?? 'N/A') ?></small>
+                                    </td>
                                     <td class="text-center">
-                                        <div class="form-check form-switch d-inline-block">
-                                            <input class="form-check-input corredor-status-toggle"
-                                                   type="checkbox"
-                                                   role="switch"
-                                                   <?= $corredor['corredor_habil'] ? 'checked' : '' ?>
-                                                   data-id="<?= $corredor['corredor_id'] ?>"
-                                                   title="Cambiar estado">
-                                        </div>
+                                        <?php
+                                        $estadoColor = $insp['estado_color'] ?? '#6c757d';
+                                        $estadoNombre = $insp['estado_nombre'] ?? 'Sin estado';
+                                        ?>
+                                        <span class="badge" style="background-color: <?= esc($estadoColor) ?>">
+                                            <?= esc($estadoNombre) ?>
+                                        </span>
                                     </td>
-
+                                    <td>
+                                        <small>
+                                            <?= date('d/m/Y', strtotime($insp['inspecciones_created_at'])) ?>
+                                        </small>
+                                    </td>
                                     <td class="text-end">
                                         <div class="btn-group" role="group">
-                                            <a href="<?= base_url('corredores/show/' . $corredor['corredor_id']) ?>"
-                                               class="btn btn-sm btn-outline-primary"
+                                            <a href="<?= base_url('corredor/show/' . $insp['inspecciones_id']) ?>" 
+                                               class="btn btn-sm btn-outline-primary" 
                                                title="Ver detalles">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-
-                                            <?php if (function_exists('can') ? can('gestionar_corredores') : true): ?>
-                                            <a href="<?= base_url('corredores/edit/' . $corredor['corredor_id']) ?>"
-                                               class="btn btn-sm btn-outline-warning"
-                                               title="Editar">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
+                                            <?php if ($insp['estado_id'] == 1): // Solo editar si está en estado Solicitud ?>
+                                                <a href="<?= base_url('corredor/edit/' . $insp['inspecciones_id']) ?>" 
+                                                   class="btn btn-sm btn-outline-warning" 
+                                                   title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
                                             <?php endif; ?>
                                         </div>
                                     </td>
@@ -217,152 +272,29 @@ Gestión de Corredores
         </div>
     </div>
 </div>
+
+<?= $this->endSection() ?>
+
+<?= $this->section('styles') ?>
+<style>
+.card {
+    border-radius: 12px;
+}
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+.table > :not(caption) > * > * {
+    padding: 1rem 0.75rem;
+}
+</style>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
 $(function() {
-    // Estado global del CSRF - se actualiza después de cada petición
-    let csrfToken = {
-        name: '<?= csrf_token() ?>',
-        hash: '<?= csrf_hash() ?>'
-    };
-
-    // Control de peticiones en vuelo para evitar race conditions
-    const requestsInFlight = new Set();
-
-    // Manejador del toggle de estado
-    function handleCorredorToggle() {
-        const $toggle = $(this);
-        
-        // Si estamos revirtiendo programáticamente, ignorar
-        if ($toggle.data('reverting')) {
-            return;
-        }
-
-        const corredorId = $toggle.data('id');
-        const isChecked = $toggle.is(':checked');
-
-        // Prevenir múltiples peticiones simultáneas para el mismo corredor
-        if (requestsInFlight.has(corredorId)) {
-            // Revertir el cambio visual
-            $toggle.data('reverting', true)
-                   .prop('checked', !isChecked)
-                   .data('reverting', false);
-            return;
-        }
-
-        // Marcar como en proceso
-        requestsInFlight.add(corredorId);
-        $toggle.prop('disabled', true);
-
-        // Realizar petición AJAX
-        $.ajax({
-            url: '<?= base_url('corredores/toggleStatus') ?>/' + corredorId,
-            type: 'POST',
-            data: {
-                [csrfToken.name]: csrfToken.hash
-            },
-            headers: {
-                'X-CSRF-TOKEN': csrfToken.hash
-            },
-            dataType: 'json'
-        })
-        .done(function(response, textStatus, xhr) {
-            // Actualizar token CSRF si viene en la respuesta
-            const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
-            if (newToken) {
-                csrfToken.hash = newToken;
-            }
-
-            if (response && response.success) {
-                // Éxito - mostrar mensaje
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Estado actualizado',
-                    text: response.message || 'El estado del corredor ha sido actualizado',
-                    timer: 1600,
-                    showConfirmButton: false
-                });
-            } else {
-                // Error en la respuesta - revertir toggle
-                $toggle.data('reverting', true)
-                       .prop('checked', !isChecked)
-                       .data('reverting', false);
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: response?.message || 'No se pudo actualizar el estado del corredor'
-                });
-            }
-        })
-        .fail(function(xhr, textStatus, errorThrown) {
-            // Error de conexión - intentar obtener token de todos modos
-            const newToken = xhr.getResponseHeader('X-CSRF-TOKEN');
-            if (newToken) {
-                csrfToken.hash = newToken;
-            }
-
-            // Revertir toggle
-            $toggle.data('reverting', true)
-                   .prop('checked', !isChecked)
-                   .data('reverting', false);
-            
-            // Mostrar error
-            let errorMessage = 'No se pudo conectar con el servidor';
-            
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-                errorMessage = xhr.responseJSON.message;
-            } else if (xhr.status === 403) {
-                errorMessage = 'No tienes permisos para realizar esta acción';
-            } else if (xhr.status === 404) {
-                errorMessage = 'Corredor no encontrado';
-            }
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de conexión',
-                text: errorMessage
-            });
-
-            console.error('Error en toggleStatus:', {
-                status: xhr.status,
-                statusText: xhr.statusText,
-                responseText: xhr.responseText
-            });
-        })
-        .always(function() {
-            // Limpiar estado
-            requestsInFlight.delete(corredorId);
-            $toggle.prop('disabled', false);
-        });
-    }
-
-    // Vincular evento a todos los toggles
-    $('.corredor-status-toggle').on('change', handleCorredorToggle);
-
-    // Confirmación de eliminación (si se reactiva el botón de eliminar)
-    $('.btn-delete').on('click', function(e) {
-        e.preventDefault();
-        const form = $(this).closest('form');
-        const mensaje = $(this).data('confirm') || '¿Estás seguro de eliminar este corredor?';
-
-        Swal.fire({
-            title: 'Confirmar eliminación',
-            text: mensaje,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit();
-            }
-        });
+    // Auto-submit del filtro al cambiar compañía
+    $('#cia_id').on('change', function() {
+        $(this).closest('form').submit();
     });
 });
 </script>

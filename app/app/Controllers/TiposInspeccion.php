@@ -201,4 +201,19 @@ class TiposInspeccion extends BaseController
         $tipos = $this->tiposInspeccionModel->getListaActivos();
         return $this->response->setJSON($tipos);
     }
+    public function show($id)
+    {
+        $tipo = $this->tiposInspeccionModel->find($id);
+        
+        if (!$tipo) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Tipo de inspección no encontrado');
+        }
+
+        $data = [
+            'title' => 'Detalles del Tipo de Inspección',
+            'tipo'  => $tipo
+        ];
+
+        return view('tipos_inspeccion/show', $data);
+    }
 }

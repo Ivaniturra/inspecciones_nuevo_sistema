@@ -27,7 +27,7 @@ Detalles del Tipo de Vehículo
                         </div>
                     </div>
                     <div>
-                        <h1 class="h3 mb-0"><?= esc($tipo['tipo_vehiculo_nombre']) ?></h1>
+                        <h1 class="h3 mb-0"><?= esc($tipo['tipo_inspeccion_nombre']) ?></h1>
                         <p class="text-muted mb-0">
                             <span class="badge bg-info">ID: <?= (int)$tipo['tipo_vehiculo_id'] ?></span>
                             <?php if (!empty($tipo['tipo_vehiculo_clave'])): ?>

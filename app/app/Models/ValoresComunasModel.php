@@ -6,13 +6,16 @@ use CodeIgniter\Model;
 
 class ValoresComunasModel extends Model
 {
-    protected $table = 'valores_comunas';
-    protected $primaryKey = 'valores_id';
-    
-    protected $allowedFields = [
+    protected $table            = 'valores_comunas'; // ← CORREGIDO
+    protected $primaryKey       = 'valores_id';
+    protected $useAutoIncrement = true;
+    protected $returnType       = 'array';
+    protected $useSoftDeletes   = false;
+    protected $protectFields    = true;
+    protected $allowedFields    = [
         'comunas_id',
         'cia_id',
-        'tipo_vehiculo_id',
+        'tipo_inspeccion_id',
         'valores_tipo_usuario',
         'valores_unidad_medida',
         'valores_valor',
@@ -20,14 +23,16 @@ class ValoresComunasModel extends Model
         'valores_descripcion',
         'valores_fecha_vigencia_desde',
         'valores_fecha_vigencia_hasta',
-        'valores_activo', // ← ✅ ASEGURATE DE QUE ESTE CAMPO ESTÉ AQUÍ
+        'valores_activo'
     ];
 
-    // ... resto del modelo
-
-    /**
-     * Toggle estado activo/inactivo - Método simplificado
-     */
+    // Dates
+    protected $useTimestamps = true;
+    protected $dateFormat    = 'datetime';
+    protected $createdField  = 'valores_created_at';
+    protected $updatedField  = 'valores_updated_at';
+    protected $deletedField  = 'valores_deleted_at';
+  
     public function toggleStatus($id): bool
     {
         $valor = $this->find($id);

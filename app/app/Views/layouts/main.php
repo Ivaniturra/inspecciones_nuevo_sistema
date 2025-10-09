@@ -233,11 +233,10 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
     <a class="nav-link <?= url_is('valores-comunas') || url_is('valores-comunas/*') ? 'active' : '' ?>" href="<?= base_url('valores-comunas') ?>" data-bs-toggle="tooltip" data-bs-title="Valores por Comuna">
     <i class="icon fa-solid fa-dollar-sign"></i>
     <span class="label">Valores Comuna</span>
-  </a>
-  <!-- Tipos de Vehículo -->
-<a class="nav-link <?= url_is('TipoVehiculos') || url_is('TipoVehiculos/*') ? 'active' : '' ?>" href="<?= base_url('TipoVehiculos') ?>" data-bs-toggle="tooltip" data-bs-title="Tipos de Vehículo">
+  </a> 
+<a class="nav-link <?= url_is('TiposInspeccion') || url_is('TiposInspeccion/*') ? 'active' : '' ?>" href="<?= base_url('TiposInspeccion') ?>" data-bs-toggle="tooltip" data-bs-title="Tipos de Inspección">
   <i class="icon fa-solid fa-car"></i>
-  <span class="label">Tipos Vehículo</span>
+  <span class="label">Tipos Inspeccion</span>
 </a>
 <a class="nav-link <?= url_is('corredores') || url_is('corredores/*') ? 'active' : '' ?>" 
    href="<?= base_url('corredores') ?>" 

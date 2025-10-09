@@ -287,7 +287,7 @@ class ValoresComunas extends BaseController
             ->join('provincias', 'provincias.provincias_id = comunas.provincias_id', 'left')
             ->join('regiones', 'regiones.region_id = provincias.regiones_id', 'left')
             ->join('cias', 'cias.cia_id = valores_comunas.cia_id', 'left')
-            ->join('tipo_inspeccion_id tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left');
+            ->join('tipos_inspeccion tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left');
 
         if ($ciaId) {
             $valores->where('valores_comunas.cia_id', $ciaId);

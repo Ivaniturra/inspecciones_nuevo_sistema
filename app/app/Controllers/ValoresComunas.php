@@ -475,7 +475,7 @@ class ValoresComunas extends BaseController
     {
         $db = \Config\Database::connect();
         
-        $tipos = $db->table('tipo_inspeccion_id')
+        $tipos = $db->table('tipos_inspeccion')
                    ->select('tipo_inspeccion_id, tipo_inspeccion_nombre')
                    ->where('tipo_inspeccion_activo', 1)
                    ->orderBy('tipo_inspeccion_id', 'ASC')

@@ -6,12 +6,13 @@ use CodeIgniter\Model;
 
 class ValoresComunasModel extends Model
 {
-    protected $table            = 'valores_comunas'; // ← CORREGIDO
+    protected $table            = 'valores_comunas';
     protected $primaryKey       = 'valores_id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
+    
     protected $allowedFields    = [
         'comunas_id',
         'cia_id',
@@ -26,33 +27,18 @@ class ValoresComunasModel extends Model
         'valores_activo'
     ];
 
-    // Dates
+    // Dates - UNA SOLA VEZ
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'valores_created_at';
     protected $updatedField  = 'valores_updated_at';
     protected $deletedField  = 'valores_deleted_at';
-  
-    public function toggleStatus($id): bool
-    {
-        $valor = $this->find($id);
-        if (!$valor) return false;
-        
-        $newStatus = ($valor['valores_activo'] ?? 1) == 1 ? 0 : 1;
-        return (bool) $this->update($id, ['valores_activo' => $newStatus]);
-    }
 
-    // Fechas
-    protected $useTimestamps = true;
-    protected $dateFormat    = 'datetime';
-    protected $createdField  = 'valores_created_at';
-    protected $updatedField  = 'valores_updated_at';
-
-    // VALIDACIÓN CORREGIDA PARA NOMBRES REALES
+    // VALIDACIÓN CORREGIDA
     protected $validationRules = [
         'comunas_id'                     => 'required',
         'cia_id'                         => 'required|is_natural_no_zero',
-        'tipo_vehiculo_id'               => 'required|is_natural_no_zero',
+        'tipo_inspeccion_id'             => 'required|is_natural_no_zero', // ← CORREGIDO
         'valores_tipo_usuario'           => 'required',
         'valores_unidad_medida'          => 'required|in_list[UF,CLP,UTM]',
         'valores_moneda'                 => 'permit_empty|in_list[UF,CLP,UTM]',
@@ -70,6 +56,10 @@ class ValoresComunasModel extends Model
             'required' => 'La compañía es obligatoria',
             'is_natural_no_zero' => 'ID de compañía inválido',
         ],
+        'tipo_inspeccion_id' => [ // ← CORREGIDO
+            'required' => 'El tipo de inspección es obligatorio',
+            'is_natural_no_zero' => 'ID de tipo de inspección inválido',
+        ],
         'valores_tipo_usuario' => [
             'required' => 'El tipo de usuario es obligatorio',
         ],
@@ -82,20 +72,33 @@ class ValoresComunasModel extends Model
     protected $skipValidation       = false;
     protected $cleanValidationRules = true;
 
+    // Callbacks
     protected $allowCallbacks = true;
     protected $beforeInsert   = ['setDefaults'];
     protected $beforeUpdate   = ['setDefaults'];
 
     protected function setDefaults(array $data): array
     {
-        if (! isset($data['data'])) return $data;
+        if (!isset($data['data'])) return $data;
         $d =& $data['data'];
 
-        if (! isset($d['valores_activo'])) $d['valores_activo'] = 1;
-        if (! isset($d['valores_moneda'])) $d['valores_moneda'] = 'CLP';
-        if (! isset($d['valores_tipo_usuario'])) $d['valores_tipo_usuario'] = 'general';
+        if (!isset($d['valores_activo'])) $d['valores_activo'] = 1;
+        if (!isset($d['valores_moneda'])) $d['valores_moneda'] = 'CLP';
+        if (!isset($d['valores_tipo_usuario'])) $d['valores_tipo_usuario'] = 'general';
 
         return $data;
+    }
+
+    /**
+     * Cambiar estado activo/inactivo
+     */
+    public function toggleStatus($id): bool
+    {
+        $valor = $this->find($id);
+        if (!$valor) return false;
+        
+        $newStatus = ($valor['valores_activo'] ?? 1) == 1 ? 0 : 1;
+        return (bool) $this->update($id, ['valores_activo' => $newStatus]);
     }
 
     /* ===================== CONSULTAS CON ESTRUCTURA REAL ===================== */
@@ -112,13 +115,13 @@ class ValoresComunasModel extends Model
                 provincias.provincias_nombre,
                 regiones.region_nombre,
                 cias.cia_nombre,
-                tv.tipo_inspeccion_nombre
+                ti.tipo_inspeccion_nombre
             ')
             ->join('comunas',          'comunas.comunas_id = valores_comunas.comunas_id', 'left')
             ->join('provincias',       'provincias.provincias_id = comunas.provincias_id', 'left')
             ->join('regiones',         'regiones.region_id = provincias.regiones_id', 'left')
             ->join('cias',             'cias.cia_id = valores_comunas.cia_id', 'left')
-            ->join('tipos_inspeccion tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left') // verifica el nombre real de la tabla
+            ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left')
             ->where('valores_comunas.valores_activo', 1)
             ->orderBy('cias.cia_nombre', 'ASC')
             ->orderBy('comunas.comunas_nombre', 'ASC')
@@ -133,12 +136,12 @@ class ValoresComunasModel extends Model
                 comunas.comunas_nombre, 
                 provincias.provincias_nombre,
                 regiones.region_nombre,
-                tv.tipo_vehiculo_nombre
+                ti.tipo_inspeccion_nombre
             ')
             ->join('comunas',         'comunas.comunas_id = valores_comunas.comunas_id', 'left')
             ->join('provincias',      'provincias.provincias_id = comunas.provincias_id', 'left')
             ->join('regiones',        'regiones.region_id = provincias.regiones_id', 'left')
-            ->join('tipos_inspeccion tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left')
+            ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left')
             ->where('valores_comunas.cia_id', $ciaId)
             ->where('valores_comunas.valores_activo', 1)
             ->orderBy('comunas.comunas_nombre', 'ASC')
@@ -152,11 +155,11 @@ class ValoresComunasModel extends Model
                 valores_comunas.*, 
                 cias.cia_nombre, 
                 comunas.comunas_nombre,
-                tv.tipo_vehiculo_nombre
+                ti.tipo_inspeccion_nombre
             ')
             ->join('cias',            'cias.cia_id = valores_comunas.cia_id', 'left')
             ->join('comunas',         'comunas.comunas_id = valores_comunas.comunas_id', 'left')
-            ->join('tipos_inspeccion tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left')
+            ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left')
             ->where('valores_comunas.comunas_id', $comunaCodigo)
             ->where('valores_comunas.valores_activo', 1)
             ->orderBy('cias.cia_nombre', 'ASC')
@@ -167,7 +170,7 @@ class ValoresComunasModel extends Model
     /**
      * Obtener valor específico vigente
      */
-    public function getValorVigente($comunaCodigo, $ciaId, $tipoUsuario = 'general', $tipoVehiculoId = null): ?array
+    public function getValorVigente($comunaCodigo, $ciaId, $tipoUsuario = 'general', $tipoInspeccionId = null): ?array
     {
         $today = date('Y-m-d');
         
@@ -181,8 +184,8 @@ class ValoresComunasModel extends Model
                             ->orWhere('valores_fecha_vigencia_hasta', null)
                         ->groupEnd();
 
-        if ($tipoVehiculoId) {
-            $builder->where('tipo_inspeccion_id', $tipoVehiculoId);
+        if ($tipoInspeccionId) {
+            $builder->where('tipo_inspeccion_id', $tipoInspeccionId);
         }
 
         return $builder->orderBy('valores_fecha_vigencia_desde', 'DESC')->first();
@@ -191,12 +194,12 @@ class ValoresComunasModel extends Model
     /**
      * Verificar duplicados
      */
-    public function existeValorCompleto($comunaCodigo, $ciaId, $tipoUsuario, $tipoVehiculoId, $unidadMedida, $excludeId = null): bool
+    public function existeValorCompleto($comunaCodigo, $ciaId, $tipoUsuario, $tipoInspeccionId, $unidadMedida, $excludeId = null): bool
     {
         $builder = $this->where('comunas_id', $comunaCodigo)
                         ->where('cia_id', $ciaId)
                         ->where('valores_tipo_usuario', $tipoUsuario)
-                        ->where('tipo_inspeccion_id', $tipoVehiculoId)
+                        ->where('tipo_inspeccion_id', $tipoInspeccionId)
                         ->where('valores_unidad_medida', $unidadMedida)
                         ->where('valores_activo', 1);
 
@@ -254,13 +257,13 @@ class ValoresComunasModel extends Model
                 provincias.provincias_nombre,
                 regiones.region_nombre, 
                 cias.cia_nombre,
-                tv.tipo_vehiculo_nombre
+                ti.tipo_inspeccion_nombre
             ')
             ->join('comunas',         'comunas.comunas_id = valores_comunas.comunas_id', 'left')
             ->join('provincias',      'provincias.provincias_id = comunas.provincias_id', 'left')
             ->join('regiones',        'regiones.region_id = provincias.regiones_id', 'left')
             ->join('cias',            'cias.cia_id = valores_comunas.cia_id', 'left')
-            ->join('tipos_inspeccion tv', 'tv.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left')
+            ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = valores_comunas.tipo_inspeccion_id', 'left')
             ->find($id);
     }
 }

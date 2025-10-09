@@ -239,7 +239,7 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
    data-bs-toggle="tooltip" 
    data-bs-title="Tipos de Inspección">
     <i class="icon fa-solid fa-car"></i>
-    <span class="label">Tipos Inspección</span>
+    <span class="label">Tipos Inspeccióssn</span>
 </a>
 <a class="nav-link <?= url_is('corredores') || url_is('corredores/*') ? 'active' : '' ?>" 
    href="<?= base_url('corredores') ?>" 

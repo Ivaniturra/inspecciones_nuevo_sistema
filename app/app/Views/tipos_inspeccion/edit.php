@@ -1,7 +1,7 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>
-Editar Tipo de Vehículo
+Editar Tipo de Inspección
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -11,15 +11,18 @@ Editar Tipo de Vehículo
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h3 mb-0">Editar Tipo de Vehículo</h1>
-                    <p class="text-muted">Modifica los datos de: <strong><?= esc($tipo['tipo_vehiculo_nombre']) ?></strong></p>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-edit text-warning me-2"></i>
+                        Editar Tipo de Inspección
+                    </h1>
+                    <p class="text-muted mb-0">Modifica los datos de: <strong><?= esc($tipo['tipo_inspeccion_nombre']) ?></strong></p>
                 </div>
                 <div class="btn-group">
-                    <a href="<?= base_url('TipoVehiculos/show/' . $tipo['tipo_vehiculo_id']) ?>" class="btn btn-outline-info">
-                        <i class="fas fa-eye"></i> Ver detalles
+                    <a href="<?= base_url('tipos-inspeccion/show/' . $tipo['tipo_inspeccion_id']) ?>" class="btn btn-outline-info">
+                        <i class="fas fa-eye me-1"></i>Ver detalles
                     </a>
-                    <a href="<?= base_url('TipoVehiculos') ?>" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left"></i> Volver al listado
+                    <a href="<?= base_url('tipos-inspeccion') ?>" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Volver al listado
                     </a>
                 </div>
             </div>
@@ -55,12 +58,12 @@ Editar Tipo de Vehículo
                 <div class="card-header bg-warning text-dark">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-edit me-2"></i>
-                        Editar Tipo de Vehículo
+                        Formulario de Edición
                     </h5>
                 </div>
 
                 <div class="card-body">
-                    <form action="<?= base_url('TipoVehiculos/update/' . $tipo['tipo_vehiculo_id']) ?>" method="post" id="tipoVehiculoForm" novalidate>
+                    <form action="<?= base_url('tipos-inspeccion/update/' . $tipo['tipo_inspeccion_id']) ?>" method="post" id="tipoInspeccionForm" novalidate>
                         <?= csrf_field() ?>
                         <input type="hidden" name="_method" value="PUT">
 
@@ -68,81 +71,97 @@ Editar Tipo de Vehículo
                             <div class="col-lg-8">
                                 <!-- Nombre del Tipo -->
                                 <div class="mb-3">
-                                    <label for="tipo_vehiculo_nombre" class="form-label">
+                                    <label for="tipo_inspeccion_nombre" class="form-label">
                                         <i class="fas fa-car text-primary me-1"></i>
-                                        Nombre del Tipo *
+                                        Nombre del Tipo <span class="text-danger">*</span>
                                     </label>
                                     <input
                                         type="text"
-                                        class="form-control <?= session('errors.tipo_vehiculo_nombre') ? 'is-invalid' : '' ?>"
-                                        id="tipo_vehiculo_nombre"
-                                        name="tipo_vehiculo_nombre"
-                                        value="<?= esc(old('tipo_vehiculo_nombre', $tipo['tipo_vehiculo_nombre'])) ?>"
-                                        placeholder="Ej. Automóvil, Camión, Motocicleta..."
-                                        required>
+                                        class="form-control <?= session('errors.tipo_inspeccion_nombre') ? 'is-invalid' : '' ?>"
+                                        id="tipo_inspeccion_nombre"
+                                        name="tipo_inspeccion_nombre"
+                                        value="<?= esc(old('tipo_inspeccion_nombre', $tipo['tipo_inspeccion_nombre'])) ?>"
+                                        placeholder="Ej. Liviano, Pesado, Motocicleta..."
+                                        required
+                                        maxlength="100">
                                     <div class="invalid-feedback">
-                                        <?= esc(session('errors.tipo_vehiculo_nombre')) ?>
+                                        <?= esc(session('errors.tipo_inspeccion_nombre')) ?>
                                     </div>
-                                    <div class="form-text">Mínimo 2 caracteres, máximo 100.</div>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Mínimo 2 caracteres, máximo 100.
+                                    </div>
                                 </div>
 
                                 <div class="row">
                                     <!-- Clave -->
                                     <div class="col-md-6 mb-3">
-                                        <label for="tipo_vehiculo_clave" class="form-label">
+                                        <label for="tipo_inspeccion_clave" class="form-label">
                                             <i class="fas fa-key text-secondary me-1"></i>
                                             Clave
                                         </label>
                                         <input
                                             type="text"
-                                            class="form-control <?= session('errors.tipo_vehiculo_clave') ? 'is-invalid' : '' ?>"
-                                            id="tipo_vehiculo_clave"
-                                            name="tipo_vehiculo_clave"
-                                            value="<?= esc(old('tipo_vehiculo_clave', $tipo['tipo_vehiculo_clave'])) ?>"
-                                            placeholder="ej. liviano, pesado, motocicleta">
+                                            class="form-control <?= session('errors.tipo_inspeccion_clave') ? 'is-invalid' : '' ?>"
+                                            id="tipo_inspeccion_clave"
+                                            name="tipo_inspeccion_clave"
+                                            value="<?= esc(old('tipo_inspeccion_clave', $tipo['tipo_inspeccion_clave'])) ?>"
+                                            placeholder="ej. liviano, pesado, moto"
+                                            maxlength="50">
                                         <div class="invalid-feedback">
-                                            <?= esc(session('errors.tipo_vehiculo_clave')) ?>
+                                            <?= esc(session('errors.tipo_inspeccion_clave')) ?>
                                         </div>
-                                        <div class="form-text">Clave única para identificar el tipo.</div>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Identificador único (opcional).
+                                        </div>
                                     </div>
 
                                     <!-- Estado -->
                                     <div class="col-md-6 mb-3">
-                                        <label for="tipo_vehiculo_activo" class="form-label">
+                                        <label for="tipo_inspeccion_activo" class="form-label">
                                             <i class="fas fa-toggle-on text-success me-1"></i>
                                             Estado
                                         </label>
-                                        <select class="form-select" id="tipo_vehiculo_activo" name="tipo_vehiculo_activo">
-                                            <?php $activoOld = old('tipo_vehiculo_activo', (string)$tipo['tipo_vehiculo_activo']); ?>
-                                            <option value="1" <?= $activoOld === '1' ? 'selected' : '' ?>>? Activo</option>
-                                            <option value="0" <?= $activoOld === '0' ? 'selected' : '' ?>>? Inactivo</option>
+                                        <select class="form-select" id="tipo_inspeccion_activo" name="tipo_inspeccion_activo">
+                                            <?php $activoOld = old('tipo_inspeccion_activo', (string)$tipo['tipo_inspeccion_activo']); ?>
+                                            <option value="1" <?= $activoOld === '1' ? 'selected' : '' ?>>✅ Activo</option>
+                                            <option value="0" <?= $activoOld === '0' ? 'selected' : '' ?>>❌ Inactivo</option>
                                         </select>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Solo los tipos activos aparecen en los formularios.
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- Descripción -->
                                 <div class="mb-4">
-                                    <label for="tipo_vehiculo_descripcion" class="form-label">
+                                    <label for="tipo_inspeccion_descripcion" class="form-label">
                                         <i class="fas fa-align-left text-info me-1"></i>
                                         Descripción
                                     </label>
                                     <textarea
-                                        class="form-control <?= session('errors.tipo_vehiculo_descripcion') ? 'is-invalid' : '' ?>"
-                                        id="tipo_vehiculo_descripcion"
-                                        name="tipo_vehiculo_descripcion"
+                                        class="form-control <?= session('errors.tipo_inspeccion_descripcion') ? 'is-invalid' : '' ?>"
+                                        id="tipo_inspeccion_descripcion"
+                                        name="tipo_inspeccion_descripcion"
                                         rows="3"
-                                        placeholder="Describe las características de este tipo de vehículo..."><?= esc(old('tipo_vehiculo_descripcion', $tipo['tipo_vehiculo_descripcion'])) ?></textarea>
+                                        maxlength="255"
+                                        placeholder="Describe las características de este tipo de inspección..."><?= esc(old('tipo_inspeccion_descripcion', $tipo['tipo_inspeccion_descripcion'])) ?></textarea>
                                     <div class="invalid-feedback">
-                                        <?= esc(session('errors.tipo_vehiculo_descripcion')) ?>
+                                        <?= esc(session('errors.tipo_inspeccion_descripcion')) ?>
                                     </div>
-                                    <div class="form-text">Descripción opcional del tipo de vehículo (máximo 255 caracteres).</div>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Descripción opcional (máximo 255 caracteres).
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="col-lg-4">
                                 <!-- Preview Card -->
                                 <div class="card bg-light mb-4">
-                                    <div class="card-header">
+                                    <div class="card-header bg-white">
                                         <h6 class="mb-0">
                                             <i class="fas fa-eye me-1"></i>
                                             Vista Previa
@@ -152,11 +171,14 @@ Editar Tipo de Vehículo
                                         <div class="mb-3">
                                             <i id="preview-icon" class="fas fa-car fa-3x text-primary"></i>
                                         </div>
-                                        <h6 id="preview-nombre" class="mb-2"><?= esc($tipo['tipo_vehiculo_nombre']) ?></h6>
+                                        <h6 id="preview-nombre" class="mb-2"><?= esc($tipo['tipo_inspeccion_nombre']) ?></h6>
                                         <div class="mb-2">
-                                            <small id="preview-clave" class="badge bg-secondary"><?= esc($tipo['tipo_vehiculo_clave']) ?></small>
+                                            <small id="preview-clave" class="badge bg-secondary"><?= esc($tipo['tipo_inspeccion_clave']) ?></small>
                                         </div>
-                                        <p id="preview-descripcion" class="text-muted small mb-0"><?= esc($tipo['tipo_vehiculo_descripcion'] ?: 'Sin descripción') ?></p>
+                                        <p id="preview-descripcion" class="text-muted small mb-0"><?= esc($tipo['tipo_inspeccion_descripcion'] ?: 'Sin descripción') ?></p>
+                                        <div class="mt-3">
+                                            <span id="preview-estado" class="badge bg-success">Activo</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -168,12 +190,12 @@ Editar Tipo de Vehículo
                                             Información del registro
                                         </h6>
                                         <small class="text-muted">
-                                            <strong>ID:</strong> <?= (int)$tipo['tipo_vehiculo_id'] ?><br>
-                                            <?php if (!empty($tipo['tipo_vehiculo_created_at'])): ?>
-                                                <strong>Creado:</strong> <?= date('d/m/Y H:i', strtotime($tipo['tipo_vehiculo_created_at'])) ?><br>
+                                            <strong>ID:</strong> <?= (int)$tipo['tipo_inspeccion_id'] ?><br>
+                                            <?php if (!empty($tipo['tipo_inspeccion_created_at'])): ?>
+                                                <strong>Creado:</strong> <?= date('d/m/Y H:i', strtotime($tipo['tipo_inspeccion_created_at'])) ?><br>
                                             <?php endif; ?>
-                                            <?php if (!empty($tipo['tipo_vehiculo_updated_at'])): ?>
-                                                <strong>Última modificación:</strong> <?= date('d/m/Y H:i', strtotime($tipo['tipo_vehiculo_updated_at'])) ?>
+                                            <?php if (!empty($tipo['tipo_inspeccion_updated_at'])): ?>
+                                                <strong>Modificado:</strong> <?= date('d/m/Y H:i', strtotime($tipo['tipo_inspeccion_updated_at'])) ?>
                                             <?php endif; ?>
                                         </small>
                                     </div>
@@ -182,13 +204,21 @@ Editar Tipo de Vehículo
                         </div>
 
                         <!-- Buttons -->
-                        <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="<?= base_url('TipoVehiculos') ?>" class="btn btn-outline-secondary">
-                                <i class="fas fa-times"></i> Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-save"></i> Actualizar Tipo
-                            </button>
+                        <div class="card-footer bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-asterisk text-danger me-1"></i>
+                                    Los campos marcados son obligatorios
+                                </small>
+                                <div class="btn-group">
+                                    <a href="<?= base_url('tipos-inspeccion') ?>" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-save me-1"></i>Actualizar Tipo
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -201,14 +231,16 @@ Editar Tipo de Vehículo
 <?= $this->section('scripts') ?>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const nombreInput = document.getElementById('tipo_vehiculo_nombre');
-    const claveInput = document.getElementById('tipo_vehiculo_clave');
-    const descripcionInput = document.getElementById('tipo_vehiculo_descripcion');
+    const nombreInput = document.getElementById('tipo_inspeccion_nombre');
+    const claveInput = document.getElementById('tipo_inspeccion_clave');
+    const descripcionInput = document.getElementById('tipo_inspeccion_descripcion');
+    const activoSelect = document.getElementById('tipo_inspeccion_activo');
     
     const previewNombre = document.getElementById('preview-nombre');
     const previewClave = document.getElementById('preview-clave');
     const previewDescripcion = document.getElementById('preview-descripcion');
     const previewIcon = document.getElementById('preview-icon');
+    const previewEstado = document.getElementById('preview-estado');
 
     function updatePreview() {
         // Actualizar nombre
@@ -227,6 +259,16 @@ document.addEventListener('DOMContentLoaded', function () {
         // Actualizar descripción
         const descripcion = descripcionInput.value.trim() || 'Sin descripción';
         previewDescripcion.textContent = descripcion;
+
+        // Actualizar estado
+        const activo = activoSelect.value === '1';
+        if (activo) {
+            previewEstado.className = 'badge bg-success';
+            previewEstado.textContent = '✅ Activo';
+        } else {
+            previewEstado.className = 'badge bg-secondary';
+            previewEstado.textContent = '❌ Inactivo';
+        }
 
         // Actualizar ícono según el nombre
         const iconClass = getIconByName(nombre.toLowerCase());
@@ -251,16 +293,30 @@ document.addEventListener('DOMContentLoaded', function () {
     nombreInput.addEventListener('input', updatePreview);
     claveInput.addEventListener('input', updatePreview);
     descripcionInput.addEventListener('input', updatePreview);
+    activoSelect.addEventListener('change', updatePreview);
 
     // Validación del formulario
-    const form = document.getElementById('tipoVehiculoForm');
+    const form = document.getElementById('tipoInspeccionForm');
     form.addEventListener('submit', function (e) {
         const nombre = nombreInput.value.trim();
         if (nombre.length < 2) {
             e.preventDefault();
-            alert('El nombre del tipo debe tener al menos 2 caracteres.');
-            return;
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                text: 'El nombre del tipo debe tener al menos 2 caracteres.'
+            });
+            nombreInput.focus();
+            return false;
         }
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Actualizando...',
+            text: 'Por favor espera',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
     });
 
     // Autofocus y selección
@@ -271,6 +327,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Preview inicial
     updatePreview();
+
+    // Character counter para descripción
+    const maxChars = 255;
+    descripcionInput.addEventListener('input', function() {
+        const remaining = maxChars - this.value.length;
+        const counterText = `${remaining} caracteres restantes`;
+        
+        let counter = this.nextElementSibling;
+        if (!counter || !counter.classList.contains('char-counter')) {
+            counter = document.createElement('small');
+            counter.className = 'char-counter text-muted d-block mt-1';
+            this.parentNode.appendChild(counter);
+        }
+        
+        counter.textContent = counterText;
+        
+        if (remaining < 50) {
+            counter.classList.add('text-warning');
+        } else {
+            counter.classList.remove('text-warning');
+        }
+    });
+
+    // Auto-hide alerts
+    setTimeout(() => {
+        document.querySelectorAll('.alert-dismissible').forEach(alert => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        });
+    }, 5000);
 });
 </script>
 <?= $this->endSection() ?>

@@ -42,7 +42,7 @@ class ValoresComunas extends BaseController
             ],
             'cias'            => $this->getCiasForSelect(),
             'regiones'        => $this->getRegionesForSelect(),
-            'tipos_inspeccion'  => $this->tiposInspeccionModel->getListaActivos(), // CAMBIADO
+            'tipos_inspeccion'  => $this->getTiposVehiculoForSelect(), 
             'validation'        => session('validation') ?? \Config\Services::validation(),
         ];
 

@@ -93,15 +93,15 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
         $routes->get('export/(:segment)', 'Inspecciones::export/$1');
     });
     
-$routes->group('api', static function($routes) {
-    $routes->get('comunas/search', 'Api\ComunasController::search');
-    $routes->get('estados/list', 'Api\EstadosController::list');
-    $routes->get('cias/search', 'Api\CiasController::search');
-    $routes->post('inspecciones/status', 'Api\InspeccionesController::updateStatus');
-    $routes->get('tipos-inspeccion', 'Inspecciones::getTiposInspeccion'); 
-    $routes->get('tipos-inspeccion/(:num)', 'Inspecciones::getTipoInspeccionInfo/$1');
-    $routes->get('carrocerias/(:num)', 'Inspecciones::getCarroceriasByTipo/$1');
-});
+    $routes->group('api', static function($routes) {
+        $routes->get('comunas/search', 'Api\ComunasController::search');
+        $routes->get('estados/list', 'Api\EstadosController::list');
+        $routes->get('cias/search', 'Api\CiasController::search');
+        $routes->post('inspecciones/status', 'Api\InspeccionesController::updateStatus');
+        $routes->get('tipos-inspeccion', 'Inspecciones::getTiposInspeccion'); 
+        $routes->get('tipos-inspeccion/(:num)', 'Inspecciones::getTipoInspeccionInfo/$1');
+        $routes->get('carrocerias/(:num)', 'Inspecciones::getCarroceriasByTipo/$1');
+    });
     // ===================================================
     // COMPAÑÍAS DE SEGUROS (solo super admin)
     // ===================================================
@@ -204,18 +204,18 @@ $routes->group('api', static function($routes) {
     // ===================================================
     // TIPOS DE VEHÍCULOS (admin e inspectores)
     // ===================================================
-    $routes->group('TipoVehiculos', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
-        $routes->get('/', 'TipoVehiculos::index');
-        $routes->get('create', 'TipoVehiculos::create');
-        $routes->post('store', 'TipoVehiculos::store');
-        $routes->get('show/(:num)', 'TipoVehiculos::show/$1');
-        $routes->get('edit/(:num)', 'TipoVehiculos::edit/$1');
-        $routes->post('update/(:num)', 'TipoVehiculos::update/$1');
-        $routes->put('update/(:num)', 'TipoVehiculos::update/$1');
-        $routes->delete('delete/(:num)', 'TipoVehiculos::delete/$1');
-        $routes->post('delete/(:num)', 'TipoVehiculos::delete/$1');
-        $routes->post('toggleStatus/(:num)', 'TipoVehiculos::toggleStatus/$1');
-        $routes->get('getSelect', 'TipoVehiculos::getSelect');
+    $routes->group('TiposInspeccion', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
+        $routes->get('/', 'TiposInspeccion::index');
+        $routes->get('create', 'TiposInspeccion::create');
+        $routes->post('store', 'TiposInspeccion::store');
+        $routes->get('show/(:num)', 'TiposInspeccion::show/$1');
+        $routes->get('edit/(:num)', 'TiposInspeccion::edit/$1');
+        $routes->post('update/(:num)', 'TiposInspeccion::update/$1');
+        $routes->put('update/(:num)', 'TiposInspeccion::update/$1');
+        $routes->delete('delete/(:num)', 'TiposInspeccion::delete/$1');
+        $routes->post('delete/(:num)', 'TiposInspeccion::delete/$1');
+        $routes->post('toggleStatus/(:num)', 'TiposInspeccion::toggleStatus/$1');
+        $routes->get('getSelect', 'TiposInspeccion::getSelect');
     }); 
     // Redirecciones para compatibilidad con URLs anteriores
     $routes->get('inspecciones-old', 'Corredor::index');

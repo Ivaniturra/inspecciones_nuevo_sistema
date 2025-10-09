@@ -14,12 +14,12 @@ Detalles del Tipo de Vehículo
                     <div class="me-3">
                         <?php 
                         // Ícono y color según el tipo
-                        $iconInfo = match(strtolower($tipo['tipo_vehiculo_nombre'])) {
-                            'liviano' => ['icon' => 'fa-car', 'color' => 'bg-primary'],
-                            'pesado' => ['icon' => 'fa-truck', 'color' => 'bg-warning'], 
-                            'motocicleta' => ['icon' => 'fa-motorcycle', 'color' => 'bg-info'],
-                            default => ['icon' => 'fa-car', 'color' => 'bg-secondary']
-                        };
+                        $iconInfo = match(strtolower($tipo['tipo_inspeccion_nombre'])) {
+                                'liviano' => ['icon' => 'fa-car', 'color' => 'bg-primary'],
+                                'pesado' => ['icon' => 'fa-truck', 'color' => 'bg-warning'], 
+                                'motocicleta', 'moto' => ['icon' => 'fa-motorcycle', 'color' => 'bg-info'],
+                                default => ['icon' => 'fa-car', 'color' => 'bg-secondary']
+                            };
                         ?>
                         <div class="<?= $iconInfo['color'] ?> text-white rounded-circle d-flex align-items-center justify-content-center" 
                              style="width: 60px; height: 60px;">

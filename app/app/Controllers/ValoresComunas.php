@@ -40,7 +40,7 @@ class ValoresComunas extends BaseController
             'cias'            => $this->getCiasForSelect(),
             'regiones'        => $this->getRegionesForSelect(),
             'tipos_usuario'   => $this->getTiposUsuarioForSelect(),
-            'tipos_vehiculo'  => $this->getTiposVehiculoForSelect(),
+            'tipos_inspeccion'  => $this->getTiposVehiculoForSelect(),
         ];
 
         return view('valores_comunas/create', $data);
@@ -154,7 +154,7 @@ class ValoresComunas extends BaseController
             'comunas'        => $this->getComunasByProvinciaHelper($valor['provincias_id']),
             'cias'           => $this->getCiasForSelect(),
             'tipos_usuario'  => $this->getTiposUsuarioForSelect(),
-            'tipos_vehiculo' => $this->getTiposVehiculoForSelect(),
+            'tipos_inspeccion' => $this->getTiposVehiculoForSelect(),
             'validation'     => \Config\Services::validation(),
         ];
 

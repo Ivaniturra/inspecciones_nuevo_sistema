@@ -204,19 +204,88 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     // ===================================================
     // TIPOS DE VEHÍCULOS (admin e inspectores)
     // ===================================================
-    $routes->group('tipos-inspeccion', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
-        $routes->get('/', 'TiposInspeccion::index');
-        $routes->get('create', 'TiposInspeccion::create');
-        $routes->post('store', 'TiposInspeccion::store');
-        $routes->get('show/(:num)', 'TiposInspeccion::show/$1');
-        $routes->get('edit/(:num)', 'TiposInspeccion::edit/$1');
-        $routes->post('update/(:num)', 'TiposInspeccion::update/$1');
-        $routes->put('update/(:num)', 'TiposInspeccion::update/$1');
-        $routes->delete('delete/(:num)', 'TiposInspeccion::delete/$1');
-        $routes->post('delete/(:num)', 'TiposInspeccion::delete/$1');
-        $routes->post('toggleStatus/(:num)', 'TiposInspeccion::toggleStatus/$1');
-        $routes->get('getSelect', 'TiposInspeccion::getSelect');
-    }); 
+   $routes->group('regiones', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
+    // CRUD Principal
+    $routes->get('/', 'Regiones::index');
+    $routes->get('create', 'Regiones::create');
+    $routes->post('store', 'Regiones::store');
+    $routes->get('show/(:num)', 'Regiones::show/$1');
+    $routes->get('edit/(:num)', 'Regiones::edit/$1');
+    $routes->post('update/(:num)', 'Regiones::update/$1');
+    $routes->put('update/(:num)', 'Regiones::update/$1');
+    $routes->delete('delete/(:num)', 'Regiones::delete/$1');
+    $routes->post('delete/(:num)', 'Regiones::delete/$1');
+    
+    // Acciones adicionales
+    $routes->post('toggleStatus/(:num)', 'Regiones::toggleStatus/$1');
+    
+    // AJAX
+    $routes->get('getSelect', 'Regiones::getSelect');
+    $routes->get('getActivas', 'Regiones::getActivas');
+    $routes->get('estadisticas', 'Regiones::estadisticas');
+});
+
+// ==================== PROVINCIAS ====================
+$routes->group('provincias', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
+    // CRUD Principal
+    $routes->get('/', 'Provincias::index');
+    $routes->get('create', 'Provincias::create');
+    $routes->post('store', 'Provincias::store');
+    $routes->get('show/(:num)', 'Provincias::show/$1');
+    $routes->get('edit/(:num)', 'Provincias::edit/$1');
+    $routes->post('update/(:num)', 'Provincias::update/$1');
+    $routes->put('update/(:num)', 'Provincias::update/$1');
+    $routes->delete('delete/(:num)', 'Provincias::delete/$1');
+    $routes->post('delete/(:num)', 'Provincias::delete/$1');
+    
+    // Acciones adicionales
+    $routes->post('toggleStatus/(:num)', 'Provincias::toggleStatus/$1');
+    
+    // AJAX
+    $routes->get('getSelect', 'Provincias::getSelect');
+    $routes->get('getByRegion/(:num)', 'Provincias::getByRegion/$1');
+    $routes->get('getActivas', 'Provincias::getActivas');
+});
+
+// ==================== COMUNAS ====================
+$routes->group('comunas', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
+    // CRUD Principal
+    $routes->get('/', 'Comunas::index');
+    $routes->get('create', 'Comunas::create');
+    $routes->post('store', 'Comunas::store');
+    $routes->get('show/(:segment)', 'Comunas::show/$1'); // segment porque comunas_id puede no ser numérico
+    $routes->get('edit/(:segment)', 'Comunas::edit/$1');
+    $routes->post('update/(:segment)', 'Comunas::update/$1');
+    $routes->put('update/(:segment)', 'Comunas::update/$1');
+    $routes->delete('delete/(:segment)', 'Comunas::delete/$1');
+    $routes->post('delete/(:segment)', 'Comunas::delete/$1');
+    
+    // Acciones adicionales
+    $routes->post('toggleStatus/(:segment)', 'Comunas::toggleStatus/$1');
+    
+    // AJAX
+    $routes->get('getSelect', 'Comunas::getSelect');
+    $routes->get('getByProvincia/(:num)', 'Comunas::getByProvincia/$1');
+    $routes->get('getByRegion/(:num)', 'Comunas::getByRegion/$1');
+    $routes->get('buscar', 'Comunas::buscar'); // Búsqueda por texto
+    $routes->get('getActivas', 'Comunas::getActivas');
+});
+
+// ==================== TIPOS DE INSPECCIÓN ====================
+$routes->group('tipos-inspeccion', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
+    $routes->get('/', 'TiposInspeccion::index');
+    $routes->get('create', 'TiposInspeccion::create');
+    $routes->post('store', 'TiposInspeccion::store');
+    $routes->get('show/(:num)', 'TiposInspeccion::show/$1');
+    $routes->get('edit/(:num)', 'TiposInspeccion::edit/$1');
+    $routes->post('update/(:num)', 'TiposInspeccion::update/$1');
+    $routes->put('update/(:num)', 'TiposInspeccion::update/$1');
+    $routes->delete('delete/(:num)', 'TiposInspeccion::delete/$1');
+    $routes->post('delete/(:num)', 'TiposInspeccion::delete/$1');
+    $routes->post('toggleStatus/(:num)', 'TiposInspeccion::toggleStatus/$1');
+    $routes->get('getSelect', 'TiposInspeccion::getSelect');
+});
+     
     // Redirecciones para compatibilidad con URLs anteriores
     $routes->get('inspecciones-old', 'Corredor::index');
     $routes->get('dashboard-corredor', 'Corredor::index');

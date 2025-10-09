@@ -46,54 +46,60 @@ class ValoresComunas extends BaseController
         return view('valores_comunas/create', $data);
     }
 
-    /** Guardar nuevo valor */
     public function store()
     {
         $rules = [
             'comunas_id'           => 'required',
             'cia_id'               => 'required|integer',
-            'tipo_usuario'         => 'required',
-            'tipo_inspeccion_id'     => 'required|integer',
-            'unidad_medida'        => 'required',
+            'tipo_usuario'         => 'required|in_list[Inspector,Compañía]',
+            'tipo_inspeccion_id'   => 'required|integer', // CORREGIDO
+            'unidad_medida'        => 'required|in_list[UF,CLP,UTM]',
             'valor'                => 'required|decimal',
             'fecha_vigencia_desde' => 'required|valid_date',
             'fecha_vigencia_hasta' => 'permit_empty|valid_date',
         ];
 
-        if (! $this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if (!$this->validate($rules)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('validation', $this->validator);
         }
 
-        // Verificar si ya existe un valor activo para estos parámetros
+        // Verificar si ya existe un valor activo
         if ($this->valoresComunasModel->existeValorCompleto(
             $this->request->getPost('comunas_id'),
             $this->request->getPost('cia_id'),
             $this->request->getPost('tipo_usuario'),
-            $this->request->getPost('tipo_inspeccion_id'),
+            $this->request->getPost('tipo_inspeccion_id'), // CORREGIDO
             $this->request->getPost('unidad_medida')
         )) {
-            return redirect()->back()->withInput()->with('error', 'Ya existe un valor activo para esta combinación específica');
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ya existe un valor activo para esta combinación específica');
         }
 
         $data = [
-            'comunas_id'                     => (string)$this->request->getPost('comunas_id'),
+            'comunas_id'                     => $this->request->getPost('comunas_id'),
             'cia_id'                         => (int)$this->request->getPost('cia_id'),
-            'tipo_vehiculo_id'               => (int)$this->request->getPost('tipo_vehiculo_id'),
-            'valores_tipo_usuario'           => (string)$this->request->getPost('tipo_usuario'),
-            'valores_unidad_medida'          => (string)$this->request->getPost('unidad_medida'),
+            'tipo_inspeccion_id'             => (int)$this->request->getPost('tipo_inspeccion_id'), // CORREGIDO
+            'valores_tipo_usuario'           => $this->request->getPost('tipo_usuario'),
+            'valores_unidad_medida'          => $this->request->getPost('unidad_medida'),
             'valores_valor'                  => (float)$this->request->getPost('valor'),
-            'valores_moneda'                 => (string)($this->request->getPost('moneda') ?: $this->request->getPost('unidad_medida')),
-            'valores_descripcion'            => (string)$this->request->getPost('descripcion'),
-            'valores_fecha_vigencia_desde'   => (string)$this->request->getPost('fecha_vigencia_desde'),
+            'valores_moneda'                 => $this->request->getPost('moneda') ?: $this->request->getPost('unidad_medida'),
+            'valores_descripcion'            => $this->request->getPost('descripcion'),
+            'valores_fecha_vigencia_desde'   => $this->request->getPost('fecha_vigencia_desde'),
             'valores_fecha_vigencia_hasta'   => $this->request->getPost('fecha_vigencia_hasta') ?: null,
             'valores_activo'                 => 1,
         ];
 
         if ($this->valoresComunasModel->save($data)) {
-            return redirect()->to('/valores-comunas')->with('success', 'Valor creado exitosamente');
+            return redirect()->to('/valores-comunas')
+                ->with('success', 'Valor creado exitosamente');
         }
 
-        return redirect()->back()->withInput()->with('error', 'Error al crear el valor');
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'Error al crear el valor');
     }
 
     /** Ver detalle */

@@ -234,9 +234,12 @@ main.main-content{ min-height: calc(100vh - var(--nav-h)); }
     <i class="icon fa-solid fa-dollar-sign"></i>
     <span class="label">Valores Comuna</span>
   </a> 
-<a class="nav-link <?= url_is('TiposInspeccion') || url_is('TiposInspeccion/*') ? 'active' : '' ?>" href="<?= base_url('TiposInspeccion') ?>" data-bs-toggle="tooltip" data-bs-title="Tipos de Inspección">
-  <i class="icon fa-solid fa-car"></i>
-  <span class="label">Tipos Inspeccion</span>
+<a class="nav-link <?= url_is('tipos-inspeccion') || url_is('tipos-inspeccion/*') ? 'active' : '' ?>" 
+   href="<?= base_url('tipos-inspeccion') ?>" 
+   data-bs-toggle="tooltip" 
+   data-bs-title="Tipos de Inspección">
+    <i class="icon fa-solid fa-car"></i>
+    <span class="label">Tipos Inspección</span>
 </a>
 <a class="nav-link <?= url_is('corredores') || url_is('corredores/*') ? 'active' : '' ?>" 
    href="<?= base_url('corredores') ?>" 

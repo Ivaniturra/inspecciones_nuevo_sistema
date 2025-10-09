@@ -204,7 +204,7 @@ $routes->group('', ['filter' => 'auth'], static function($routes) {
     // ===================================================
     // TIPOS DE VEHÍCULOS (admin e inspectores)
     // ===================================================
-    $routes->group('TiposInspeccion', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
+    $routes->group('tipos-inspeccion', ['namespace' => 'App\Controllers', 'filter' => 'role:3,7'], static function($routes) {
         $routes->get('/', 'TiposInspeccion::index');
         $routes->get('create', 'TiposInspeccion::create');
         $routes->post('store', 'TiposInspeccion::store');

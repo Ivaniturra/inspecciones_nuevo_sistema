@@ -392,9 +392,9 @@
  *  Config & helpers
  *  ======================== */
 const URLS = {
-  carrocerias: '/inspecciones/carrocerias/',       // GET /{tipo_inspeccion_id}
-  tipoInfo:    '/inspecciones/tipo-inspeccion-info/', // GET /{tipo_inspeccion_id}
-  store:       '/corredor/store'                   // POST
+  carrocerias: '/api/carrocerias/',          // GET /api/carrocerias/{tipo_inspeccion_id}
+  tipoInfo:    '/api/tipos-inspeccion/',     // GET /api/tipos-inspeccion/{id}
+  store:       '/corredor/store'             // POST (si tu store no está en /api)
 };
 const DEBUG = false; // pon true para ver logs de depuración
 

@@ -7,8 +7,7 @@ use App\Models\UserModel;
 class Auth extends BaseController
 {
     public function login()
-    {
-        // Si ya está logueado, redirige
+    { 
         if (session('user_id')) {
             return redirect()->to(base_url('cias')); 
         }
@@ -25,8 +24,7 @@ class Auth extends BaseController
         if (!$this->request->is('post')) {
             return redirect()->to(base_url('/'))->with('error', 'Método no permitido.');
         }
-
-        // 1) Validación básica (CSRF se valida automáticamente si está habilitado)
+ 
         $rules = [
             'email'    => 'required|valid_email',
             'password' => 'required|min_length[6]',
@@ -36,14 +34,11 @@ class Auth extends BaseController
             return redirect()->back()
                             ->withInput()
                             ->with('errors', $this->validator->getErrors());
-        }
-
-        // 2) Obtener datos del POST
+        } 
         $email    = strtolower(trim($this->request->getPost('email')));
         $pass     = $this->request->getPost('password');
         $remember = (bool) $this->request->getPost('remember');
-
-        // Resto del código permanece igual...
+ 
         $users = new \App\Models\UserModel();
         $user  = $users->findByEmail($email);
 
@@ -66,8 +61,7 @@ class Auth extends BaseController
                             ->withInput()
                             ->with('error', 'Credenciales inválidas.');
         }
-
-        // Verificar contraseña
+ 
         if (!password_verify($pass, $user['user_clave'])) {
             $users->logLoginAttempt((int) $user['user_id'], false);
             return redirect()->back()
@@ -75,18 +69,15 @@ class Auth extends BaseController
                             ->with('error', 'Credenciales inválidas.');
         }
 
-
-        // 4) Verificar si necesita cambiar contraseña
+ 
         if (!empty($user['user_debe_cambiar_clave'])) {
             // Guardar datos temporales para el cambio de contraseña
             session()->setTempdata('temp_user_id', $user['user_id'], 600); // 10 minutos
             return redirect()->to(base_url('auth/change-password'))
                 ->with('info', 'Debes cambiar tu contraseña antes de continuar.');
-        } 
-        // 5) Determinar branding según tipo de usuario
+        }  
         $brandingData = $this->getBrandingForUser($user);
-
-        // 6) Sesión base + branding
+ 
         session()->set([
             'user_id'        => (int) $user['user_id'],
             'user_name'      => $user['user_nombre'],
@@ -98,8 +89,7 @@ class Auth extends BaseController
             'cia_id'         => $user['cia_id']          ?? null,
             'corredor_id'    => $user['corredor_id']     ?? null,
             'logged_in'      => true,
-
-            // Branding dinámico según tipo de usuario
+ 
             'brand_title'    => $brandingData['title'],
             'brand_logo'     => $brandingData['logo'],
             'nav_bg'         => $brandingData['nav_bg'],
@@ -108,23 +98,16 @@ class Auth extends BaseController
             'sidebar_end'    => $brandingData['sidebar_end'],
             'app_title'      => $brandingData['app_title'],
         ]);
-
-        // 7) Auditoría y housekeeping
+ 
         $users->logLoginAttempt((int) $user['user_id'], true);
         $users->updateLastAccess((int) $user['user_id']);
-
-        // 8) Recordarme (opcional)
+ 
         if ($remember) {
             // TODO: implementar remember token
         }
-
-        // 9) Redirección según tipo de usuario
+ 
         return $this->redirectByUserType($user);
-    }
-
-    /**
-     * Obtener branding específico según tipo de usuario
-     */
+    } 
     private function getBrandingForUser(array $user): array
     {
         $perfil_tipo = $user['perfil_tipo'] ?? 'interno';

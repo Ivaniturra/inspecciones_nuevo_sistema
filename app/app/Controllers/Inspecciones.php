@@ -18,13 +18,27 @@ class Inspecciones extends BaseController
         $this->bitacoraModel = new BitacoraModel();
         $this->ciasModel = new CiaModel();
     }
-
-    /**
-     * Mostrar listado de inspecciones
-     */
-    public function index()
-    {
-        $inspecciones = $this->inspeccionesModel->getInspeccionesWithDetails();
+ 
+   public function index()
+    { 
+        $inspecciones = $this->inspeccionesModel->select('
+            inspecciones.*,
+            cias.cia_nombre,
+            users.user_nombre,
+            comunas.comunas_nombre,
+            estados.estado_nombre,
+            estados.estado_color,
+            ti.tipo_inspeccion_nombre,
+            tc.tipo_carroceria_nombre
+        ')
+        ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
+        ->join('users', 'users.user_id = inspecciones.user_id', 'left')
+        ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left')
+        ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left') // ← CAMBIO AQUÍ
+        ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = inspecciones.tipo_inspeccion_id', 'left')
+        ->join('tipo_carroceria tc', 'tc.tipo_carroceria_id = inspecciones.tipo_carroceria_id', 'left')
+        ->orderBy('inspecciones.inspecciones_created_at', 'DESC')
+        ->findAll();
 
         $data = [
             'title' => 'Inspecciones',
@@ -33,7 +47,59 @@ class Inspecciones extends BaseController
 
         return view('inspecciones/index', $data);
     }
+    public function getCarroceriasByTipo($tipoInspeccionId)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Solicitud no permitida']);
+        }
 
+        $tipoCarroceriaModel = new \App\Models\TipoCarroceriaModel();
+        $carrocerias = $tipoCarroceriaModel->getCarroceriasForSelect($tipoInspeccionId);
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'carrocerias' => $carrocerias
+        ]);
+    }
+ 
+    public function getTipoInspeccionInfo($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Solicitud no permitida']);
+        }
+
+        $tipoInspeccionModel = new \App\Models\TipoInspeccionModel();
+        $tipo = $tipoInspeccionModel->find($id);
+        
+        if (!$tipo) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'success' => false,
+                'message' => 'Tipo de inspección no encontrado'
+            ]);
+        } 
+        $codigo = $tipo['tipo_inspeccion_codigo'] ?? 'LIVIANO';
+        $info = $infoAdicional[$codigo] ?? $infoAdicional['LIVIANO'];
+
+        return $this->response->setJSON([
+            'success' => true,
+            'tipo' => $tipo, 
+        ]);
+    }
+ 
+    public function getTiposInspeccion()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Solicitud no permitida']);
+        }
+
+        $tipoInspeccionModel = new \App\Models\TipoInspeccionModel();
+        $tipos = $tipoInspeccionModel->getTiposForSelect();
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'tipos_inspeccion' => $tipos
+        ]);
+    }
     /**
      * Mostrar formulario para crear nueva inspección
      */
@@ -134,29 +200,48 @@ class Inspecciones extends BaseController
      */
     public function show($id)
     {
-        $inspeccion = $this->inspeccionesModel
-            ->select('inspecciones.*, cias.cia_nombre, users.user_nombre')
-            ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
-            ->join('users', 'users.user_id = inspecciones.user_id', 'left')
-            ->find($id);
+        // Obtener inspección con estado de la tabla
+        $inspeccion = $this->inspeccionesModel->select('
+            inspecciones.*,
+            cias.cia_nombre,
+            users.user_nombre,
+            comunas.comunas_nombre,
+            estados.estado_nombre,
+            estados.estado_color,
+            ti.tipo_inspeccion_nombre,
+            tc.tipo_carroceria_nombre
+        ')
+        ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
+        ->join('users', 'users.user_id = inspecciones.user_id', 'left')
+        ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left')
+        ->join('estados', 'estados.estado_id = inspecciones.estado_id', 'left') // ← CAMBIO AQUÍ
+        ->join('tipos_inspeccion ti', 'ti.tipo_inspeccion_id = inspecciones.tipo_inspeccion_id', 'left')
+        ->join('tipo_carroceria tc', 'tc.tipo_carroceria_id = inspecciones.tipo_carroceria_id', 'left')
+        ->where('inspecciones.inspecciones_id', $id)
+        ->first();
 
         if (!$inspeccion) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Inspección no encontrada');
         }
 
         // Obtener bitácora
-        $es_inspector = in_array(session('user_perfil_id'), [3, 7]); // Perfiles que pueden ver comentarios privados
+        $es_inspector = in_array(session('user_perfil_id'), [3, 7]);
         $bitacora = $this->bitacoraModel->getBitacoraByInspeccion($id, $es_inspector);
         
         // Estadísticas de la bitácora
         $stats_bitacora = $this->bitacoraModel->getEstadisticasComentarios($id);
+        
+        // Obtener todos los estados disponibles para cambios
+        $estadoModel = new \App\Models\EstadoModel();
+        $estados_disponibles = $estadoModel->getAllEstados();
 
         $data = [
             'title' => 'Inspección #' . $id,
             'inspeccion' => $inspeccion,
             'bitacora' => $bitacora,
             'stats_bitacora' => $stats_bitacora,
-            'puede_comentar' => true, // Ajustar según permisos
+            'estados_disponibles' => $estados_disponibles, // ← NUEVO
+            'puede_comentar' => true,
             'puede_ver_privados' => $es_inspector
         ];
 
@@ -215,10 +300,7 @@ class Inspecciones extends BaseController
             ]);
         }
     }
-
-    /**
-     * Cambiar estado de inspección
-     */
+ 
     public function cambiarEstado()
     {
         if (!$this->request->isAJAX()) {
@@ -227,7 +309,7 @@ class Inspecciones extends BaseController
 
         $rules = [
             'inspeccion_id' => 'required|is_natural_no_zero',
-            'nuevo_estado' => 'required|in_list[pendiente,en_proceso,completada,cancelada]',
+            'nuevo_estado_id' => 'required|is_natural_no_zero', // ← CAMBIO: ahora es estado_id
             'comentario' => 'permit_empty|max_length[500]'
         ];
 
@@ -239,7 +321,7 @@ class Inspecciones extends BaseController
         }
 
         $inspeccion_id = $this->request->getPost('inspeccion_id');
-        $nuevo_estado = $this->request->getPost('nuevo_estado');
+        $nuevo_estado_id = $this->request->getPost('nuevo_estado_id'); // ← CAMBIO
         $comentario = $this->request->getPost('comentario');
 
         // Obtener estado actual
@@ -248,30 +330,39 @@ class Inspecciones extends BaseController
             return $this->response->setStatusCode(404)->setJSON(['error' => 'Inspección no encontrada']);
         }
 
-        $estado_anterior = $inspeccion['estado'];
+        $estado_anterior_id = $inspeccion['estado_id']; // ← CAMBIO
+
+        // Obtener nombres de estados para el comentario
+        $estadoModel = new \App\Models\EstadoModel();
+        $estado_anterior = $estadoModel->find($estado_anterior_id);
+        $estado_nuevo = $estadoModel->find($nuevo_estado_id);
 
         // Actualizar estado
-        $this->inspeccionesModel->update($inspeccion_id, ['estado' => $nuevo_estado]);
+        $this->inspeccionesModel->update($inspeccion_id, ['estado_id' => $nuevo_estado_id]); // ← CAMBIO
 
         // Registrar en bitácora
-        $this->bitacoraModel->registrarCambioEstado(
-            $inspeccion_id,
-            session('user_id'),
-            $estado_anterior,
-            $nuevo_estado,
-            $comentario
-        );
+        $comentarioTexto = "Estado cambiado de '{$estado_anterior['estado_nombre']}' a '{$estado_nuevo['estado_nombre']}'";
+        if ($comentario) {
+            $comentarioTexto .= ". Observación: " . $comentario;
+        }
+        
+        $this->bitacoraModel->insert([
+            'inspecciones_id' => $inspeccion_id,
+            'user_id' => session('user_id'),
+            'bitacora_comentario' => $comentarioTexto,
+            'bitacora_tipo_comentario' => 'estado_cambio',
+            'bitacora_estado_anterior_id' => $estado_anterior_id, // ← NUEVO
+            'bitacora_estado_nuevo_id' => $nuevo_estado_id, // ← NUEVO
+            'bitacora_es_privado' => 0
+        ]);
 
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Estado actualizado exitosamente',
-            'nuevo_estado' => $nuevo_estado
+            'nuevo_estado' => $estado_nuevo['estado_nombre'],
+            'nuevo_estado_color' => $estado_nuevo['estado_color']
         ]);
     }
-
-    /**
-     * Eliminar comentario de la bitácora
-     */
     public function eliminarComentario($bitacora_id)
     {
         if (!$this->request->isAJAX()) {

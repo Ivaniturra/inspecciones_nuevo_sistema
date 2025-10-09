@@ -27,18 +27,18 @@ class ValoresComunasModel extends Model
         'valores_activo'
     ];
 
-    // Dates - UNA SOLA VEZ
+    // Dates
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'valores_created_at';
     protected $updatedField  = 'valores_updated_at';
     protected $deletedField  = 'valores_deleted_at';
 
-    // VALIDACIÓN CORREGIDA
+    // Validation
     protected $validationRules = [
         'comunas_id'                     => 'required',
         'cia_id'                         => 'required|is_natural_no_zero',
-        'tipo_inspeccion_id'             => 'required|is_natural_no_zero', // ← CORREGIDO
+        'tipo_inspeccion_id'             => 'required|is_natural_no_zero',
         'valores_tipo_usuario'           => 'required',
         'valores_unidad_medida'          => 'required|in_list[UF,CLP,UTM]',
         'valores_moneda'                 => 'permit_empty|in_list[UF,CLP,UTM]',
@@ -56,7 +56,7 @@ class ValoresComunasModel extends Model
             'required' => 'La compañía es obligatoria',
             'is_natural_no_zero' => 'ID de compañía inválido',
         ],
-        'tipo_inspeccion_id' => [ // ← CORREGIDO
+        'tipo_inspeccion_id' => [
             'required' => 'El tipo de inspección es obligatorio',
             'is_natural_no_zero' => 'ID de tipo de inspección inválido',
         ],
@@ -101,11 +101,8 @@ class ValoresComunasModel extends Model
         return (bool) $this->update($id, ['valores_activo' => $newStatus]);
     }
 
-    /* ===================== CONSULTAS CON ESTRUCTURA REAL ===================== */
+    /* ===================== CONSULTAS ===================== */
 
-    /**
-     * Query principal con nombres reales de campos y tablas
-     */
     public function getValoresWithDetails(): array
     {
         return $this->select('
@@ -167,9 +164,6 @@ class ValoresComunasModel extends Model
             ->findAll();
     }
 
-    /**
-     * Obtener valor específico vigente
-     */
     public function getValorVigente($comunaCodigo, $ciaId, $tipoUsuario = 'general', $tipoInspeccionId = null): ?array
     {
         $today = date('Y-m-d');
@@ -191,9 +185,6 @@ class ValoresComunasModel extends Model
         return $builder->orderBy('valores_fecha_vigencia_desde', 'DESC')->first();
     }
 
-    /**
-     * Verificar duplicados
-     */
     public function existeValorCompleto($comunaCodigo, $ciaId, $tipoUsuario, $tipoInspeccionId, $unidadMedida, $excludeId = null): bool
     {
         $builder = $this->where('comunas_id', $comunaCodigo)
@@ -224,9 +215,6 @@ class ValoresComunasModel extends Model
         return $builder->countAllResults() > 0;
     }
 
-    /**
-     * Obtener tipos de usuario únicos
-     */
     public function getTiposUsuario(): array
     {
         return $this->select('valores_tipo_usuario')
@@ -246,9 +234,6 @@ class ValoresComunasModel extends Model
         ];
     }
 
-    /**
-     * Obtener valor con todos los detalles
-     */
     public function getValorWithFullDetails($id): ?array
     {
         return $this->select('

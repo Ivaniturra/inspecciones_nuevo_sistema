@@ -299,7 +299,7 @@ class Corredor extends BaseController
             estados.estado_nombre,
             estados.estado_color,
             ti.tipo_inspeccion_nombre,
-            ti.tipo_inspeccion_codigo,
+            ti.tipo_inspeccion_nombre,
             tc.tipo_carroceria_nombre
         ')
         ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')

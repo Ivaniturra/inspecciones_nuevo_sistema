@@ -49,7 +49,7 @@ class Corredor extends BaseController
             estados.estado_nombre,
             estados.estado_color,
             ti.tipo_inspeccion_nombre,
-            tc.tipo_corroceria_nombre')
+            tc.tipo_carroceria_nombre')
         ->join('cias', 'cias.cia_id = inspecciones.cia_id', 'left')
         ->join('users', 'users.user_id = inspecciones.user_id', 'left')
         ->join('comunas', 'comunas.comunas_id = inspecciones.comunas_id', 'left')

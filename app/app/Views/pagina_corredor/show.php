@@ -190,13 +190,11 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
                         <a href="<?= base_url('corredor') ?>" class="btn btn-outline-secondary btn-action">
                             <i class="fas fa-arrow-left me-2"></i>Volver al Dashboard
                         </a>
-                        
-                        <?php if (in_array($inspeccion['inspecciones_estado'], ['pendiente', 'en_proceso'])): ?>
+                         
                         <a href="<?= base_url('corredor/edit/' . $inspeccion['inspecciones_id']) ?>" 
                            class="btn btn-primary btn-action">
                             <i class="fas fa-edit me-2"></i>Editar
-                        </a>
-                        <?php endif; ?>
+                        </a> 
                         
                         <a href="<?= base_url('corredor/print/' . $inspeccion['inspecciones_id']) ?>" 
                            class="btn btn-outline-info btn-action" target="_blank">

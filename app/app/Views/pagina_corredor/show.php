@@ -129,7 +129,7 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
                     <?php if (!empty($inspeccion['estado_color'])): ?>
                         <?php 
                         $bgColor = $inspeccion['estado_color'];
-                        $textColor = $this->getTextColorForBackground($bgColor);
+                        $textColor = getTextColorForBackground($bgColor);
                         ?>
                         <span class="status-badge" 
                               style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>;">
@@ -161,7 +161,7 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
                             <?php 
                             $isActive = ($estado['estado_id'] == $inspeccion['estado_id']);
                             $bgColor = $estado['estado_color'] ?? '#6c757d';
-                            $textColor = $this->getTextColorForBackground($bgColor);
+                            $textColor = getTextColorForBackground($bgColor);
                             ?>
                             
                             <div class="estado-step <?= $isActive ? 'active' : '' ?>"
@@ -399,7 +399,7 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
                             <?php if (!empty($inspeccion['estado_color'])): ?>
                                 <?php 
                                 $bgColor = $inspeccion['estado_color'];
-                                $textColor = $this->getTextColorForBackground($bgColor);
+                                $textColor = getTextColorForBackground($bgColor);
                                 ?>
                                 <span class="status-badge" 
                                       style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>;">
@@ -450,7 +450,7 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
                             <?php 
                             $isActive = ($estado['estado_id'] == $inspeccion['estado_id']);
                             $bgColor = $estado['estado_color'] ?? '#6c757d';
-                            $textColor = $this->getTextColorForBackground($bgColor);
+                            $textColor = getTextColorForBackground($bgColor);
                             ?>
                             <div class="d-flex align-items-center mb-2 <?= $isActive ? 'fw-bold' : '' ?>">
                                 <span class="badge me-2" 

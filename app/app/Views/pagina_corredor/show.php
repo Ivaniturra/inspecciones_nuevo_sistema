@@ -144,42 +144,7 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
         </div>
     </div>
 
-    <!-- Flujo de Estados -->
-    <?php if (!empty($estados)): ?>
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0">
-                        <i class="fas fa-route me-2"></i>
-                        Flujo del Proceso
-                    </h6>
-                </div>
-                <div class="card-body py-3">
-                    <div class="estado-flow">
-                        <?php foreach ($estados as $index => $estado): ?>
-                            <?php 
-                            $isActive = ($estado['estado_id'] == $inspeccion['estado_id']);
-                            $bgColor = $estado['estado_color'] ?? '#6c757d';
-                            $textColor = getTextColorForBackground($bgColor);
-                            ?>
-                            
-                            <div class="estado-step <?= $isActive ? 'active' : '' ?>"
-                                 <?= $isActive ? 'style="--estado-color: '.$bgColor.'; --estado-text-color: '.$textColor.';"' : '' ?>>
-                                <span class="badge bg-light text-dark me-1"><?= $estado['estado_id'] ?></span>
-                                <?= esc($estado['estado_nombre']) ?>
-                            </div>
-                            
-                            <?php if ($index < count($estados) - 1): ?>
-                                <i class="fas fa-chevron-right estado-arrow"></i>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <?php endif; ?>
+     
 
     <!-- Acciones -->
     <div class="row mb-4">
@@ -430,43 +395,7 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
                     </div>
                     <?php endif; ?>
                 </div>
-            </div>
-
-            <!-- Panel de Estados Disponibles -->
-            <?php if (!empty($estados)): ?>
-            <div class="card border-0 shadow-sm info-card mt-4">
-                <div class="card-header" 
-                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <h6 class="mb-0">
-                        <i class="fas fa-sitemap me-2"></i>
-                        Estados del Sistema
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="small">
-                        <?php foreach ($estados as $estado): ?>
-                            <?php 
-                            $isActive = ($estado['estado_id'] == $inspeccion['estado_id']);
-                            $bgColor = $estado['estado_color'] ?? '#6c757d';
-                            $textColor = getTextColorForBackground($bgColor);
-                            ?>
-                            <div class="d-flex align-items-center mb-2 <?= $isActive ? 'fw-bold' : '' ?>">
-                                <span class="badge me-2" 
-                                      style="background-color: <?= $bgColor ?>; color: <?= $textColor ?>;">
-                                    <?= $estado['estado_id'] ?>
-                                </span>
-                                <span class="<?= $isActive ? 'text-primary' : '' ?>">
-                                    <?= esc($estado['estado_nombre']) ?>
-                                </span>
-                                <?php if ($isActive): ?>
-                                    <i class="fas fa-check-circle text-success ms-auto"></i>
-                                <?php endif; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?>
+            </div> 
         </div>
     </div>
 </div>

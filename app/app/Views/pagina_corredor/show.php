@@ -201,7 +201,7 @@ Inspección #<?= $inspeccion['inspecciones_id'] ?>
                             <i class="fas fa-print me-2"></i>Imprimir
                         </a>
                         
-                        <?php if ($inspeccion['inspecciones_estado'] === 'pendiente'): ?>
+                        <?php if ($inspeccion['estado_nombre'] === 'pendiente'): ?>
                         <button type="button" class="btn btn-outline-danger btn-action" 
                                 onclick="confirmarEliminacion(<?= $inspeccion['inspecciones_id'] ?>)">
                             <i class="fas fa-trash me-2"></i>Eliminar
